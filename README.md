@@ -2,6 +2,8 @@ ZecWallet is a z-Addr first, Sapling compatible wallet and full node for zcashd 
 
 ![Screenshot](docs/screenshot-main.png?raw=true)
 ![Screenshots](docs/screenshot-sub.png?raw=true)
+
+
 # Installation
 
 Head over to the releases page and grab the latest installers or binary. https://github.com/ZcashFoundation/zecwallet/releases
