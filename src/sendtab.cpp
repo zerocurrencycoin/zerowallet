@@ -191,7 +191,7 @@ void MainWindow::setDefaultPayFrom() {
     if (maxZ >= 0) {
         ui->inputsCombo->setCurrentIndex(maxZ);                
     } else {
-        auto maxT = findMax("R");
+        auto maxT = findMax("t");
         maxT  = maxT >= 0 ? maxT : 0;
         ui->inputsCombo->setCurrentIndex(maxT);
     }
@@ -827,3 +827,4 @@ QString MainWindow::doSendTxValidations(Tx tx) {
 void MainWindow::cancelButton() {
     clearSendForm();
 }
+

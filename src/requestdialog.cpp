@@ -47,8 +47,8 @@ void RequestDialog::setupDialog(MainWindow* main, QDialog* d, Ui_RequestDialog* 
 void RequestDialog::showPaymentConfirmation(MainWindow* main, QString paymentURI) {
     PaymentURI payInfo = Settings::parseURI(paymentURI);
     if (!payInfo.error.isEmpty()) {
-        QMessageBox::critical(main, tr("Error paying safecoin URI"), 
-                tr("URI should be of the form 'safecoin:<addr>?amt=x&memo=y") + "\n" + payInfo.error);
+        QMessageBox::critical(main, tr("Error paying zcash URI"), 
+                tr("URI should be of the form 'zcash:<addr>?amt=x&memo=y") + "\n" + payInfo.error);
         return;
     }
 
@@ -123,12 +123,12 @@ void RequestDialog::showRequestZcash(MainWindow* main) {
     req.txtFrom->setFocus();
 
     if (d.exec() == QDialog::Accepted) {
-        // Construct a safecoin Payment URI with the data and pay it immediately.
-        QString memoURI = "safecoin:" + req.cmbMyAddress->currentText()
+        // Construct a zcash Payment URI with the data and pay it immediately.
+        QString memoURI = "zcash:" + req.cmbMyAddress->currentText()
                     + "?amt=" + Settings::getDecimalString(req.txtAmount->text().toDouble())
                     + "&memo=" + QUrl::toPercentEncoding(req.txtMemo->toPlainText());
 
-        QString sendURI = "safecoin:" + AddressBook::addressFromAddressLabel(req.txtFrom->text()) 
+        QString sendURI = "zcash:" + AddressBook::addressFromAddressLabel(req.txtFrom->text()) 
                     + "?amt=0.0001"
                     + "&memo=" + QUrl::toPercentEncoding(memoURI);
 

@@ -22,13 +22,9 @@ struct ConnectionConfig {
     QString rpcpassword;
     bool    usingZcashConf;
     bool    zcashDaemon;
-    bool    fastsync;
+    bool    skiptxverification;
     QString zcashDir;
     QString proxy;
-    QString safenode;
-    QString spentindex;
-    QString timeindex;
-    QString addrindex;
 
     ConnectionType connType;
 };

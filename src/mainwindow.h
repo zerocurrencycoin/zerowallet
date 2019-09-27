@@ -76,14 +76,10 @@ public:
     QLabel*             statusIcon;
     QLabel*             loadingLabel;
     QWidget*            zcashdtab;
-    QWidget*            safenodestab;
 
     Logger*      logger;
 
     void doClose();
-
-public slots:
-    void slot_change_theme(const QString& themeName);
 
 private:    
     void closeEvent(QCloseEvent* event);
@@ -93,7 +89,6 @@ private:
     void setupReceiveTab();
     void setupBalancesTab();
     void setupZcashdTab();
-    void SafeNodesTab();
 
     void setupTurnstileDialog();
     void setupSettingsModal();
@@ -125,11 +120,6 @@ private:
     void setMemoEnabled(int number, bool enabled);
     
     void donate();
-	
-    void website();
-    void discord();
-    void safenodes();
-	
     void addressBook();
     void postToZBoard();
     void importPrivKey();

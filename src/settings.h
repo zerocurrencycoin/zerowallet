@@ -68,10 +68,7 @@ public:
 
     bool    getCheckForUpdates();
     void    setCheckForUpdates(bool allow);
-
-    QString get_theme_name();
-    void set_theme_name(QString theme_name);
-
+            
     bool    isSaplingActive();
 
     void    setUsingZcashConf(QString confLocation);
@@ -121,9 +118,9 @@ public:
 
     static const QString labelRegExp;
 
-    static const int     updateSpeed         = 10 * 1000;        // 10 sec
-    static const int     quickUpdateSpeed    = 3  * 1000;        // 3 sec
-    static const int     priceRefreshSpeed   = 15 * 60 * 1000;   // 15 mins
+    static const int     updateSpeed         = 20 * 1000;        // 20 sec
+    static const int     quickUpdateSpeed    = 5  * 1000;        // 5 sec
+    static const int     priceRefreshSpeed   = 60 * 60 * 1000;   // 1 hr
 
 private:
     // This class can only be accessed through Settings::getInstance()

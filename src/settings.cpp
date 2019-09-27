@@ -79,7 +79,7 @@ bool Settings::isTAddress(QString addr) {
     if (!isValidAddress(addr))
         return false;
         
-    return addr.startsWith("R");
+    return addr.startsWith("t");
 }
 
 int Settings::getZcashdVersion() {
@@ -107,8 +107,8 @@ void Settings::setBlockNumber(int number) {
 }
 
 bool Settings::isSaplingActive() {
-    return  (isTestnet() && getBlockNumber() > 0) ||
-			(!isTestnet() && getBlockNumber() > 547422);
+    return  (isTestnet() && getBlockNumber() > 280000) ||
+           (!isTestnet() && getBlockNumber() > 419200);
 }
 
 double Settings::getZECPrice() { 
@@ -147,15 +147,6 @@ bool Settings::getAllowCustomFees() {
 
 void Settings::setAllowCustomFees(bool allow) {
     QSettings().setValue("options/customfees", allow);
-}
-
-QString Settings::get_theme_name() {
-    // Load from the QT Settings.
-    return QSettings().value("options/theme_name", false).toString();
-}
-
-void Settings::set_theme_name(QString theme_name) {
-    QSettings().setValue("options/theme_name", theme_name);
 }
 
 bool Settings::getSaveZtxs() {
@@ -197,9 +188,9 @@ void Settings::saveRestoreTableHeader(QTableView* table, QDialog* d, QString tab
 void Settings::openAddressInExplorer(QString address) {
     QString url;
     if (Settings::getInstance()->isTestnet()) {
-        url = "https://testnet.safecoin.org/address/" + address;
+        url = "https://chain.so/address/ZECTEST/" + address;
     } else {
-        url = "https://explorer.safecoin.org/address/" + address;
+        url = "https://chain.so/address/ZEC/" + address;
     }
     QDesktopServices::openUrl(QUrl(url));
 }
@@ -207,10 +198,10 @@ void Settings::openAddressInExplorer(QString address) {
 void Settings::openTxInExplorer(QString txid) {
     QString url;
     if (Settings::getInstance()->isTestnet()) {
-        url = "https://testnet.safecoin.org/tx/" + txid;
+        url = "https://chain.so/tx/ZECTEST/" + txid;
     }
     else {
-        url = "https://explorer.safecoin.org/tx/" + txid;
+        url = "https://chain.so/tx/ZEC/" + txid;
     }
     QDesktopServices::openUrl(QUrl(url));
 }
@@ -254,17 +245,18 @@ const QString Settings::txidStatusMessage = QString(QObject::tr("Tx submitted (r
 
 QString Settings::getTokenName() {
     if (Settings::getInstance()->isTestnet()) {
-        return "SAFET";
+        return "TAZ";
     } else {
-        return "SAFE";
+        return "ZEC";
     }
 }
 
 QString Settings::getDonationAddr() {
     if (Settings::getInstance()->isTestnet()) 
-            return "ztestsaplingXXX";
+            return "ztestsapling1wn6889vznyu42wzmkakl2effhllhpe4azhu696edg2x6me4kfsnmqwpglaxzs7tmqsq7kudemp5";
     else 
-            return "RtU6tF2d1YE6hw9DHMAyNRb2uUk4PwSCZr";
+            return "zs1gv64eu0v2wx7raxqxlmj354y9ycznwaau9kduljzczxztvs4qcl00kn2sjxtejvrxnkucw5xx9u";
+
 }
 
 bool Settings::addToZcashConf(QString confLocation, QString line) {
@@ -342,12 +334,13 @@ bool Settings::isValidSaplingPrivateKey(QString pk) {
 }
 
 bool Settings::isValidAddress(QString addr) {
-    QRegExp zsexp("^zs1[a-z0-9]{75}$",  Qt::CaseInsensitive);
+    QRegExp zcexp("^z[a-z0-9]{94}$",  Qt::CaseInsensitive);
+    QRegExp zsexp("^z[a-z0-9]{77}$",  Qt::CaseInsensitive);
     QRegExp ztsexp("^ztestsapling[a-z0-9]{76}", Qt::CaseInsensitive);
-    QRegExp texp("^R[a-z0-9]{33}$", Qt::CaseInsensitive);
-    //qDebug() << "isValidAddress(" << addr << ")";
+    QRegExp texp("^t[a-z0-9]{34}$", Qt::CaseInsensitive);
 
-    return  texp.exactMatch(addr) || ztsexp.exactMatch(addr) || zsexp.exactMatch(addr);
+    return  zcexp.exactMatch(addr)  || texp.exactMatch(addr) || 
+            ztsexp.exactMatch(addr) || zsexp.exactMatch(addr);
 }
 
 // Get a pretty string representation of this Payment URI
@@ -360,12 +353,12 @@ QString Settings::paymentURIPretty(PaymentURI uri) {
 PaymentURI Settings::parseURI(QString uri) {
     PaymentURI ans;
 
-    if (!uri.startsWith("safecoin:")) {
-        ans.error = "Not a safecoin payment URI";
+    if (!uri.startsWith("zcash:")) {
+        ans.error = "Not a zcash payment URI";
         return ans;
     }
 
-    uri = uri.right(uri.length() - QString("safecoin:").length());
+    uri = uri.right(uri.length() - QString("zcash:").length());
     
     QRegExp re("([a-zA-Z0-9]+)");
     int pos;

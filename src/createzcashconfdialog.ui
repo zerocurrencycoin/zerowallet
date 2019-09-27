@@ -11,13 +11,13 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Configure safecoin.conf</string>
+   <string>Configure zcash.conf</string>
   </property>
   <layout class="QGridLayout" name="gridLayout">
    <item row="2" column="1">
     <widget class="QLabel" name="label">
      <property name="text">
-      <string>Your safecoin node will be configured for you automatically</string>
+      <string>Your zcash node will be configured for you automatically</string>
      </property>
      <property name="alignment">
       <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
@@ -109,7 +109,7 @@
       <item row="5" column="0">
        <widget class="QLabel" name="label_6">
         <property name="text">
-         <string>Allow connections to the internet to check for updates, get SAFE/USD prices etc...</string>
+         <string>Allow connections to the internet to check for updates, get ZEC/USD prices etc...</string>
         </property>
        </widget>
       </item>
@@ -199,7 +199,6 @@
      </property>
     </widget>
    </item>
-
    <item row="4" column="1">
     <widget class="QLabel" name="label_3">
      <property name="text">
@@ -219,7 +218,6 @@
      </property>
     </widget>
    </item>
-
    <item row="5" column="1">
     <widget class="Line" name="line_2">
      <property name="orientation">

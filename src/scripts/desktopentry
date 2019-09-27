@@ -1,12 +1,13 @@
 [Desktop Entry]
-Name=SafecoinWallet
-Comment=Full node and wallet for Safecoin
+Name=ZecWallet
+Comment=Full node and wallet for Zcash
 GenericName=Wallet
-Exec=/usr/local/bin/safecoinwallet %u
-Icon=safecoinwallet.xpm
+Exec=/usr/local/bin/zecwallet %u
+Icon=zecwallet.xpm
 Type=Application
 StartupNotify=true
-StartupWMClass=safecoinwallet
+StartupWMClass=zecwallet
 Categories=Utility;
-MimeType=x-scheme-handler/safecoin;
-Keywords=safecoinwallet;
+MimeType=x-scheme-handler/zcash;
+Keywords=zecwallet;
+

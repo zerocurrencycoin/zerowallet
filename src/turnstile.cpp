@@ -409,9 +409,9 @@ void Turnstile::showZcashdMigration(MainWindow* parent) {
         menu.addAction(QObject::tr("View on block explorer"), [=] () {
             QString url;
             if (Settings::getInstance()->isTestnet()) {
-                url = "https://testnet.safecoin.org/tx/" + txid;
+                url = "https://explorer.testnet.z.cash/tx/" + txid;
             } else {
-                url = "https://explorer.safecoin.org/tx/" + txid;
+                url = "https://explorer.zcha.in/transactions/" + txid;
             }
             QDesktopServices::openUrl(QUrl(url));
         });
