@@ -81,9 +81,6 @@ public:
 
     void doClose();
 
-public slots:
-    void slot_change_theme(const QString& themeName);
-
 private:    
     void closeEvent(QCloseEvent* event);
 

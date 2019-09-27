@@ -25,7 +25,6 @@ DEFINES += \
     QT_DEPRECATED_WARNINGS
 
 INCLUDEPATH  += src/3rdparty/
-INCLUDEPATH  += src/
 
 RESOURCES     = application.qrc
 
@@ -152,5 +151,3 @@ else:win32-g++:CONFIG(debug, debug|release): PRE_TARGETDEPS += $$PWD/res/liblibs
 else:win32:!win32-g++:CONFIG(release, debug|release): PRE_TARGETDEPS += $$PWD/res/libsodium.lib
 else:win32:!win32-g++:CONFIG(debug, debug|release): PRE_TARGETDEPS += $$PWD/res/libsodiumd.lib
 else:unix: PRE_TARGETDEPS += $$PWD/res/libsodium.a
-
-DISTFILES +=
