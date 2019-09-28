@@ -313,12 +313,12 @@
          </property>
          <item>
           <property name="text">
-           <string>default</string>
+           <string>light</string>
           </property>
          </item>
          <item>
           <property name="text">
-           <string>light</string>
+           <string>classic</string>
           </property>
          </item>
          <item>

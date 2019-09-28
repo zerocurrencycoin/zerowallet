@@ -28,6 +28,7 @@
         <file>res/css/dark.css</file>
         <file>res/css/default.css</file>
         <file>res/css/light.css</file>
+	<file>res/css/classic.css</file>
     </qresource>
     <qresource prefix="/images/blue">
         <file>res/images/blue/unchecked.png</file>
