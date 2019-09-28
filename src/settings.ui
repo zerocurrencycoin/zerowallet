@@ -32,7 +32,7 @@
    <item>
     <widget class="QTabWidget" name="tabWidget">
      <property name="currentIndex">
-      <number>1</number>
+      <number>0</number>
      </property>
      <widget class="QWidget" name="tab">
       <attribute name="title">
@@ -313,26 +313,38 @@
          </property>
          <item>
           <property name="text">
-           <string>light</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
            <string>blue</string>
           </property>
           <property name="icon">
            <iconset>
-            <normaloff>:/images/blue/res/images/blue/checked.png</normaloff>:/images/blue/res//images/blue/checked.png</iconset>
+            <normaloff>../res/images/blue/unchecked.png</normaloff>
+            <disabledoff>../res/images/blue/unchecked.png</disabledoff>
+            <activeoff>../res/images/blue/checked.png</activeoff>
+            <selectedoff>../res/images/blue/checked.png</selectedoff>../res/images/blue/unchecked.png</iconset>
           </property>
          </item>
          <item>
           <property name="text">
            <string>light</string>
+          </property>
+          <property name="icon">
+           <iconset>
+            <normaloff>../res/images/blue/unchecked.png</normaloff>
+            <disabledoff>../res/images/blue/unchecked.png</disabledoff>
+            <activeoff>../res/images/blue/checked.png</activeoff>
+            <selectedoff>../res/images/blue/checked.png</selectedoff>../res/images/blue/unchecked.png</iconset>
           </property>
          </item>
          <item>
           <property name="text">
            <string>dark</string>
+          </property>
+          <property name="icon">
+           <iconset>
+            <normaloff>../res/images/blue/unchecked.png</normaloff>
+            <disabledoff>../res/images/blue/unchecked.png</disabledoff>
+            <activeoff>../res/images/blue/checked.png</activeoff>
+            <selectedoff>../res/images/blue/checked.png</selectedoff>../res/images/blue/unchecked.png</iconset>
           </property>
          </item>
          <item>
