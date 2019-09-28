@@ -1,3 +1,19 @@
+:root {
+    --main-bg:  !important;
+    --back-bg:  !important;
+    --accent-bg:    !important;
+    --text-main:    !important;
+    --text-accent:  !important;
+    --button-normal: rgb(186, 190, 194) !important;
+    --button-hover:     !important;
+    --button-pressed:   !important;
+
+
+}
+
+
+
+
 WalletFrame {
     /*border-image: url(':/images/blue/res/images/blue/blue_walletFrame_bg') 0 0 0 0 stretch stretch; */
     border-top:0px solid #000;
@@ -90,4 +106,33 @@ color: #fff;
 QMenuBar::item:selected {
 background-color:qlineargradient(x1: 0, y1: 0, x2: 0, y2: 0.25, stop: 0 #747577, stop: 1 #DADADA);
 color:#000;
+}
+
+QPushButton  { /* Global Button Style */
+    background-color: var(--button-normal) !important;
+    border:0;
+    border-radius:10px;
+    color:#ffffff;
+    font-size:12px;
+    font-weight:bold;
+    padding-left:25px;
+    padding-right:25px;
+    padding-top:5px;
+    padding-bottom:5px;
+    min-height:25px;
+}
+    
+QPushButton:hover,
+.QPushButton:hover {
+    background: rgb(186, 190, 194);
+    color: #FFF;
+}
+    
+QPushButton:focus {
+    border:none;
+    outline:none;
+}
+    
+QPushButton:pressed {
+    border:1px solid #333;
 }
