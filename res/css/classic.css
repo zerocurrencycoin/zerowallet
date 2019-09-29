@@ -1,0 +1,362 @@
+QWidget, QMainWindow, QMenuBar, QMenu, QDialog, QTabWidget, QTableView, QTableView::item, QScrollArea, QGroupBox, QPlainTextEdit, QLineEdit, QLabel
+{
+    background-color: #01698c;
+    color: #ffffff;
+}
+
+
+QTabWidget QTabBar::tab {
+padding-left:20px;
+padding-right:20px;
+padding-top:5px;
+padding-bottom:5px;
+border: 1px solid #01698c;
+background-color: #014d67;
+}
+
+QTabWidget QTabBar::tab:selected {
+min-height: 10px;
+background-color: #01698c;
+color:#fff;
+border: 2px solid #FFF;
+}
+
+QTabWidget QTabBar::tab:hover {
+background-color: rgb(186, 190, 194);
+color:#fff;
+border: 1px ridge #fff;
+min-height: 20px
+}
+
+QHeaderView { /* Table Header */
+background-color:#303335;
+}
+
+QHeaderView::section { /* Table Header Sections */
+qproperty-alignment:center;
+background-color: #014d67;
+color:#fff;
+min-height:25px;
+font-weight:bold;
+font-size:11px;
+outline:0;
+border:1px solid #525355;
+border-right:1px solid #fff;
+border-left:1px solid #fff;
+padding-left:5px;
+padding-right:5px;
+padding-top:2px;
+padding-bottom:2px;
+}
+
+QHeaderView::section:last {
+border-right: 0px solid #d7d7d7;
+}
+
+QScrollArea {
+background:transparent;
+border:0px;
+}
+
+QTableView { /* Table - has to be selected as a class otherwise it throws off QCalendarWidget */
+background:#014d67;
+}
+
+QTableView::item { /* Table Item */
+background-color:#01698c;
+border:1px solid #fff;
+font-size:12px;
+}
+
+QTableView::item:selected { /* Table Item Selected */
+background-color:#fff;
+color:#000;
+}
+
+QMenuBar {
+background-color: #014d67;
+color: #fff;
+}
+
+QMenuBar::item {
+background-color: #014d67;
+color: #fff;
+}
+
+QMenuBar::item:selected {
+background-color: #01698c;
+}
+
+QPushButton  { /* Global Button Style */
+    background-color: #014d67 ;
+    border:0;
+    border-radius:10px;
+    color:#ffffff;
+    font-size:12px;
+    font-weight:bold;
+    padding-left:25px;
+    padding-right:25px;
+    padding-top:5px;
+    padding-bottom:5px;
+    min-height:25px;
+    }
+    
+    QPushButton:hover,
+    .QPushButton:hover {
+        background: rgb(186, 190, 194);
+        color: #FFF;
+    }
+    
+    QPushButton:focus {
+    border:none;
+    outline:none;
+    }
+    
+    QPushButton:pressed {
+    border:1px solid #333;
+    }
+    
+    .QValidatedLineEdit, .QLineEdit { /* Text Entry Fields */
+        border: 1px solid #014d67;
+        font-size:11px;
+        min-height:25px;
+        outline:0;
+        padding:3px;
+        background-color:#fcfcfc;
+        }
+        
+        .QLineEdit:!focus {
+        font-size:12px;
+        }
+        
+        .QValidatedLineEdit:disabled, .QLineEdit:disabled {
+        background-color:#f2f2f2;
+        }
+        /* QT */
+    QLineEdit#sendAddressBalance{
+        min-width: 175px;
+        max-width: 225px;
+        font: bold;
+    }
+    
+    QComboBox#inputsCombo QListView {
+    border:2px solid #014d67;
+    padding-right:1px;
+    padding-left:1px;
+        font: normal;
+    }
+    
+    QComboBox#listReceiveAddresses
+    {
+        font: normal;
+    }
+    
+    QComboBox#listReceiveAddresses QListView {
+    border:2px solid #014d67;
+    padding-right:1px;
+    padding-left:1px;
+        font: normal;
+    }
+    
+    .QValidatedLineEdit, .QLineEdit { /* Text Entry Fields */
+        border: 1px solid #014d67;
+        font-size:11px;
+        min-height:25px;
+        outline:0;
+        padding:3px;
+        background-color:#fcfcfc;
+        color:#333333;
+        }
+        
+        .QLineEdit:!focus {
+        font-size:12px;
+        }
+        
+        .QValidatedLineEdit:disabled, .QLineEdit:disabled {
+        background-color:#f2f2f2;
+        }
+    
+        /* Form elements */
+    QLineEdit { /* inputs */
+        border-radius: 4px;
+        border: 1px solid #c5cad3;
+        padding: 5px;
+        font: 12px "Volte";
+    /* QT */
+    QLineEdit#sendAddressBalance{
+        min-width: 175px;
+        max-width: 225px;
+        font: bold;
+    }
+    
+    QComboBox#inputsCombo QListView {
+    border:2px solid #014d67;
+    padding-right:1px;
+    padding-left:1px;
+        font: normal;
+    }
+    
+    QComboBox#listReceiveAddresses
+    {
+        font: normal;
+    }
+    
+    QComboBox#listReceiveAddresses QListView {
+    border:2px solid #014d67;
+    padding-right:1px;
+    padding-left:1px;
+        font: normal;
+    }
+    
+    .QValidatedLineEdit, .QLineEdit { /* Text Entry Fields */
+        border: 1px solid #014d67;
+        font-size:11px;
+        min-height:25px;
+        outline:0;
+        padding:3px;
+        background-color:#fcfcfc;
+        color:#333333;
+        }
+        
+        .QLineEdit:!focus {
+        font-size:12px;
+        }
+        
+        .QValidatedLineEdit:disabled, .QLineEdit:disabled {
+        background-color:#f2f2f2;
+        }
+    
+        /* Form elements */
+    QLineEdit { /* inputs */
+        border-radius: 4px;
+        border: 1px solid #c5cad3;
+        padding: 5px;
+        font: 12px "Volte";
+        
+        QScrollBar { /* Scroll Bar */
+    
+        }
+        
+        QScrollBar:vertical { /* Vertical Scroll Bar Attributes */
+        border:0;
+        background:#ffffff;
+        width:18px;
+        margin: 18px 0px 18px 0px;
+        }
+        
+        QScrollBar:horizontal { /* Horizontal Scroll Bar Attributes */
+        border:0;
+        background:#ffffff;
+        height:18px;
+        margin: 0px 18px 0px 18px;
+        }
+        
+        
+        QScrollBar::handle:vertical { /* Scroll Bar Slider - vertical */
+        background:#e0e0e0;
+        min-height:10px;
+        }
+        
+        QScrollBar::handle:horizontal { /* Scroll Bar Slider - horizontal */
+        background:#e0e0e0;
+        min-width:10px;
+        }
+        
+        QScrollBar::add-page, QScrollBar::sub-page { /* Scroll Bar Background */
+        background:#F8F6F6;
+        }
+        
+        QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical, QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal { /* Define Arrow Button Dimensions */
+        background-color:#F8F6F6;
+        border: 1px solid #f2f0f0;
+        width:16px;
+        height:16px;
+        }
+        
+        QScrollBar::add-line:vertical:pressed, QScrollBar::sub-line:vertical:pressed, QScrollBar::add-line:horizontal:pressed, QScrollBar::sub-line:horizontal:pressed {
+        background-color:#e0e0e0;
+        }
+        
+        QScrollBar::sub-line:vertical { /* Vertical - top button position */
+        subcontrol-position:top;
+        subcontrol-origin: margin;
+        }
+        
+        QScrollBar::add-line:vertical { /* Vertical - bottom button position */
+        subcontrol-position:bottom;
+        subcontrol-origin: margin;
+        }
+        
+        QScrollBar::sub-line:horizontal { /* Vertical - left button position */
+        subcontrol-position:left;
+        subcontrol-origin: margin;
+        }
+        
+        QScrollBar::add-line:horizontal { /* Vertical - right button position */
+        subcontrol-position:right;
+        subcontrol-origin: margin;
+        }
+        
+        QScrollBar:up-arrow, QScrollBar:down-arrow, QScrollBar:left-arrow, QScrollBar:right-arrow { /* Arrows Icon */
+        width:10px;
+        height:10px;
+        }
+        
+        QScrollBar:up-arrow {
+        background-image: url(':/images/blue/res/images/blue/blue_upArrow_small');
+        }
+        
+        QScrollBar:down-arrow {
+        background-image: url(':/images/blue/res/images/blue/blue_downArrow_small');
+        }
+        
+        QScrollBar:left-arrow {
+        background-image: url(':/images/blue/res/images/blue/blue_leftArrow_small.png');
+        }
+        
+        QScrollBar:right-arrow {
+        background-image: url(':/images/blue/res/images/blue/blue_rightArrow_small.png');
+        }
+        
+QCheckBox {
+    spacing: 5px;
+    }
+    
+    QCheckBox::indicator {
+    width: 16px;
+    height: 16px;
+    }
+    
+    QCheckBox::indicator:unchecked {
+    image:url(':/images/blue/res/images/blue/unchecked');
+    }
+    
+    QCheckBox::indicator:unchecked:hover {
+    image:url(':/images/blue/res/images/blue/unchecked');
+    }
+    
+    QCheckBox::indicator:unchecked:pressed {
+    image:url(':/images/blue/res/images/blue/checked');
+    }
+    
+    QCheckBox::indicator:checked {
+    image:url(':/images/blue/res/images/blue/checked');
+    }
+    
+    QCheckBox::indicator:checked:hover {
+    image:url(':/images/blue/res/images/blue/checked');
+    }
+    
+    QCheckBox::indicator:checked:pressed {
+    image:url(':/images/blue/res/images/blue/unchecked');
+    }
+    
+    QCheckBox::indicator:indeterminate:hover {
+    image:url(':/images/blue/res/images/blue/unchecked');
+    }
+    
+    QCheckBox::indicator:indeterminate:pressed {
+    image:url(':/images/blue/res/images/blue/checked');
+    }
+    
+    

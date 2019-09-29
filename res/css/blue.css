@@ -1,12 +1,16 @@
 QWidget, QMainWindow, QMenuBar, QMenu, QDialog, QTabWidget, QTableView, QTableView::item, QScrollArea, QGroupBox, QPlainTextEdit, QLineEdit
 {
-    background-color: #303335;
+    background-color: #01698c;
     color: #c5cad3;
 }
 
 QLabel {
     background: transparent;
-    color: #c5cad3;
+    color: #f2f0f0;
+}
+
+QGroupBox#groupBox {
+    background-color: #014d67;
 }
 
 QGroupBox#groupBox QLabel {
@@ -19,37 +23,37 @@ padding-left:20px;
 padding-right:20px;
 padding-top:5px;
 padding-bottom:5px;
-border: 1px solid #525355;
-background-color: #212121;
+border: 1px solid #01698c;
+background-color: #014d67;
 }
 
 QTabWidget QTabBar::tab:selected {
 min-height: 10px;
-background-color: #141414;
-color:#fff;
-border: 1px ridge #000;
+background-color: #014d67;
+color:#f2f0f0;
+border: 1px ridge #f2f0f0;
 }
 
 QTabWidget QTabBar::tab:hover {
-background-color: #747577;
+background-color: #0698c9;
 color: #f2f0f0;
 border: 1px ridge #f2f0f0;
 min-height: 20px
 }
 
 QHeaderView { /* Table Header */
-background-color:#212121;
+background-color:#01698c;
 }
 
 QHeaderView::section { /* Table Header Sections */
 qproperty-alignment:center;
-background-color: #212121;
+background-color: #014d67;
 color:#f2f0f0;
 min-height:25px;
 font-weight:bold;
 font-size:11px;
 outline:0;
-border:1px solid #525355;
+border:1px solid #f2f0f0;
 border-right:1px solid #fff;
 border-left:1px solid #fff;
 padding-left:5px;
@@ -73,45 +77,45 @@ QScrollBar { /* Scroll Bar */
 
 QScrollBar:vertical { /* Vertical Scroll Bar Attributes */
 border:0;
-background:#303335;
+background:#014d67;
 width:18px;
 margin: 18px 0px 18px 0px;
 }
 
 QScrollBar:horizontal { /* Horizontal Scroll Bar Attributes */
 border:0;
-background:#303335;
+background:#014d67;
 height:18px;
 margin: 0px 18px 0px 18px;
 }
 
 
 QScrollBar::handle:vertical { /* Scroll Bar Slider - vertical */
-background:#212121;
+background:#014d67;
 min-height:10px;
 border: 1px solid #f2f0f0
 }
 
 QScrollBar::handle:horizontal { /* Scroll Bar Slider - horizontal */
-background:#212121;
+background:#014d67;
 min-width:10px;
 border: 1px solid #f2f0f0;
 }
 
 QScrollBar::add-page, QScrollBar::sub-page { /* Scroll Bar Background */
-background:#303335;
+background:#01698c;
 border: 1px solid #f2f0f0;
 }
 
 QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical, QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal { /* Define Arrow Button Dimensions */
-background-color:#303335;
-border: 1px solid #f2f0f0;
+background-color:#c5cad3;
+border: 1px solid #014d67;
 width:16px;
 height:16px;
 }
 
 QScrollBar::add-line:vertical:pressed, QScrollBar::sub-line:vertical:pressed, QScrollBar::add-line:horizontal:pressed, QScrollBar::sub-line:horizontal:pressed {
-background-color:#303335;
+background-color:#01698c;
 }
 
 QScrollBar::sub-line:vertical { /* Vertical - top button position */
@@ -158,25 +162,25 @@ background-image: url(':/images/blue/res/images/blue/blue_rightArrow_small.png')
 
 
 QTableView { /* Table - has to be selected as a class otherwise it throws off QCalendarWidget */
-background:#212121;
+background:#01698c;
 }
 
 QTableView::item { /* Table Item */
-background-color:#303335;
+background-color:#01698c;
 border:1px solid #fff;
 font-size:12px;
 }
 
 QTableView::item:selected { /* Table Item Selected */
-background-color:#c5cad3;
-color:#212121;
+background-color:#014d67;
+color:#f2f0f0;
 }
 
 QPushButton  { /* Global Button Style */
-    background-color: #212121 ;
-    border:1px solid #c5cad3;
+    background-color: #014d67 ;
+    border:1px solid #f2f0f0;
     border-radius:13px;
-    color:#c5cad3;
+    color:#f2f0f0;
     font-size:12px;
     font-weight:bold;
     padding-left:15px;
@@ -188,8 +192,8 @@ QPushButton  { /* Global Button Style */
     
 QPushButton:hover,
 .QPushButton:hover {
-    background: #747577;
-    color: #c5cad3;
+    background: #0698c9;
+    color: #FFFFFF;
 }
     
 QPushButton:focus {
@@ -201,42 +205,42 @@ QPushButton:pressed {
     border:1px solid #333;
 }
 QStatusBar {
-    background: #212121;
+    background: #014d67;
     border: 0;
-    color: #c5cad3;
+    color: #f2f0f0;
     height: 36px;
     min-height: 36px;
     padding: 0;
 }
 
 QMenuBar {
-    background-color: #212121;
+    background-color: #014d67;
 }
     
 QMenuBar::item {
-    background-color:#212121;
-    color: #c5cad3;
+    background-color:#014d67;
+    color: #f2f0f0;
 }
     
 QMenuBar::item:selected {
-    background-color:#747577;
-    border: 1px solid #c5cad3;
+    background-color:#0698c9;
+    border: 1px solid #f2f0f0;
 }
 
 QMenu {
-    background-color:#303335;
+    background-color:#01698c;
     padding-left: 15px;
     padding-right: 15px;
 }
     
 QMenu::item {
-    color:#c5cad3;
+    color:#f2f0f0;
 }
     
 QMenu::item:selected {
-    background-color:#212121;
-    color:#c5cad3;
-    border: 1px solid #c5cad3;
+    background-color:#0698c9;
+    color:#f2f0f0;
+    border: 1px solid #f2f0f0;
 }
     
 
