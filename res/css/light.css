@@ -30,7 +30,7 @@ color: #f2f0f0;
 
 QTabWidget QTabBar::tab:selected {
 min-height: 10px;
-background-color: #014d67;
+background-color: #01698c;
 color:#f2f0f0;
 border: 1px ridge #f2f0f0;
 }
