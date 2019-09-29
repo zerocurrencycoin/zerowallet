@@ -38,3 +38,4 @@ zcashd
 IDEWorkspaceChecks.plist
 *.sln
 node_modules
+safe-qt-wallet.pro.user
