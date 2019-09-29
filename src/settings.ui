@@ -335,6 +335,18 @@
            <string>dark</string>
           </property>
          </item>
+         <item>
+          <property name="text">
+           <string>matrix</string>
+          </property>
+          <property name="icon">
+           <iconset>
+            <normaloff>../res/images/blue/unchecked.png</normaloff>
+            <disabledoff>../res/images/blue/unchecked.png</disabledoff>
+            <activeoff>../res/images/blue/checked.png</activeoff>
+            <selectedoff>../res/images/blue/checked.png</selectedoff>../res/images/blue/unchecked.png</iconset>
+          </property>
+         </item>
         </widget>
        </item>
       </layout>
