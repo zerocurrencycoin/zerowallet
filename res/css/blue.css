@@ -42,7 +42,7 @@ min-height: 20px
 }
 
 QHeaderView { /* Table Header */
-background-color:#014d67;
+background-color:#01698c;
 }
 
 QHeaderView::section { /* Table Header Sections */
