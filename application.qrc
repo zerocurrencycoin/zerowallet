@@ -28,6 +28,8 @@
         <file>res/css/dark.css</file>
         <file>res/css/default.css</file>
         <file>res/css/light.css</file>
+        <file>res/css/classic.css</file>
+        <file>res/css/matrix.css</file>
     </qresource>
     <qresource prefix="/images/blue">
         <file>res/images/blue/unchecked.png</file>
@@ -38,5 +40,13 @@
         <file>res/images/blue/blue_leftArrow_small.png</file>
         <file>res/images/blue/blue_rightArrow_small.png</file>
         <file>res/images/blue/blue_qtreeview_selected.png</file>
+    </qresource>
+    <qresource prefix="backgrounds">
+        <file>res/images/backgrounds/matrix.jpg</file>
+    </qresource>
+    <qresource prefix="icons">
+        <file>res/images/icons/tick-white.png</file>
+        <file>res/images/icons/tick.png</file>
+        <file>res/images/icons/close.png</file>
     </qresource>
 </RCC>
