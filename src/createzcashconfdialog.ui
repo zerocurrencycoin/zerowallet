@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>596</width>
-    <height>352</height>
+    <height>452</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -62,7 +62,7 @@
     </layout>
    </item>
    <item row="0" column="1">
-    <widget class="FilledIconLabel" name="lblTopIcon">
+    <widget class="QLabel" name="lblTopIcon">
      <property name="sizePolicy">
       <sizepolicy hsizetype="Preferred" vsizetype="MinimumExpanding">
        <horstretch>0</horstretch>
@@ -77,6 +77,9 @@
      </property>
      <property name="scaledContents">
       <bool>true</bool>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignCenter</set>
      </property>
     </widget>
    </item>
@@ -199,7 +202,6 @@
      </property>
     </widget>
    </item>
-
    <item row="4" column="1">
     <widget class="QLabel" name="label_3">
      <property name="text">
@@ -219,7 +221,6 @@
      </property>
     </widget>
    </item>
-
    <item row="5" column="1">
     <widget class="Line" name="line_2">
      <property name="orientation">
@@ -229,13 +230,6 @@
    </item>
   </layout>
  </widget>
- <customwidgets>
-  <customwidget>
-   <class>FilledIconLabel</class>
-   <extends>QLabel</extends>
-   <header>fillediconlabel.h</header>
-  </customwidget>
- </customwidgets>
  <resources/>
  <connections>
   <connection>

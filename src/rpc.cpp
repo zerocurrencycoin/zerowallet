@@ -1428,7 +1428,7 @@ void RPC::shutdownZcashd() {
     QDialog d(main);
     Ui_ConnectionDialog connD;
     connD.setupUi(&d);
-    connD.topIcon->setBasePixmap(QIcon(":/icons/res/icon.ico").pixmap(256, 256));
+    connD.topIcon->setPixmap(QIcon(":/icons/res/icon.ico").pixmap(128, 128));
     connD.status->setText(QObject::tr("Please wait for SafecoinWallet to exit"));
     connD.statusDetail->setText(QObject::tr("Waiting for safecoind to exit"));
 
