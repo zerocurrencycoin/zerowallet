@@ -37,6 +37,8 @@ public:
     bool    isSaplingAddress(QString addr);
     bool    isSproutAddress(QString addr);
             
+    bool    isValidSaplingPrivateKey(QString pk);
+
     bool    isSyncing();
     void    setSyncing(bool syncing);
 
@@ -60,7 +62,16 @@ public:
 
     bool    getAllowCustomFees();
     void    setAllowCustomFees(bool allow);
-            
+
+    bool    getAllowFetchPrices();
+    void    setAllowFetchPrices(bool allow);
+
+    bool    getCheckForUpdates();
+    void    setCheckForUpdates(bool allow);
+
+    QString get_theme_name();
+    void set_theme_name(QString theme_name);
+
     bool    isSaplingActive();
 
     void    setUsingZcashConf(QString confLocation);
@@ -76,6 +87,10 @@ public:
     static const QString txidStatusMessage;
     
     static void saveRestore(QDialog* d);
+    static void saveRestoreTableHeader(QTableView* table, QDialog* d, QString tablename) ;
+
+    static void openAddressInExplorer(QString address);
+    static void openTxInExplorer(QString txid);
 
     static PaymentURI parseURI(QString paymentURI);
     static QString    paymentURIPretty(PaymentURI);
@@ -84,12 +99,14 @@ public:
     static bool    isTAddress(QString addr);
 
     static QString getDecimalString(double amt);
-    static QString getUSDFormat(double bal);
+    static QString getUSDFormat(double usdAmt);
+
+    static QString getUSDFromZecAmount(double bal);
     static QString getZECDisplayFormat(double bal);
     static QString getZECUSDDisplayFormat(double bal);
 
     static QString getTokenName();
-    static QString getDonationAddr(bool sapling);
+    static QString getDonationAddr();
 
     static double  getMinerFee();
     static double  getZboardAmount();

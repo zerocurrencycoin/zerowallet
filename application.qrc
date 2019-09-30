@@ -11,11 +11,42 @@
     <qresource prefix="/img">
         <file>res/safecoindlogo.gif</file>
         <file>res/logobig.gif</file>
+        <file>res/safenode.png</file>
     </qresource>
     <qresource prefix="/translations">
-        <file>res/zec_qt_wallet_es.qm</file>
-        <file>res/zec_qt_wallet_fr.qm</file>
-        <file>res/zec_qt_wallet_pt.qm</file>
-        <file>res/zec_qt_wallet_it.qm</file>
+        <file>res/safe_qt_wallet_es.qm</file>
+        <file>res/safe_qt_wallet_fr.qm</file>
+        <file>res/safe_qt_wallet_pt.qm</file>
+        <file>res/safe_qt_wallet_it.qm</file>
+        <file>res/safe_qt_wallet_zh.qm</file>
+        <file>res/safe_qt_wallet_ru.qm</file>
+        <file>res/safe_qt_wallet_uk.qm</file>
+        <file>res/safe_qt_wallet_tr.qm</file>
+    </qresource>
+    <qresource prefix="/css">
+        <file>res/css/blue.css</file>
+        <file>res/css/dark.css</file>
+        <file>res/css/default.css</file>
+        <file>res/css/light.css</file>
+        <file>res/css/matrix.css</file>
+	<file>res/css/classic.css</file>
+    </qresource>
+    <qresource prefix="/images/blue">
+        <file>res/images/blue/unchecked.png</file>
+        <file>res/images/blue/checked.png</file>
+        <file>res/images/blue/blue_downArrow.png</file>
+        <file>res/images/blue/blue_downArrow_small.png</file>
+        <file>res/images/blue/blue_upArrow_small.png</file>
+        <file>res/images/blue/blue_leftArrow_small.png</file>
+        <file>res/images/blue/blue_rightArrow_small.png</file>
+        <file>res/images/blue/blue_qtreeview_selected.png</file>
+    </qresource>
+    <qresource prefix="backgrounds">
+        <file>res/images/backgrounds/matrix.jpg</file>
+    </qresource>
+    <qresource prefix="icons">
+        <file>res/images/icons/tick-white.png</file>
+        <file>res/images/icons/tick.png</file>
+        <file>res/images/icons/close.png</file>
     </qresource>
 </RCC>
