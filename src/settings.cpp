@@ -151,7 +151,7 @@ void Settings::setAllowCustomFees(bool allow) {
 
 QString Settings::get_theme_name() {
     // Load from the QT Settings.
-    return QSettings().value("options/theme_name", false).toString();
+    return QSettings().value("options/theme_name", "matrix").toString();
 }
 
 void Settings::set_theme_name(QString theme_name) {
