@@ -1,13 +1,4 @@
-<<<<<<< HEAD
-<<<<<<< HEAD
-
-QWidget, QMainWindow, QMenuBar, QMenu, QDialog, QTabWidget, QTableView, QTableView::item, QScrollArea, QGroupBox, QPlainTextEdit, QLineEdit, QLabel, MainWindow
-=======
 QWidget, QMainWindow, QMenuBar, QMenu, QDialog, QTabWidget, QTableView, QTableView::item, QScrollArea, QGroupBox, QPlainTextEdit, QLineEdit
->>>>>>> f7ef373... darkmode fix
-=======
-QWidget, QMainWindow, QMenuBar, QMenu, QDialog, QTabWidget, QTableView, QTableView::item, QScrollArea, QGroupBox, QPlainTextEdit, QLineEdit
->>>>>>> f7ef373... darkmode fix
 {
     background-color: #303335;
     color: #c5cad3;
@@ -47,7 +38,7 @@ min-height: 20px
 }
 
 QHeaderView { /* Table Header */
-background-color:#303335;
+background-color:#212121;
 }
 
 QHeaderView::section { /* Table Header Sections */
