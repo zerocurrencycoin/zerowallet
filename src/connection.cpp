@@ -17,7 +17,7 @@ ConnectionLoader::ConnectionLoader(MainWindow* main, RPC* rpc) {
     connD = new Ui_ConnectionDialog();
     connD->setupUi(d);
     QPixmap logo(":/img/res/logobig.gif");
-    connD->topIcon->setBasePixmap(logo.scaled(256, 256, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+    connD->topIcon->setPixmap(logo.scaled(128, 128, Qt::KeepAspectRatio, Qt::SmoothTransformation));
 }
 
 ConnectionLoader::~ConnectionLoader() {    
@@ -137,7 +137,7 @@ void ConnectionLoader::createZcashConf() {
     ui.setupUi(&d);
 
     QPixmap logo(":/img/res/safecoindlogo.gif");
-    ui.lblTopIcon->setBasePixmap(logo.scaled(256, 256, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+    ui.lblTopIcon->setPixmap(logo.scaled(128, 128, Qt::KeepAspectRatio, Qt::SmoothTransformation));
     ui.btnPickDir->setEnabled(false);
 
     ui.grpAdvanced->setVisible(false);

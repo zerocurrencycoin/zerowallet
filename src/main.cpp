@@ -142,7 +142,7 @@ public:
 
     int main(int argc, char *argv[]) {
         QCoreApplication::setAttribute(Qt::AA_UseHighDpiPixmaps);
-        QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
+        // QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling); // disabled to prevent UI appears too large on 4k displays
 
         SingleApplication a(argc, argv, true);
 

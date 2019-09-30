@@ -1399,12 +1399,12 @@ void MainWindow::setupBalancesTab() {
     });
 }
 
-void MainWindow::setupZcashdTab() {    
-    ui->safecoinlogo->setBasePixmap(QPixmap(":/img/res/safecoindlogo.gif"));
+void MainWindow::setupZcashdTab() {
+    ui->safecoinlogo->setPixmap(QPixmap(":/img/res/safecoindlogo.gif").scaled(256, 256, Qt::KeepAspectRatio, Qt::SmoothTransformation));
 }
 
 void MainWindow::SafeNodesTab() {
-    ui->safenodelogo->setBasePixmap(QPixmap(":/img/res/safenode.png"));
+    ui->safenodelogo->setPixmap(QPixmap(":/img/res/safenode.png").scaled(128, 128, Qt::KeepAspectRatio, Qt::SmoothTransformation));
 }
 
 void MainWindow::setupTransactionsTab() {
