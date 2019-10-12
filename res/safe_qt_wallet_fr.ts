@@ -65,7 +65,7 @@
     <message>
         <location filename="../src/mainwindow.ui" line="89"/>
         <source>Transparent</source>
-        <translation>Transparant</translation>
+        <translation>Transparent</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.ui" line="129"/>
@@ -76,7 +76,7 @@
         <location filename="../src/mainwindow.ui" line="170"/>
         <location filename="../src/mainwindow.ui" line="848"/>
         <source>Your node is still syncing, balances may not be updated</source>
-        <translation type="unfinished"></translation>
+        <translation>Votre nœud est en cours de synchronisation, les soldes peuvent ne pas être mis à jour</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.ui" line="189"/>
@@ -158,7 +158,7 @@
     <message>
         <location filename="../src/mainwindow.ui" line="551"/>
         <source>Recurring payment</source>
-        <translation type="unfinished"></translation>
+        <translation>Paiement récurrent</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.ui" line="558"/>
@@ -252,7 +252,7 @@
     <message>
         <location filename="../src/mainwindow.ui" line="740"/>
         <source>View All Addresses</source>
-        <translation type="unfinished"></translation>
+        <translation>Voir toutes les adresses</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.ui" line="891"/>
@@ -347,7 +347,7 @@
     <message>
         <location filename="../src/mainwindow.ui" line="1130"/>
         <source>Check github.com for &amp;updates</source>
-        <translation>Vérifier &amp;github.com pour des mises à jour</translation>
+        <translation>Vérifier les mises à jour sur &amp;github.com</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.ui" line="1135"/>
@@ -403,7 +403,7 @@
     <message>
         <location filename="../src/mainwindow.ui" line="1179"/>
         <source>Pay safecoin &amp;URI...</source>
-        <translation>PAyer une URI safecoin</translation>
+        <translation>Payer une URI safecoin</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.ui" line="1184"/>
@@ -418,7 +418,7 @@
     <message>
         <location filename="../src/mainwindow.ui" line="1192"/>
         <source>&amp;Recurring Payments</source>
-        <translation type="unfinished"></translation>
+        <translation>Paiement récurrent</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.ui" line="1197"/>
@@ -428,7 +428,7 @@
     <message>
         <location filename="../src/mainwindow.ui" line="1202"/>
         <source>File a bug...</source>
-        <translation type="unfinished"></translation>
+        <translation>Signaler un bogue</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.cpp" line="498"/>
@@ -509,17 +509,17 @@
     <message>
         <location filename="../src/mainwindow.cpp" line="277"/>
         <source>Not yet ready</source>
-        <translation type="unfinished"></translation>
+        <translation>Pas encore pret</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.cpp" line="277"/>
         <source>safecoind is not yet ready. Please wait for the UI to load</source>
-        <translation type="unfinished"></translation>
+        <translation>Patientez...</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.cpp" line="605"/>
         <source>SafecoinWallet needs to restart to rescan/reindex. SafecoinWallet will now close, please restart SafecoinWallet to continue</source>
-        <translation type="unfinished"></translation>
+        <translation>SafecoinWallet doit redémarrer. SafecoinWallet va maintenant se fermer, veuillez redémarrer SafecoinWallet pour continuer.</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.cpp" line="607"/>
@@ -729,12 +729,12 @@ Cette adresse ne semble pas être de type adresse-z</translation>
     <message>
         <location filename="../src/sendtab.cpp" line="128"/>
         <source>Cannot support multiple addresses</source>
-        <translation type="unfinished"></translation>
+        <translation>Impossible de prendre en charge plusieurs adresses</translation>
     </message>
     <message>
         <location filename="../src/sendtab.cpp" line="129"/>
         <source>Recurring payments doesn&apos;t currently support multiple addresses</source>
-        <translation type="unfinished"></translation>
+        <translation>Impossible de prendre en charge plusieurs adresses sur les payment récurrent</translation>
     </message>
     <message>
         <location filename="../src/sendtab.cpp" line="548"/>
@@ -796,7 +796,7 @@ Cette adresse ne semble pas être de type adresse-z</translation>
     <message>
         <location filename="../src/memoedit.cpp" line="51"/>
         <source>Reply to</source>
-        <translation type="unfinished">Répondre à</translation>
+        <translation>Répondre à</translation>
     </message>
 </context>
 <context>
@@ -804,12 +804,12 @@ Cette adresse ne semble pas être de type adresse-z</translation>
     <message>
         <location filename="../src/migration.ui" line="14"/>
         <source>Migration Turnstile</source>
-        <translation type="unfinished"></translation>
+        <translation>Turnstile Migration</translation>
     </message>
     <message>
         <location filename="../src/migration.ui" line="30"/>
         <source>Migration History</source>
-        <translation type="unfinished"></translation>
+        <translation>Migration de l&apos;Historique</translation>
     </message>
     <message>
         <location filename="../src/migration.ui" line="36"/>
@@ -971,12 +971,12 @@ Not starting embedded safecoind because --no-embedded was passed</source>
     <message>
         <location filename="../src/connection.cpp" line="146"/>
         <source>Show Advanced Config</source>
-        <translation type="unfinished"></translation>
+        <translation>Afficher la configuration avancée</translation>
     </message>
     <message>
         <location filename="../src/connection.cpp" line="159"/>
         <source>Choose data directory</source>
-        <translation type="unfinished"></translation>
+        <translation>Choisir le répertoire</translation>
     </message>
     <message>
         <location filename="../src/connection.cpp" line="243"/>
@@ -1197,12 +1197,12 @@ Veuillez configurer l&apos;hôte/port et utilisateur/mot de passe dans le menu E
     <message>
         <location filename="../src/addressbook.cpp" line="128"/>
         <source>Address or Label Error</source>
-        <translation type="unfinished"></translation>
+        <translation>Adresse ou erreur l&apos;étiquette</translation>
     </message>
     <message>
         <location filename="../src/addressbook.cpp" line="129"/>
         <source>Address or Label cannot be empty</source>
-        <translation type="unfinished"></translation>
+        <translation>L&apos;adresse ou l&apos;étiquette ne peut pas etre vide</translation>
     </message>
     <message>
         <location filename="../src/addressbook.cpp" line="134"/>
@@ -1221,7 +1221,7 @@ Veuillez configurer l&apos;hôte/port et utilisateur/mot de passe dans le menu E
     <message>
         <location filename="../src/addressbook.cpp" line="143"/>
         <source>Label Error</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Erreur d&apos;étiquette</translation>
     </message>
     <message>
         <location filename="../src/addressbook.cpp" line="144"/>
@@ -1308,7 +1308,7 @@ Vous avez soit des fonds non confirmés soit le solde est trop petit pour une mi
     <message>
         <location filename="../src/websockets.cpp" line="356"/>
         <source>Connected directly</source>
-        <translation type="unfinished"></translation>
+        <translation>Connecté directement</translation>
     </message>
     <message>
         <location filename="../src/websockets.cpp" line="359"/>
@@ -1339,12 +1339,12 @@ Vous avez soit des fonds non confirmés soit le solde est trop petit pour une mi
         <location filename="../src/recurring.cpp" line="575"/>
         <location filename="../src/turnstile.cpp" line="409"/>
         <source>View on block explorer</source>
-        <translation type="unfinished">Voir dans l&apos;explorateur de block</translation>
+        <translation>Voir dans l&apos;explorateur de block</translation>
     </message>
     <message>
         <location filename="../src/recurring.cpp" line="588"/>
         <source>View Error</source>
-        <translation type="unfinished"></translation>
+        <translation>Voir l&apos;erreur</translation>
     </message>
     <message>
         <location filename="../src/recurring.cpp" line="589"/>
