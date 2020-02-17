@@ -575,29 +575,29 @@ void RPC::getInfoThenRefresh(bool force) {
 
         static int lastBlock    = 0;
         int curBlock            = reply["blocks"].get<json::number_integer_t>();
-        int longestchain        = reply["longestchain"].get<json::number_integer_t>();
+        //int longestchain        = reply["longestchain"].get<json::number_integer_t>();
         int version             = reply["version"].get<json::number_integer_t>();
-        int notarized           = reply["notarized"].get<json::number_integer_t>();
-        int p2pport             = reply["p2pport"].get<json::number_integer_t>();
-        int rpcport             = reply["rpcport"].get<json::number_integer_t>();
-        int protocolversion     = reply["protocolversion"].get<json::number_integer_t>();
-        int tls_connections     = reply["tls_connections"].get<json::number_integer_t>();
-        QString safever          = QString::fromStdString( reply["SAFEversion"].get<json::string_t>() );
-        QString ntzhash         = QString::fromStdString( reply["notarizedhash"].get<json::string_t>() );
-        QString ntztxid         = QString::fromStdString( reply["notarizedtxid"].get<json::string_t>() );
+        // int notarized           = reply["notarized"].get<json::number_integer_t>();
+        // int p2pport             = reply["p2pport"].get<json::number_integer_t>();
+        // int rpcport             = reply["rpcport"].get<json::number_integer_t>();
+        // int protocolversion     = reply["protocolversion"].get<json::number_integer_t>();
+        // int tls_connections     = reply["tls_connections"].get<json::number_integer_t>();
+        // QString safever          = QString::fromStdString( reply["SAFEversion"].get<json::string_t>() );
+        // QString ntzhash         = QString::fromStdString( reply["notarizedhash"].get<json::string_t>() );
+        // QString ntztxid         = QString::fromStdString( reply["notarizedtxid"].get<json::string_t>() );
 
         Settings::getInstance()->setZcashdVersion(version);
 
-        ui->notarized->setText(QString::number(notarized));
-        ui->longestchain->setText(QString::number(longestchain));
-        ui->notarizedhashvalue->setText( ntzhash );
-        ui->notarizedtxidvalue->setText( ntztxid );
-        ui->version->setText( QString::number(version) );
-        ui->safeversion->setText( safever );
-        ui->protocolversion->setText( QString::number(protocolversion) );
-        ui->tls_connections->setText( QString::number(tls_connections) );
-        ui->p2pport->setText( QString::number(p2pport) );
-        ui->rpcport->setText( QString::number(rpcport) );
+        // ui->notarized->setText(QString::number(notarized));
+        // ui->longestchain->setText(QString::number(longestchain));
+        // ui->notarizedhashvalue->setText( ntzhash );
+        // ui->notarizedtxidvalue->setText( ntztxid );
+        // ui->version->setText( QString::number(version) );
+        // ui->safeversion->setText( safever );
+        // ui->protocolversion->setText( QString::number(protocolversion) );
+        // ui->tls_connections->setText( QString::number(tls_connections) );
+        // ui->p2pport->setText( QString::number(p2pport) );
+        // ui->rpcport->setText( QString::number(rpcport) );
 
 
         // See if recurring payments needs anything
@@ -640,176 +640,176 @@ void RPC::getInfoThenRefresh(bool force) {
             });
 
         // Get activenodes
-        payload = {
-            {"jsonrpc", "1.0"},
-            {"id", "someid"},
-            {"method", "getactivenodes"}
-        };
-        conn->doRPCIgnoreError(payload, [=] (const json& reply) {
-            double collateral_total;
-            int node_count          = reply["node_count"].get<json::number_integer_t>();
-            int tier_0_count        = reply["tier_0_count"].get<json::number_integer_t>();
-            int tier_1_count        = reply["tier_1_count"].get<json::number_integer_t>();
-            int tier_2_count        = reply["tier_2_count"].get<json::number_integer_t>();
-            int tier_3_count        = reply["tier_3_count"].get<json::number_integer_t>();
-            collateral_total    = reply["collateral_total"].get<json::number_float_t>();
+        // payload = {
+        //     {"jsonrpc", "1.0"},
+        //     {"id", "someid"},
+        //     {"method", "getactivenodes"}
+        // };
+        // conn->doRPCIgnoreError(payload, [=] (const json& reply) {
+        //     double collateral_total;
+        //     int node_count          = reply["node_count"].get<json::number_integer_t>();
+        //     int tier_0_count        = reply["tier_0_count"].get<json::number_integer_t>();
+        //     int tier_1_count        = reply["tier_1_count"].get<json::number_integer_t>();
+        //     int tier_2_count        = reply["tier_2_count"].get<json::number_integer_t>();
+        //     int tier_3_count        = reply["tier_3_count"].get<json::number_integer_t>();
+        //     collateral_total    = reply["collateral_total"].get<json::number_float_t>();
+        //
+        //     ui->node_count->setText(QString::number(node_count));
 
-            ui->node_count->setText(QString::number(node_count));
-			
-		if (!getConnection()->config->addrindex.isEmpty()) {
-			
-            ui->tier_0_count->setText(QString::number(tier_0_count));
-            ui->tier_1_count->setText(QString::number(tier_1_count));
-            ui->tier_2_count->setText(QString::number(tier_2_count));
-            ui->tier_3_count->setText(QString::number(tier_3_count));
-            ui->collateral_total->setToolTip(Settings::getZECDisplayFormat(collateral_total));
-            ui->collateral_total->setText(Settings::getZECDisplayFormat(collateral_total));
-            ui->collateral_total_usd->setToolTip(Settings::getUSDFromZecAmount(collateral_total));
-            ui->collateral_total_usd->setText(Settings::getUSDFromZecAmount(collateral_total));
+		// if (!getConnection()->config->addrindex.isEmpty()) {
+    //
+    //         ui->tier_0_count->setText(QString::number(tier_0_count));
+    //         ui->tier_1_count->setText(QString::number(tier_1_count));
+    //         ui->tier_2_count->setText(QString::number(tier_2_count));
+    //         ui->tier_3_count->setText(QString::number(tier_3_count));
+    //         ui->collateral_total->setToolTip(Settings::getZECDisplayFormat(collateral_total));
+    //         ui->collateral_total->setText(Settings::getZECDisplayFormat(collateral_total));
+    //         ui->collateral_total_usd->setToolTip(Settings::getUSDFromZecAmount(collateral_total));
+    //         ui->collateral_total_usd->setText(Settings::getUSDFromZecAmount(collateral_total));
+    //
+		// } else {
+		// 		ui->tier_0_count->setText("addressindex not enabled");
+		// 		ui->tier_1_count->setText("addressindex not enabled");
+		// 		ui->tier_2_count->setText("addressindex not enabled");
+		// 		ui->tier_3_count->setText("addressindex not enabled");
+		// 		ui->collateral_total->setText("addressindex not enabled");
+		// 		ui->collateral_total_usd->setText("addressindex not enabled");
+		// }
 
-		} else {
-				ui->tier_0_count->setText("addressindex not enabled");
-				ui->tier_1_count->setText("addressindex not enabled");
-				ui->tier_2_count->setText("addressindex not enabled");
-				ui->tier_3_count->setText("addressindex not enabled");
-				ui->collateral_total->setText("addressindex not enabled");
-				ui->collateral_total_usd->setText("addressindex not enabled");
-		}
-
-        });
+        // });
 
 
         // Get nodeinfo
-        payload = {
-            {"jsonrpc", "1.0"},
-            {"id", "someid"},
-            {"method", "getnodeinfo"}
-        };
-        conn->doRPCIgnoreError(payload, [=] (const json& reply) {
-		
-		double balance, collateral;
-		int tier;
-		int last_reg_height;
-		int valid_thru_height;
-		bool is_valid;
-
-	if (!getConnection()->config->safenode.isEmpty()) {
-		if (!getConnection()->config->addrindex.isEmpty()) {
-			try
-			{
-				balance = reply["balance"].get<json::number_float_t>();
-				
-				ui->balance->setToolTip(Settings::getZECDisplayFormat(balance));
-				ui->balance->setText(Settings::getZECDisplayFormat(balance));
-				ui->balance_usd->setToolTip(Settings::getUSDFromZecAmount(balance));
-				ui->balance_usd->setText(Settings::getUSDFromZecAmount(balance));
-			}
-			catch (...)
-			{
-				ui->balance->setText("unknown");
-				ui->balance_usd->setText("unknown");
-			}
-			try
-			{
-				collateral = reply["collateral"].get<json::number_float_t>();
-				
-				ui->collateral->setToolTip(Settings::getZECDisplayFormat(collateral));
-				ui->collateral->setText(Settings::getZECDisplayFormat(collateral));
-				ui->collateral_usd->setToolTip(Settings::getUSDFromZecAmount(collateral));
-				ui->collateral_usd->setText(Settings::getUSDFromZecAmount(collateral));
-			}
-			catch (...)
-			{
-				ui->collateral->setText("unknown");
-				ui->collateral_usd->setText("unknown");
-			}
-		
-			
-			try
-			{
-				tier = reply["tier"].get<json::number_integer_t>();
-				
-				ui->tier->setText(QString::number(tier));
-			}
-			catch (...)
-			{
-				ui->tier->setText("unknown");
-			}
-		} else {
-				ui->balance->setText("addressindex not enabled");
-				ui->balance_usd->setText("addressindex not enabled");
-				ui->collateral->setText("addressindex not enabled");
-				ui->collateral_usd->setText("addressindex not enabled");
-				ui->tier->setText("addressindex not enabled");
-		}
-
-			is_valid = reply["is_valid"].get<json::boolean_t>();
-			
-			std::vector<std::string> vs_errors = reply["errors"].get<std::vector<std::string>>();
-			QString error_line;
-			
-			for (unsigned int i = 0; i < vs_errors.size(); i++)
-			
-			{
-				error_line = error_line + QString(vs_errors.at(i).c_str()) + "\n";
-			}
-			
-			ui->is_valid->setText(is_valid?"YES":"NO");
-			ui->errors->setText(error_line);
-
-
-		if (is_valid == true) {
-			try
-			{
-				last_reg_height = reply["last_reg_height"].get<json::number_integer_t>();
-				
-				ui->last_reg_height->setText(QString::number(last_reg_height));
-			}
-			catch (...)
-			{
-				ui->last_reg_height->setText("unknown");
-			}
-			try
-			{
-				valid_thru_height = reply["valid_thru_height"].get<json::number_integer_t>();
-				
-				ui->valid_thru_height->setText(QString::number(valid_thru_height));
-			}
-			catch (...)
-			{
-				ui->valid_thru_height->setText("unknown");
-			}
-		} else {
-			ui->last_reg_height->setText("not valid");
-			ui->valid_thru_height->setText("not valid");
-		}
-
-		
-			QString parentkey   = QString::fromStdString( reply["parentkey"].get<json::string_t>() );
-			QString safekey     = QString::fromStdString( reply["safekey"].get<json::string_t>() );
-			QString safeheight  = QString::fromStdString( reply["safeheight"].get<json::string_t>() );
-			QString SAFE_address  = QString::fromStdString( reply["SAFE_address"].get<json::string_t>() );
-			
-			ui->parentkey->setText(parentkey);
-			ui->safekey->setText(safekey);
-			ui->safeheight->setText(safeheight);
-			ui->safeaddress->setText(SAFE_address);
-	} else {
-			ui->balance->setText("not configured");
-			ui->balance_usd->setText("not configured");
-			ui->collateral->setText("not configured");
-			ui->collateral_usd->setText("not configured");
-			ui->tier->setText("not configured");
-			ui->is_valid->setText("not configured");
-			ui->errors->setText("not configured");
-			ui->last_reg_height->setText("not configured");
-			ui->valid_thru_height->setText("not configured");
-			ui->parentkey->setText("not configured");
-			ui->safekey->setText("not configured");
-			ui->safeheight->setText("not configured");
-			ui->safeaddress->setText("not configured");
-	}
-        });
+  //       payload = {
+  //           {"jsonrpc", "1.0"},
+  //           {"id", "someid"},
+  //           {"method", "getnodeinfo"}
+  //       };
+  //       conn->doRPCIgnoreError(payload, [=] (const json& reply) {
+  //
+	// 	double balance, collateral;
+	// 	int tier;
+	// 	int last_reg_height;
+	// 	int valid_thru_height;
+	// 	bool is_valid;
+  //
+	// if (!getConnection()->config->safenode.isEmpty()) {
+	// 	if (!getConnection()->config->addrindex.isEmpty()) {
+	// 		try
+	// 		{
+	// 			balance = reply["balance"].get<json::number_float_t>();
+  //
+	// 			ui->balance->setToolTip(Settings::getZECDisplayFormat(balance));
+	// 			ui->balance->setText(Settings::getZECDisplayFormat(balance));
+	// 			ui->balance_usd->setToolTip(Settings::getUSDFromZecAmount(balance));
+	// 			ui->balance_usd->setText(Settings::getUSDFromZecAmount(balance));
+	// 		}
+	// 		catch (...)
+	// 		{
+	// 			ui->balance->setText("unknown");
+	// 			ui->balance_usd->setText("unknown");
+	// 		}
+	// 		try
+	// 		{
+	// 			collateral = reply["collateral"].get<json::number_float_t>();
+  //
+	// 			ui->collateral->setToolTip(Settings::getZECDisplayFormat(collateral));
+	// 			ui->collateral->setText(Settings::getZECDisplayFormat(collateral));
+	// 			ui->collateral_usd->setToolTip(Settings::getUSDFromZecAmount(collateral));
+	// 			ui->collateral_usd->setText(Settings::getUSDFromZecAmount(collateral));
+	// 		}
+	// 		catch (...)
+	// 		{
+	// 			ui->collateral->setText("unknown");
+	// 			ui->collateral_usd->setText("unknown");
+	// 		}
+  //
+  //
+	// 		try
+	// 		{
+	// 			tier = reply["tier"].get<json::number_integer_t>();
+  //
+	// 			ui->tier->setText(QString::number(tier));
+	// 		}
+	// 		catch (...)
+	// 		{
+	// 			ui->tier->setText("unknown");
+	// 		}
+	// 	} else {
+	// 			ui->balance->setText("addressindex not enabled");
+	// 			ui->balance_usd->setText("addressindex not enabled");
+	// 			ui->collateral->setText("addressindex not enabled");
+	// 			ui->collateral_usd->setText("addressindex not enabled");
+	// 			ui->tier->setText("addressindex not enabled");
+	// 	}
+  //
+	// 		is_valid = reply["is_valid"].get<json::boolean_t>();
+  //
+	// 		std::vector<std::string> vs_errors = reply["errors"].get<std::vector<std::string>>();
+	// 		QString error_line;
+  //
+	// 		for (unsigned int i = 0; i < vs_errors.size(); i++)
+  //
+	// 		{
+	// 			error_line = error_line + QString(vs_errors.at(i).c_str()) + "\n";
+	// 		}
+  //
+	// 		ui->is_valid->setText(is_valid?"YES":"NO");
+	// 		ui->errors->setText(error_line);
+  //
+  //
+	// 	if (is_valid == true) {
+	// 		try
+	// 		{
+	// 			last_reg_height = reply["last_reg_height"].get<json::number_integer_t>();
+  //
+	// 			ui->last_reg_height->setText(QString::number(last_reg_height));
+	// 		}
+	// 		catch (...)
+	// 		{
+	// 			ui->last_reg_height->setText("unknown");
+	// 		}
+	// 		try
+	// 		{
+	// 			valid_thru_height = reply["valid_thru_height"].get<json::number_integer_t>();
+  //
+	// 			ui->valid_thru_height->setText(QString::number(valid_thru_height));
+	// 		}
+	// 		catch (...)
+	// 		{
+	// 			ui->valid_thru_height->setText("unknown");
+	// 		}
+	// 	} else {
+	// 		ui->last_reg_height->setText("not valid");
+	// 		ui->valid_thru_height->setText("not valid");
+	// 	}
+  //
+  //
+	// 		QString parentkey   = QString::fromStdString( reply["parentkey"].get<json::string_t>() );
+	// 		QString safekey     = QString::fromStdString( reply["safekey"].get<json::string_t>() );
+	// 		QString safeheight  = QString::fromStdString( reply["safeheight"].get<json::string_t>() );
+	// 		QString SAFE_address  = QString::fromStdString( reply["SAFE_address"].get<json::string_t>() );
+  //
+	// 		ui->parentkey->setText(parentkey);
+	// 		ui->safekey->setText(safekey);
+	// 		ui->safeheight->setText(safeheight);
+	// 		ui->safeaddress->setText(SAFE_address);
+	// } else {
+	// 		ui->balance->setText("not configured");
+	// 		ui->balance_usd->setText("not configured");
+	// 		ui->collateral->setText("not configured");
+	// 		ui->collateral_usd->setText("not configured");
+	// 		ui->tier->setText("not configured");
+	// 		ui->is_valid->setText("not configured");
+	// 		ui->errors->setText("not configured");
+	// 		ui->last_reg_height->setText("not configured");
+	// 		ui->valid_thru_height->setText("not configured");
+	// 		ui->parentkey->setText("not configured");
+	// 		ui->safekey->setText("not configured");
+	// 		ui->safeheight->setText("not configured");
+	// 		ui->safeaddress->setText("not configured");
+	// }
+  //       });
 
 
         // Get network info
