@@ -6,17 +6,17 @@ safecoinwallet desktop wallet for Safecoin ($SAFE) that runs on Linux, Windows a
 
 Head over to the releases page and grab the latest installers or binary. https://github.com/Fair-Exchange/safecoinwallet/releases
 
-## safecoind
-safecoinwallet needs a Safecoin full node running safecoind. If you already have a safecoind node running, safecoinwallet will connect to it. 
+## zerod
+safecoinwallet needs a Safecoin full node running zerod. If you already have a zerod node running, safecoinwallet will connect to it. 
 
-If you don't have one, safecoinwallet will start its embedded safecoind node. 
+If you don't have one, safecoinwallet will start its embedded zerod node. 
 
-Additionally, if this is the first time you're running safecoinwallet or a safecoind daemon, safecoinwallet will download the zcash params (~1.7 GB) and configure `safecoin.conf` for you. 
+Additionally, if this is the first time you're running safecoinwallet or a zerod daemon, safecoinwallet will download the zcash params (~1.7 GB) and configure `zero.conf` for you. 
 
-Pass `--no-embedded` to disable the embedded safecoind and force safecoinwallet to connect to an external node.
+Pass `--no-embedded` to disable the embedded zerod and force safecoinwallet to connect to an external node.
 
 ## Compiling from source
-safecoinwallet is written in C++ 14, and can be compiled with g++/clang++/visual c++. It also depends on Qt5, which you can get from [here](https://www.qt.io/download). Note that if you are compiling from source, you won't get the embedded safecoind by default. You can either run an external safecoind, or compile safecoind as well. 
+safecoinwallet is written in C++ 14, and can be compiled with g++/clang++/visual c++. It also depends on Qt5, which you can get from [here](https://www.qt.io/download). Note that if you are compiling from source, you won't get the embedded zerod by default. You can either run an external zerod, or compile zerod as well. 
 
 
 ### Building on Linux
@@ -25,7 +25,7 @@ safecoinwallet is written in C++ 14, and can be compiled with g++/clang++/visual
 sudo apt-get install qt5-default qt5-qmake libqt5websockets5-dev
 git clone https://github.com/Fair-Exchange/safecoinwallet.git
 cd safecoinwallet
-qmake safe-qt-wallet.pro CONFIG+=debug
+qmake zero-qt-wallet.pro CONFIG+=debug
 make -j$(nproc)
 
 ./safecoinwallet
@@ -38,7 +38,7 @@ From the VS Tools command prompt
 ```
 git clone  https://github.com/Fair-Exchange/safecoinwallet.git
 cd safecoinwallet
-c:\Qt5\bin\qmake.exe safe-qt-wallet.pro -spec win32-msvc CONFIG+=debug
+c:\Qt5\bin\qmake.exe zero-qt-wallet.pro -spec win32-msvc CONFIG+=debug
 nmake
 
 debug\safecoinwallet.exe
@@ -46,7 +46,7 @@ debug\safecoinwallet.exe
 
 To create the Visual Studio project files so you can compile and run from Visual Studio:
 ```
-c:\Qt5\bin\qmake.exe safe-qt-wallet.pro -tp vc CONFIG+=debug
+c:\Qt5\bin\qmake.exe zero-qt-wallet.pro -tp vc CONFIG+=debug
 ```
 
 ### Building on macOS
@@ -55,7 +55,7 @@ You need to install the Xcode app or the Xcode command line tools first, and the
 ```
 git clone https://github.com/Fair-Exchange/safecoinwallet.git
 cd safecoinwallet
-qmake safe-qt-wallet.pro CONFIG+=debug
+qmake zero-qt-wallet.pro CONFIG+=debug
 make
 
 ./safecoinwallet.app/Contents/MacOS/safecoinwallet
@@ -68,8 +68,8 @@ It does not attempt to download them, it bundles them. To simulate this from a d
 these four files in your Git repo:
 
 ```
-    ln -s ../safecoin/src/safecoind
-    ln -s ../safecoin/src/safecoin-cli
+    ln -s ../zero/src/zerod
+    ln -s ../zero/src/zero-cli
 ```
 
 The above assumes safecoinwallet and safecoin git repos are in the same directory. File names on Windows will need to be tweaked.

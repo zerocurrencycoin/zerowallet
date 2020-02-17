@@ -78,11 +78,11 @@ void RPC::setEZcashd(QProcess* p) {
     ezcashd = p;
 
     if ((ezcashd && ui->tabWidget->widget(4) == nullptr) && (ezcashd && ui->tabWidget->widget(5) == nullptr)) {
-		ui->tabWidget->addTab(main->safenodestab, "SafeNodes") && ui->tabWidget->addTab(main->zcashdtab, "safecoind");
+		ui->tabWidget->addTab(main->safenodestab, "SafeNodes") && ui->tabWidget->addTab(main->zcashdtab, "zerod");
     }
 }
 
-// Called when a connection to safecoind is available. 
+// Called when a connection to zerod is available. 
 void RPC::setConnection(Connection* c) {
     if (c == nullptr) return;
 
@@ -91,7 +91,7 @@ void RPC::setConnection(Connection* c) {
 
     ui->statusBar->showMessage("Ready! Thank you for helping secure the Safecoin network by running a full node.");
 
-    // See if we need to remove the reindex/rescan flags from the safecoin.conf file
+    // See if we need to remove the reindex/rescan flags from the zero.conf file
     auto zcashConfLocation = Settings::getInstance()->getZcashdConfLocation();
     Settings::removeFromZcashConf(zcashConfLocation, "rescan");
     Settings::removeFromZcashConf(zcashConfLocation, "reindex");
@@ -538,7 +538,7 @@ void RPC::refreshReceivedZTrans(QList<QString> zaddrs) {
     );
 } 
 
-/// This will refresh all the balance data from safecoind
+/// This will refresh all the balance data from zerod
 void RPC::refresh(bool force) {
     if  (conn == nullptr) 
         return noConnection();
@@ -846,7 +846,7 @@ void RPC::getInfoThenRefresh(bool force) {
             Settings::getInstance()->setSyncing(isSyncing);
             Settings::getInstance()->setBlockNumber(blockNumber);
 
-            // Update safecoind tab if it exists
+            // Update zerod tab if it exists
                 if (isSyncing) {
                     QString txt = QString::number(blockNumber);
                     if (estimatedheight > 0) {
@@ -860,7 +860,7 @@ void RPC::getInfoThenRefresh(bool force) {
                     ui->heightLabel->setText(QObject::tr("Downloading blocks"));
                 } else {
                     // If syncing is finished, we may have to remove the fastsync
-                    // flag from safecoin.conf
+                    // flag from zero.conf
                     if (getConnection() != nullptr && getConnection()->config->fastsync) {
                         getConnection()->config->fastsync = false;
                         Settings::removeFromZcashConf(Settings::getInstance()->getZcashdConfLocation(), 
@@ -888,10 +888,10 @@ void RPC::getInfoThenRefresh(bool force) {
             auto zecPrice = Settings::getInstance()->getUSDFromZecAmount(1);
             QString tooltip;
             if (connections > 0) {
-                tooltip = QObject::tr("Connected to safecoind");
+                tooltip = QObject::tr("Connected to zerod");
             }
             else {
-                tooltip = QObject::tr("safecoind has no peer connections");
+                tooltip = QObject::tr("zerod has no peer connections");
             }
             tooltip = tooltip % "(v " % QString::number(Settings::getInstance()->getZcashdVersion()) % ")";
 
@@ -903,14 +903,14 @@ void RPC::getInfoThenRefresh(bool force) {
         });
 
     }, [=](QNetworkReply* reply, const json&) {
-        // safecoind has probably disappeared.
+        // zerod has probably disappeared.
         this->noConnection();
 
         // Prevent multiple dialog boxes, because these are called async
         static bool shown = false;
         if (!shown && prevCallSucceeded) { // show error only first time
             shown = true;
-            QMessageBox::critical(main, QObject::tr("Connection Error"), QObject::tr("There was an error connecting to safecoind. The error was") + ": \n\n"
+            QMessageBox::critical(main, QObject::tr("Connection Error"), QObject::tr("There was an error connecting to zerod. The error was") + ": \n\n"
                 + reply->errorString(), QMessageBox::StandardButton::Ok);
             shown = false;
         }
@@ -994,7 +994,7 @@ bool RPC::processUnspent(const json& reply, QMap<QString, double>* balancesMap, 
  * Refresh the turnstile migration status
  */
 void RPC::refreshMigration() {
-    // Turnstile migration is only supported in safecoind v2.0.5 and above
+    // Turnstile migration is only supported in zerod v2.0.5 and above
     if (Settings::getInstance()->getZcashdVersion() < 2000552)
         return;
 
@@ -1360,7 +1360,7 @@ void RPC::refreshZECPrice() {
     if  (conn == nullptr)
         return noConnection();
 
-    QUrl cmcURL("https://api.coinmarketcap.com/v1/ticker/safecoin/");
+    QUrl cmcURL("https://api.coinmarketcap.com/v1/ticker/zero/");
 
     QNetworkRequest req;
     req.setUrl(cmcURL);
@@ -1410,9 +1410,9 @@ void RPC::refreshZECPrice() {
 }
 
 void RPC::shutdownZcashd() {
-    // Shutdown embedded safecoind if it was started
+    // Shutdown embedded zerod if it was started
     if (ezcashd == nullptr || ezcashd->processId() == 0 || conn == nullptr) {
-        // No safecoind running internally, just return
+        // No zerod running internally, just return
         return;
     }
 
@@ -1430,7 +1430,7 @@ void RPC::shutdownZcashd() {
     connD.setupUi(&d);
     connD.topIcon->setPixmap(QIcon(":/icons/res/icon.ico").pixmap(128, 128));
     connD.status->setText(QObject::tr("Please wait for SafecoinWallet to exit"));
-    connD.statusDetail->setText(QObject::tr("Waiting for safecoind to exit"));
+    connD.statusDetail->setText(QObject::tr("Waiting for zerod to exit"));
 
     QTimer waiter(main);
 
@@ -1442,7 +1442,7 @@ void RPC::shutdownZcashd() {
 
         if ((ezcashd->atEnd() && ezcashd->processId() == 0) ||
             waitCount > 30 || 
-            conn->config->zcashDaemon)  {   // If safecoind is daemon, then we don't have to do anything else
+            conn->config->zcashDaemon)  {   // If zerod is daemon, then we don't have to do anything else
             qDebug() << "Ended";
             waiter.stop();
             QTimer::singleShot(1000, [&]() { d.accept(); });

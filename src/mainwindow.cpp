@@ -50,7 +50,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
 	    
     ui->setupUi(this);
-    logger = new Logger(this, QDir(QStandardPaths::writableLocation(QStandardPaths::AppDataLocation)).filePath("safe-qt-wallet.log"));
+    logger = new Logger(this, QDir(QStandardPaths::writableLocation(QStandardPaths::AppDataLocation)).filePath("zero-qt-wallet.log"));
 
     // Status Bar
     setupStatusBar();
@@ -144,11 +144,11 @@ MainWindow::MainWindow(QWidget *parent) :
     // Initialize to the balances tab
     ui->tabWidget->setCurrentIndex(0);
 
-    // The safecoind tab is hidden by default, and only later added in if the embedded safecoind is started
+    // The zerod tab is hidden by default, and only later added in if the embedded zerod is started
     zcashdtab = ui->tabWidget->widget(4);
     ui->tabWidget->removeTab(4);
 
-    // The safenodes tab is hidden by default, and only later added in if the embedded safecoind is started
+    // The safenodes tab is hidden by default, and only later added in if the embedded zerod is started
     safenodestab = ui->tabWidget->widget(3);
     ui->tabWidget->removeTab(3);
 
@@ -320,7 +320,7 @@ void MainWindow::turnstileProgress() {
 void MainWindow::turnstileDoMigration(QString fromAddr) {
     // Return if there is no connection
     if (rpc->getAllZAddresses() == nullptr || rpc->getAllBalances() == nullptr) {
-        QMessageBox::information(this, tr("Not yet ready"), tr("safecoind is not yet ready. Please wait for the UI to load"), QMessageBox::Ok);
+        QMessageBox::information(this, tr("Not yet ready"), tr("zerod is not yet ready. Please wait for the UI to load"), QMessageBox::Ok);
         return;
     }
 
@@ -435,7 +435,7 @@ void MainWindow::turnstileDoMigration(QString fromAddr) {
 void MainWindow::setupTurnstileDialog() {        
     // Turnstile migration
     QObject::connect(ui->actionTurnstile_Migration, &QAction::triggered, [=] () {
-        // If the underlying safecoind has support for the migration and there is no existing migration
+        // If the underlying zerod has support for the migration and there is no existing migration
         // in progress, use that.         
         if (rpc->getMigrationStatus()->available && !rpc->getTurnstile()->isMigrationPresent()) {
             Turnstile::showZcashdMigration(this);
@@ -511,7 +511,7 @@ void MainWindow::setupSettingsModal() {
         // Setup clear button
         QObject::connect(settings.btnClearSaved, &QCheckBox::clicked, [=]() {
             if (QMessageBox::warning(this, "Clear saved history?",
-                "Shielded z-Address transactions are stored locally in your wallet, outside safecoind. You may delete this saved information safely any time for your privacy.\nDo you want to delete the saved shielded transactions now?",
+                "Shielded z-Address transactions are stored locally in your wallet, outside zerod. You may delete this saved information safely any time for your privacy.\nDo you want to delete the saved shielded transactions now?",
                 QMessageBox::Yes, QMessageBox::Cancel)) {
                     SentTxStore::deleteHistory();
                     // Reload after the clear button so existing txs disappear
@@ -551,7 +551,7 @@ void MainWindow::setupSettingsModal() {
         if (rpc->getEZcashD() == nullptr) {
             settings.chkTor->setEnabled(false);
             settings.lblTor->setEnabled(false);
-            QString tooltip = tr("Tor configuration is available only when running an embedded safecoind.");
+            QString tooltip = tr("Tor configuration is available only when running an embedded zerod.");
             settings.chkTor->setToolTip(tooltip);
             settings.lblTor->setToolTip(tooltip);
         }
@@ -613,7 +613,7 @@ void MainWindow::setupSettingsModal() {
         QIntValidator validator(0, 65535);
         settings.port->setValidator(&validator);
 
-        // If values are coming from safecoin.conf, then disable all the fields
+        // If values are coming from zero.conf, then disable all the fields
         auto zcashConfLocation = Settings::getInstance()->getZcashdConfLocation();
         if (!zcashConfLocation.isEmpty()) {
             settings.confMsg->setText("Settings are being read from \n" + zcashConfLocation);
@@ -623,7 +623,7 @@ void MainWindow::setupSettingsModal() {
             settings.rpcpassword->setEnabled(false);
         }
         else {
-            settings.confMsg->setText("No local safecoin.conf found. Please configure connection manually.");
+            settings.confMsg->setText("No local zero.conf found. Please configure connection manually.");
             settings.hostname->setEnabled(true);
             settings.port->setEnabled(true);
             settings.rpcuser->setEnabled(true);
@@ -640,13 +640,13 @@ void MainWindow::setupSettingsModal() {
         // Connection tab by default
         settings.tabWidget->setCurrentIndex(0);
 
-        // Enable the troubleshooting options only if using embedded safecoind
+        // Enable the troubleshooting options only if using embedded zerod
         if (!rpc->isEmbedded()) {
             settings.chkRescan->setEnabled(false);
-            settings.chkRescan->setToolTip(tr("You're using an external safecoind. Please restart safecoind with -rescan"));
+            settings.chkRescan->setToolTip(tr("You're using an external zerod. Please restart zerod with -rescan"));
 
             settings.chkReindex->setEnabled(false);
-            settings.chkReindex->setToolTip(tr("You're using an external safecoind. Please restart safecoind with -reindex"));
+            settings.chkReindex->setToolTip(tr("You're using an external zerod. Please restart zerod with -reindex"));
         }
 
         if (settingsDialog.exec() == QDialog::Accepted) {
@@ -1138,7 +1138,7 @@ void MainWindow::importPrivKey() {
     pui.buttonBox->button(QDialogButtonBox::Save)->setVisible(false);
     pui.helpLbl->setText(QString() %
                         tr("Please paste your private keys (z-Addr or t-Addr) here, one per line") % ".\n" %
-                        tr("The keys will be imported into your connected safecoind node"));  
+                        tr("The keys will be imported into your connected zerod node"));  
 
     if (d.exec() == QDialog::Accepted && !pui.privKeyTxt->toPlainText().trimmed().isEmpty()) {
         auto rawkeys = pui.privKeyTxt->toPlainText().trimmed().split("\n");
@@ -1195,7 +1195,7 @@ void MainWindow::exportTransactions() {
 
 /**
  * Backup the wallet.dat file. This is kind of a hack, since it has to read from the filesystem rather than an RPC call
- * This might fail for various reasons - Remote safecoind, non-standard locations, custom params passed to safecoind, many others
+ * This might fail for various reasons - Remote zerod, non-standard locations, custom params passed to zerod, many others
 */
 void MainWindow::backupWalletDat() {
     if (!rpc->getConnection())
@@ -1212,7 +1212,7 @@ void MainWindow::backupWalletDat() {
     QFile wallet(zcashdir.filePath("wallet.dat"));
     if (!wallet.exists()) {
         QMessageBox::critical(this, tr("No wallet.dat"), tr("Couldn't find the wallet.dat on this computer") + "\n" +
-            tr("You need to back it up from the machine safecoind is running on"), QMessageBox::Ok);
+            tr("You need to back it up from the machine zerod is running on"), QMessageBox::Ok);
         return;
     }
     
@@ -1398,11 +1398,11 @@ void MainWindow::setupBalancesTab() {
 }
 
 void MainWindow::setupZcashdTab() {
-    ui->safecoinlogo->setPixmap(QPixmap(":/img/res/safecoindlogo.gif").scaled(256, 256, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+    ui->safecoinlogo->setPixmap(QPixmap(":/img/res/zerodlogo.gif").scaled(256, 256, Qt::KeepAspectRatio, Qt::SmoothTransformation));
 }
 
 void MainWindow::SafeNodesTab() {
-    ui->safenodelogo->setPixmap(QPixmap(":/img/res/safenode.png").scaled(128, 128, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+    ui->safenodelogo->setPixmap(QPixmap(":/img/res/zero.png").scaled(128, 128, Qt::KeepAspectRatio, Qt::SmoothTransformation));
 }
 
 void MainWindow::setupTransactionsTab() {

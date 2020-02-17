@@ -245,8 +245,8 @@
     </message>
     <message>
         <location filename="../src/mainwindow.ui" line="878"/>
-        <source>safecoind</source>
-        <translation>safecoind</translation>
+        <source>zerod</source>
+        <translation>zerod</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.ui" line="908"/>
@@ -406,18 +406,18 @@
     </message>
     <message>
         <location filename="../src/mainwindow.cpp" line="479"/>
-        <source>Tor configuration is available only when running an embedded safecoind.</source>
-        <translation>Die Tor konfiguration ist nur möglich, wenn der integrierte safecoind client läuft.</translation>
+        <source>Tor configuration is available only when running an embedded zerod.</source>
+        <translation>Die Tor konfiguration ist nur möglich, wenn der integrierte zerod client läuft.</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.cpp" line="518"/>
-        <source>You&apos;re using an external safecoind. Please restart safecoind with -rescan</source>
-        <translation>Sie benutzen einen externen safecoind clienten. Bitte starten Sie safecoind mit folgendem Parameter neu: -rescan</translation>
+        <source>You&apos;re using an external zerod. Please restart zerod with -rescan</source>
+        <translation>Sie benutzen einen externen zerod clienten. Bitte starten Sie zerod mit folgendem Parameter neu: -rescan</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.cpp" line="521"/>
-        <source>You&apos;re using an external safecoind. Please restart safecoind with -reindex</source>
-        <translation>Sie benutzen einen externen safecoind clienten. Bitte starten Sie safecoind mit folgendem Parameter neu: -reindex</translation>
+        <source>You&apos;re using an external zerod. Please restart zerod with -reindex</source>
+        <translation>Sie benutzen einen externen zerod clienten. Bitte starten Sie zerod mit folgendem Parameter neu: -reindex</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.cpp" line="540"/>
@@ -512,8 +512,8 @@
     </message>
     <message>
         <location filename="../src/mainwindow.cpp" line="859"/>
-        <source>The keys will be imported into your connected safecoind node</source>
-        <translation>Die Keys werden in das verbundene safecoind Node importiert</translation>
+        <source>The keys will be imported into your connected zerod node</source>
+        <translation>Die Keys werden in das verbundene zerod Node importiert</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.cpp" line="899"/>
@@ -537,8 +537,8 @@
     </message>
     <message>
         <location filename="../src/mainwindow.cpp" line="923"/>
-        <source>You need to back it up from the machine safecoind is running on</source>
-        <translation>Die Sicherung geht nur auf dem System, wo safecoind aktiv läuft</translation>
+        <source>You need to back it up from the machine zerod is running on</source>
+        <translation>Die Sicherung geht nur auf dem System, wo zerod aktiv läuft</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.cpp" line="927"/>
@@ -810,44 +810,44 @@ doesn&apos;t look like a z-address</source>
     </message>
     <message>
         <location filename="../src/connection.cpp" line="52"/>
-        <source>Starting embedded safecoind</source>
-        <translation>Starte integriertes safecoind</translation>
+        <source>Starting embedded zerod</source>
+        <translation>Starte integriertes zerod</translation>
     </message>
     <message>
         <location filename="../src/connection.cpp" line="62"/>
-        <source>safecoind is set to run as daemon</source>
-        <translation>safecoind wird im Hintergund gestartet</translation>
+        <source>zerod is set to run as daemon</source>
+        <translation>zerod wird im Hintergund gestartet</translation>
     </message>
     <message>
         <location filename="../src/connection.cpp" line="62"/>
-        <source>Waiting for safecoind</source>
-        <translation>Warte auf safecoind</translation>
+        <source>Waiting for zerod</source>
+        <translation>Warte auf zerod</translation>
     </message>
     <message>
         <location filename="../src/connection.cpp" line="77"/>
-        <source>You have safecoind set to start as a daemon, which can cause problems with SafecoinWallet
+        <source>You have zerod set to start as a daemon, which can cause problems with SafecoinWallet
 
-.Please remove the following line from your safecoin.conf and restart SafecoinWallet
+.Please remove the following line from your zero.conf and restart SafecoinWallet
 daemon=1</source>
-        <translation>Sie haben safecoind im Hintergrund gestartet, was zu Problemen führen kann. Bitte löschen Sie folgende Zeile aus Ihrer Safecoin3.conf: daemon=1</translation>
+        <translation>Sie haben zerod im Hintergrund gestartet, was zu Problemen führen kann. Bitte löschen Sie folgende Zeile aus Ihrer Safecoin3.conf: daemon=1</translation>
     </message>
     <message>
         <location filename="../src/connection.cpp" line="82"/>
-        <source>Couldn&apos;t start the embedded safecoind.
+        <source>Couldn&apos;t start the embedded zerod.
 
 Please try restarting.
 
-If you previously started safecoind with custom arguments, you might need to reset safecoin.conf.
+If you previously started zerod with custom arguments, you might need to reset zero.conf.
 
-If all else fails, please run safecoind manually.</source>
-        <translation>Ich konnte den intergrierten safecoind nicht starten. Wenn Sie safecoind mit anderen Argumenten gestartet haben, müssen Sie die Safecoin3.conf resetten. Wenn dies nicht funktioniert, starten Sie safecoind manuell</translation>
+If all else fails, please run zerod manually.</source>
+        <translation>Ich konnte den intergrierten zerod nicht starten. Wenn Sie zerod mit anderen Argumenten gestartet haben, müssen Sie die Safecoin3.conf resetten. Wenn dies nicht funktioniert, starten Sie zerod manuell</translation>
     </message>
     <message>
         <location filename="../src/connection.cpp" line="93"/>
-        <source>Couldn&apos;t connect to safecoind configured in safecoin.conf.
+        <source>Couldn&apos;t connect to zerod configured in zero.conf.
 
-Not starting embedded safecoind because --no-embedded was passed</source>
-        <translation>Starte den internen safecoind Node nicht --no-embedded wurde eingestellt.</translation>
+Not starting embedded zerod because --no-embedded was passed</source>
+        <translation>Starte den internen zerod Node nicht --no-embedded wurde eingestellt.</translation>
     </message>
     <message>
         <location filename="../src/connection.cpp" line="146"/>
@@ -927,17 +927,17 @@ Not starting embedded safecoind because --no-embedded was passed</source>
     </message>
     <message>
         <location filename="../src/rpc.cpp" line="645"/>
-        <source>Connected to safecoind</source>
+        <source>Connected to zerod</source>
         <translation>Verbunden zu Safecoind</translation>
     </message>
     <message>
         <location filename="../src/rpc.cpp" line="648"/>
-        <source>safecoind has no peer connections</source>
+        <source>zerod has no peer connections</source>
         <translation>Safecoind hat keine Verbindung zu anderen Teilnehmern</translation>
     </message>
     <message>
         <location filename="../src/rpc.cpp" line="667"/>
-        <source>There was an error connecting to safecoind. The error was</source>
+        <source>There was an error connecting to zerod. The error was</source>
         <translation>Es gab einen Fehler bei dem versuch Safecoind zu verbinden. Der Fehler war</translation>
     </message>
     <message>
@@ -1002,7 +1002,7 @@ Would you like to visit the releases page?</source>
     </message>
     <message>
         <location filename="../src/rpc.cpp" line="1111"/>
-        <source>Waiting for safecoind to exit</source>
+        <source>Waiting for zerod to exit</source>
         <translation>Bitte warten Sie, bis Safecoind beendet ist</translation>
     </message>
     <message>
@@ -1012,7 +1012,7 @@ Would you like to visit the releases page?</source>
     </message>
     <message>
         <location filename="../src/connection.cpp" line="319"/>
-        <source>safecoind error</source>
+        <source>zerod error</source>
         <translation>Safecoind fehler</translation>
     </message>
     <message>
@@ -1024,19 +1024,19 @@ Please set the host/port and user/password in the Edit-&gt;Settings menu.</sourc
     </message>
     <message>
         <location filename="../src/connection.cpp" line="398"/>
-        <source>Could not connect to safecoind configured in settings.
+        <source>Could not connect to zerod configured in settings.
 
 Please set the host/port and user/password in the Edit-&gt;Settings menu.</source>
-        <translation>Konnte keine Verbindung zum konfigurierten safecoind aufbauen. Bitte tragen Sie den Host/Port und Benutzer/Passwort im Einstellungsmenü ein.</translation>
+        <translation>Konnte keine Verbindung zum konfigurierten zerod aufbauen. Bitte tragen Sie den Host/Port und Benutzer/Passwort im Einstellungsmenü ein.</translation>
     </message>
     <message>
         <location filename="../src/connection.cpp" line="459"/>
-        <source>Authentication failed. The username / password you specified was not accepted by safecoind. Try changing it in the Edit-&gt;Settings menu</source>
+        <source>Authentication failed. The username / password you specified was not accepted by zerod. Try changing it in the Edit-&gt;Settings menu</source>
         <translation>Authentifizierung fehlgeschlagen. Der Benutzername / Passwort wurde nicht akzeptiert. Versuche Sie die Daten im Einstellunsgmenü zu ändern.</translation>
     </message>
     <message>
         <location filename="../src/connection.cpp" line="474"/>
-        <source>Your safecoind is starting up. Please wait.</source>
+        <source>Your zerod is starting up. Please wait.</source>
         <translation>Safecoind startet. Bitte warten</translation>
     </message>
     <message>
@@ -1306,7 +1306,7 @@ You either have unconfirmed funds or the balance is too low for an automatic mig
     </message>
     <message>
         <location filename="../src/settings.ui" line="33"/>
-        <source>safecoind connection</source>
+        <source>zerod connection</source>
         <translation>Safecoind Verbindungen</translation>
     </message>
     <message>
@@ -1542,7 +1542,7 @@ You either have unconfirmed funds or the balance is too low for an automatic mig
     </message>
     <message>
         <location filename="../src/confirm.ui" line="155"/>
-        <source>safecoind doesn&apos;t seem to have any peers. You might not be connected to the internet, so this Transaction might not work.</source>
+        <source>zerod doesn&apos;t seem to have any peers. You might not be connected to the internet, so this Transaction might not work.</source>
         <translation>Safecoind hat keine Verbindung zu anderen Teilnehmern. Sie haben evtl. keine Verbindung zum Internet, sodass die Transaktion nicht funktioniert.</translation>
     </message>
     <message>
@@ -1700,39 +1700,39 @@ You either have unconfirmed funds or the balance is too low for an automatic mig
         <translation>Veröffentliche im Forum</translation>
     </message>
     <message>
-        <source>safecoind is set to run as daemon</source>
-        <translation>safecoind wird im Hintergund gestartet</translation>
+        <source>zerod is set to run as daemon</source>
+        <translation>zerod wird im Hintergund gestartet</translation>
     </message>
     <message>
         <location filename="../src/connection.cpp" line="62"/>
-        <source>Waiting for safecoind</source>
-        <translation>Warte auf safecoind</translation>
+        <source>Waiting for zerod</source>
+        <translation>Warte auf zerod</translation>
     </message>
     <message>
         <location filename="../src/connection.cpp" line="77"/>
-        <source>You have safecoind set to start as a daemon, which can cause problems with SafecoinWallet
+        <source>You have zerod set to start as a daemon, which can cause problems with SafecoinWallet
 
-.Please remove the following line from your safecoin.conf and restart SafecoinWallet
+.Please remove the following line from your zero.conf and restart SafecoinWallet
 daemon=1</source>
-        <translation>Sie haben safecoind im Hintergrund gestartet, was zu Problemen führen kann. Bitte löschen Sie folgende Zeile aus Ihrer Safecoin3.conf: daemon=1</translation>
+        <translation>Sie haben zerod im Hintergrund gestartet, was zu Problemen führen kann. Bitte löschen Sie folgende Zeile aus Ihrer Safecoin3.conf: daemon=1</translation>
     </message>
     <message>
         <location filename="../src/connection.cpp" line="82"/>
-        <source>Couldn&apos;t start the embedded safecoind.
+        <source>Couldn&apos;t start the embedded zerod.
 
 Please try restarting.
 
-If you previously started safecoind with custom arguments, you might need to reset safecoin.conf.
+If you previously started zerod with custom arguments, you might need to reset zero.conf.
 
-If all else fails, please run safecoind manually.</source>
-        <translation>Ich konnte den intergrierten safecoind nicht starten. Wenn Sie safecoind mit anderen Argumenten gestartet haben, müssen Sie die Safecoin3.conf resetten. Wenn dies nicht funktioniert, starten Sie safecoind manuell</translation>
+If all else fails, please run zerod manually.</source>
+        <translation>Ich konnte den intergrierten zerod nicht starten. Wenn Sie zerod mit anderen Argumenten gestartet haben, müssen Sie die Safecoin3.conf resetten. Wenn dies nicht funktioniert, starten Sie zerod manuell</translation>
     </message>
     <message>
         <location filename="../src/connection.cpp" line="93"/>
-        <source>Couldn&apos;t connect to safecoind configured in safecoin.conf.
+        <source>Couldn&apos;t connect to zerod configured in zero.conf.
 
-Not starting embedded safecoind because --no-embedded was passed</source>
-        <translation>Starte den internen safecoind Node nicht --no-embedded wurde eingestellt.</translation>
+Not starting embedded zerod because --no-embedded was passed</source>
+        <translation>Starte den internen zerod Node nicht --no-embedded wurde eingestellt.</translation>
     </message>
     <message>
         <location filename="../src/connection.cpp" line="146"/>
@@ -1812,17 +1812,17 @@ Not starting embedded safecoind because --no-embedded was passed</source>
     </message>
     <message>
         <location filename="../src/rpc.cpp" line="645"/>
-        <source>Connected to safecoind</source>
+        <source>Connected to zerod</source>
         <translation>Verbunden zu Safecoind</translation>
     </message>
     <message>
         <location filename="../src/rpc.cpp" line="648"/>
-        <source>safecoind has no peer connections</source>
+        <source>zerod has no peer connections</source>
         <translation>Safecoind hat keine Verbindung zu anderen Teilnehmern</translation>
     </message>
     <message>
         <location filename="../src/rpc.cpp" line="667"/>
-        <source>There was an error connecting to safecoind. The error was</source>
+        <source>There was an error connecting to zerod. The error was</source>
         <translation>Es gab einen Fehler bei dem versuch Safecoind zu verbinden. Der Fehler war</translation>
     </message>
     <message>
@@ -1887,7 +1887,7 @@ Would you like to visit the releases page?</source>
     </message>
     <message>
         <location filename="../src/rpc.cpp" line="1111"/>
-        <source>Waiting for safecoind to exit</source>
+        <source>Waiting for zerod to exit</source>
         <translation>Bitte warten Sie, bis Safecoind beendet ist</translation>
     </message>
     <message>
@@ -1897,7 +1897,7 @@ Would you like to visit the releases page?</source>
     </message>
     <message>
         <location filename="../src/connection.cpp" line="319"/>
-        <source>safecoind error</source>
+        <source>zerod error</source>
         <translation>Safecoind fehler</translation>
     </message>
     <message>
@@ -1909,19 +1909,19 @@ Please set the host/port and user/password in the Edit-&gt;Settings menu.</sourc
     </message>
     <message>
         <location filename="../src/connection.cpp" line="398"/>
-        <source>Could not connect to safecoind configured in settings.
+        <source>Could not connect to zerod configured in settings.
 
 Please set the host/port and user/password in the Edit-&gt;Settings menu.</source>
-        <translation>Konnte keine Verbindung zum konfigurierten safecoind aufbauen. Bitte tragen Sie den Host/Port und Benutzer/Passwort im Einstellungsmenü ein.</translation>
+        <translation>Konnte keine Verbindung zum konfigurierten zerod aufbauen. Bitte tragen Sie den Host/Port und Benutzer/Passwort im Einstellungsmenü ein.</translation>
     </message>
     <message>
         <location filename="../src/connection.cpp" line="459"/>
-        <source>Authentication failed. The username / password you specified was not accepted by safecoind. Try changing it in the Edit-&gt;Settings menu</source>
+        <source>Authentication failed. The username / password you specified was not accepted by zerod. Try changing it in the Edit-&gt;Settings menu</source>
         <translation>Authentifizierung fehlgeschlagen. Der Benutzername / Passwort wurde nicht akzeptiert. Versuche Sie die Daten im Einstellunsgmenü zu ändern.</translation>
     </message>
     <message>
         <location filename="../src/connection.cpp" line="474"/>
-        <source>Your safecoind is starting up. Please wait.</source>
+        <source>Your zerod is starting up. Please wait.</source>
         <translation>Safecoind startet. Bitte warten</translation>
     </message>
     <message>

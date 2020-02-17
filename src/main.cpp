@@ -155,8 +155,8 @@ public:
         QCommandLineOption headlessOption(QStringList() << "headless", "Running it via GUI.");
         parser.addOption(headlessOption);
 
-        // No embedded will disable the embedded safecoind node
-        QCommandLineOption noembeddedOption(QStringList() << "no-embedded", "Disable embedded safecoind");
+        // No embedded will disable the embedded zerod node
+        QCommandLineOption noembeddedOption(QStringList() << "no-embedded", "Disable embedded zerod");
         parser.addOption(noembeddedOption);
 
         // Add an option to specify the conf file
@@ -178,15 +178,15 @@ public:
             return 0;            
         } 
 
-        QCoreApplication::setOrganizationName("safe-qt-wallet-org");
-        QCoreApplication::setApplicationName("safe-qt-wallet");
+        QCoreApplication::setOrganizationName("zero-qt-wallet-org");
+        QCoreApplication::setApplicationName("zero-qt-wallet");
 
         QString locale = QLocale::system().name();
         locale.truncate(locale.lastIndexOf('_'));   // Get the language code
         qDebug() << "Loading locale " << locale;
         
         QTranslator translator;
-        translator.load(QString(":/translations/res/safe_qt_wallet_") + locale);
+        translator.load(QString(":/translations/res/zero_qt_wallet_") + locale);
         a.installTranslator(&translator);
 
         QIcon icon(":/icons/res/icon.ico");

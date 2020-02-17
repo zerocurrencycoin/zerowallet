@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
-	<Product Id="*" Name="SafecoinWallet vRELEASE_VERSION" Language="1033" Version="RELEASE_VERSION" Manufacturer="safe-qt-wallet-org" UpgradeCode="fb9bf166-b55f-46b5-a990-9189bdf64533">
+	<Product Id="*" Name="SafecoinWallet vRELEASE_VERSION" Language="1033" Version="RELEASE_VERSION" Manufacturer="zero-qt-wallet-org" UpgradeCode="fb9bf166-b55f-46b5-a990-9189bdf64533">
 		<Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine" />
 
 		<MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed." />
@@ -9,7 +9,7 @@
         <Icon Id="safecoinwalleticon.exe" SourceFile="res/icon.ico"/>
         <Property Id="ARPPRODUCTICON" Value="safecoinwalleticon.exe" />
 
-		<Feature Id="ProductFeature" Title="safe-qt-wallet" Level="1">
+		<Feature Id="ProductFeature" Title="zero-qt-wallet" Level="1">
 			<ComponentGroupRef Id="ProductComponents" /> 
             <ComponentRef Id="ProgramMenuDir"/>
 		</Feature>
@@ -37,13 +37,13 @@
 	<Fragment>
 		<Directory Id="TARGETDIR" Name="SourceDir">
 			<Directory Id="ProgramFilesFolder">
-				<Directory Id="INSTALLFOLDER" Name="safe-qt-wallet" />
+				<Directory Id="INSTALLFOLDER" Name="zero-qt-wallet" />
 			</Directory>
             <Directory Id="ProgramMenuFolder" Name="Programs">
-                <Directory Id="ApplicationProgramsFolder" Name="safe-qt-wallet">
+                <Directory Id="ApplicationProgramsFolder" Name="zero-qt-wallet">
                     <Component Id="ProgramMenuDir" Guid="0D560F5A-53E0-4E7E-ADDA-15A26995505E">
                         <RemoveFolder Id="ProgramMenuDir" On="uninstall"/>
-                        <RegistryValue Root="HKCU" Key="Software\[Manufacturer]\safe-qt-wallet\WixSetup"
+                        <RegistryValue Root="HKCU" Key="Software\[Manufacturer]\zero-qt-wallet\WixSetup"
                                        Type="integer" Value="1" Name="installed" KeyPath="yes" />
                     </Component>
                 </Directory>
@@ -61,8 +61,8 @@
                     </Shortcut>
                 </File>
                 <File Source="LICENSE" />
-                <File Source="safecoind.exe" />
-                <File Source="safecoin-cli.exe" />
+                <File Source="zerod.exe" />
+                <File Source="zero-cli.exe" />
                 <File Source="README.md" />
 
                 <RegistryKey Root="HKCR" Key="safecoin">

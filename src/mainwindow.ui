@@ -1758,7 +1758,7 @@
       </widget>
       <widget class="QWidget" name="tab_6">
        <attribute name="title">
-        <string>safecoind</string>
+        <string>zerod</string>
        </attribute>
        <layout class="QVBoxLayout" name="verticalLayout_7">
         <item>

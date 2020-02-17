@@ -1,4 +1,4 @@
-Package: safe-qt-wallet
+Package: zero-qt-wallet
 Version: RELEASE_VERSION
 Section: base
 Priority: optional

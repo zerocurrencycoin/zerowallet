@@ -36,7 +36,7 @@ if [ -z $QT_PATH ]; then
 fi
 
 if [ -z $ZCASH_DIR ]; then
-    echo "ZCASH_DIR is not set. Please set it to the base directory of a compiled safecoind";
+    echo "ZCASH_DIR is not set. Please set it to the base directory of a compiled zerod";
     exit 1;
 fi
 
@@ -45,8 +45,8 @@ if [ -z $APP_VERSION ]; then
     exit 1;
 fi
 
-if [ ! -f $ZCASH_DIR/src/safecoind ]; then
-    echo "Could not find compiled safecoind in $ZCASH_DIR/src/.";
+if [ ! -f $ZCASH_DIR/src/zerod ]; then
+    echo "Could not find compiled zerod in $ZCASH_DIR/src/.";
     exit 1;
 fi
 
@@ -68,7 +68,7 @@ echo -n "Configuring............"
 # Build
 #TODO
 #QT_STATIC=$QT_PATH src/scripts/dotranslations.sh >/dev/null
-$QT_PATH/bin/qmake safe-qt-wallet.pro CONFIG+=release >/dev/null
+$QT_PATH/bin/qmake zero-qt-wallet.pro CONFIG+=release >/dev/null
 echo "[OK]"
 
 
@@ -81,8 +81,8 @@ echo -n "Deploying.............."
 mkdir artifacts >/dev/null 2>&1
 rm -f artifcats/safecoinwallet.dmg >/dev/null 2>&1
 rm -f artifacts/rw* >/dev/null 2>&1
-cp $ZCASH_DIR/src/safecoind safecoinwallet.app/Contents/MacOS/
-cp $ZCASH_DIR/src/safecoin-cli safecoinwallet.app/Contents/MacOS/
+cp $ZCASH_DIR/src/zerod safecoinwallet.app/Contents/MacOS/
+cp $ZCASH_DIR/src/zero-cli safecoinwallet.app/Contents/MacOS/
 $QT_PATH/bin/macdeployqt safecoinwallet.app 
 echo "[OK]"
 

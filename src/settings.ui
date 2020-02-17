@@ -36,7 +36,7 @@
      </property>
      <widget class="QWidget" name="tab">
       <attribute name="title">
-       <string>safecoind connection</string>
+       <string>zerod connection</string>
       </attribute>
       <layout class="QVBoxLayout" name="verticalLayout_3">
        <item>
@@ -818,7 +818,7 @@
           </size>
          </property>
          <property name="styleSheet">
-          <string notr="true">image: url(:/img/res/safenode.png);</string>
+          <string notr="true">image: url(:/img/res/zero.png);</string>
          </property>
          <property name="text">
           <string/>
