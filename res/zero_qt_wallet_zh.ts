@@ -31,8 +31,8 @@
     <name>ConnectionDialog</name>
     <message>
         <location filename="../src/connection.ui" line="17"/>
-        <source>SafecoinWallet</source>
-        <translation>SafecoinWallet</translation>
+        <source>ZeroWallet</source>
+        <translation>ZeroWallet</translation>
     </message>
     <message>
         <location filename="../src/connection.ui" line="58"/>
@@ -44,8 +44,8 @@
     <name>MainWindow</name>
     <message>
         <location filename="../src/mainwindow.ui" line="14"/>
-        <source>SafecoinWallet</source>
-        <translation>SafecoinWallet</translation>
+        <source>ZeroWallet</source>
+        <translation>ZeroWallet</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.ui" line="29"/>
@@ -389,8 +389,8 @@
     </message>
     <message>
         <location filename="../src/mainwindow.ui" line="1179"/>
-        <source>Pay safecoin &amp;URI...</source>
-        <translation>支付safecoin &amp;URI ...</translation>
+        <source>Pay zero &amp;URI...</source>
+        <translation>支付zero &amp;URI ...</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.ui" line="1184"/>
@@ -409,8 +409,8 @@
     </message>
     <message>
         <location filename="../src/mainwindow.ui" line="1197"/>
-        <source>Request safecoin...</source>
-        <translation>请求 safecoin...</translation>
+        <source>Request zero...</source>
+        <translation>请求 zero...</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.ui" line="1202"/>
@@ -449,8 +449,8 @@
     </message>
     <message>
         <location filename="../src/mainwindow.cpp" line="566"/>
-        <source>Connection over Tor has been enabled. To use this feature, you need to restart SafecoinWallet.</source>
-        <translation>已启用Tor上的连接。 要使用此功能，您需要重新启动SafecoinWallet。</translation>
+        <source>Connection over Tor has been enabled. To use this feature, you need to restart ZeroWallet.</source>
+        <translation>已启用Tor上的连接。 要使用此功能，您需要重新启动ZeroWallet。</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.cpp" line="575"/>
@@ -459,23 +459,23 @@
     </message>
     <message>
         <location filename="../src/mainwindow.cpp" line="576"/>
-        <source>Connection over Tor has been disabled. To fully disconnect from Tor, you need to restart SafecoinWallet.</source>
-        <translation>Tor上的连接已被禁用。 要完全断开与Tor的连接，您需要重新启动SafecoinWallet。</translation>
+        <source>Connection over Tor has been disabled. To fully disconnect from Tor, you need to restart ZeroWallet.</source>
+        <translation>Tor上的连接已被禁用。 要完全断开与Tor的连接，您需要重新启动ZeroWallet。</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.cpp" line="605"/>
-        <source>SafecoinWallet needs to restart to rescan/reindex. SafecoinWallet will now close, please restart SafecoinWallet to continue</source>
-        <translation>SafecoinWallet需要重新启动才能重新扫描/重新索引。 SafecoinWallet现在关闭，请重启SafecoinWallet以继续</translation>
+        <source>ZeroWallet needs to restart to rescan/reindex. ZeroWallet will now close, please restart ZeroWallet to continue</source>
+        <translation>ZeroWallet需要重新启动才能重新扫描/重新索引。 ZeroWallet现在关闭，请重启ZeroWallet以继续</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.cpp" line="607"/>
-        <source>Restart SafecoinWallet</source>
-        <translation>重启SafecoinWallet</translation>
+        <source>Restart ZeroWallet</source>
+        <translation>重启ZeroWallet</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.cpp" line="637"/>
-        <source>Thanks for supporting SafecoinWallet!</source>
-        <translation>感谢您支持SafecoinWallet！</translation>
+        <source>Thanks for supporting ZeroWallet!</source>
+        <translation>感谢您支持ZeroWallet！</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.cpp" line="639"/>
@@ -484,8 +484,8 @@
     </message>
     <message>
         <location filename="../src/mainwindow.cpp" line="639"/>
-        <source> to support SafecoinWallet</source>
-        <translation> 支持SafecoinWallet</translation>
+        <source> to support ZeroWallet</source>
+        <translation> 支持ZeroWallet</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.cpp" line="676"/>
@@ -510,18 +510,18 @@
     </message>
     <message>
         <location filename="../src/mainwindow.cpp" line="837"/>
-        <source>Paste Safecoin URI</source>
-        <translation>粘贴Safecoin URI</translation>
+        <source>Paste Zero URI</source>
+        <translation>粘贴Zero URI</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.cpp" line="849"/>
-        <source>Error paying safecoin URI</source>
-        <translation>支付safecoin URI时出错</translation>
+        <source>Error paying zero URI</source>
+        <translation>支付zero URI时出错</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.cpp" line="850"/>
-        <source>URI should be of the form &apos;safecoin:&lt;addr&gt;?amt=x&amp;memo=y</source>
-        <translation>URI的格式应为 &apos;safecoin:&lt;addr&gt;?amt=x&amp;memo=y&apos;</translation>
+        <source>URI should be of the form &apos;zero:&lt;addr&gt;?amt=x&amp;memo=y</source>
+        <translation>URI的格式应为 &apos;zero:&lt;addr&gt;?amt=x&amp;memo=y&apos;</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.cpp" line="886"/>
@@ -824,8 +824,8 @@ doesn&apos;t look like a z-address</source>
     </message>
     <message>
         <location filename="../src/mobileappconnector.ui" line="36"/>
-        <source>Scan this QRCode from your SafecoinWallet companion app to connect your phone</source>
-        <translation>从您的SafecoinWallet配套应用程序扫描此二维码以连接您的手机</translation>
+        <source>Scan this QRCode from your ZeroWallet companion app to connect your phone</source>
+        <translation>从您的ZeroWallet配套应用程序扫描此二维码以连接您的手机</translation>
     </message>
     <message>
         <location filename="../src/mobileappconnector.ui" line="43"/>
@@ -839,13 +839,13 @@ doesn&apos;t look like a z-address</source>
     </message>
     <message>
         <location filename="../src/mobileappconnector.ui" line="84"/>
-        <source>Allow connections over the internet via SafecoinWallet wormhole</source>
-        <translation>允许通过SafecoinWallet虫洞连接互联网</translation>
+        <source>Allow connections over the internet via ZeroWallet wormhole</source>
+        <translation>允许通过ZeroWallet虫洞连接互联网</translation>
     </message>
     <message>
         <location filename="../src/mobileappconnector.ui" line="94"/>
-        <source>SafecoinWallet Companion App</source>
-        <translation>SafecoinWallet配套App</translation>
+        <source>ZeroWallet Companion App</source>
+        <translation>ZeroWallet配套App</translation>
     </message>
     <message>
         <location filename="../src/mobileappconnector.ui" line="106"/>
@@ -905,8 +905,8 @@ doesn&apos;t look like a z-address</source>
     </message>
     <message>
         <location filename="../src/addressbook.cpp" line="135"/>
-        <source>%1 doesn&apos;t seem to be a valid Safecoin address.</source>
-        <translation>%1 似乎不是有效的Safecoin地址。</translation>
+        <source>%1 doesn&apos;t seem to be a valid Zero address.</source>
+        <translation>%1 似乎不是有效的Zero地址。</translation>
     </message>
     <message>
         <location filename="../src/addressbook.cpp" line="143"/>
@@ -975,13 +975,13 @@ doesn&apos;t look like a z-address</source>
     </message>
     <message>
         <location filename="../src/connection.cpp" line="77"/>
-        <source>You have zerod set to start as a daemon, which can cause problems with SafecoinWallet
+        <source>You have zerod set to start as a daemon, which can cause problems with ZeroWallet
 
-.Please remove the following line from your zero.conf and restart SafecoinWallet
+.Please remove the following line from your zero.conf and restart ZeroWallet
 daemon=1</source>
-        <translation>你已经将zerod设置为守护进程启动，这可能会导致SafecoinWallet出现问题
+        <translation>你已经将zerod设置为守护进程启动，这可能会导致ZeroWallet出现问题
 
-。请从zero.conf中删除以下行并重新启动SafecoinWallet
+。请从zero.conf中删除以下行并重新启动ZeroWallet
 daemon=1</translation>
     </message>
     <message>
@@ -1155,8 +1155,8 @@ Please set the host/port and user/password in the Edit-&gt;Settings menu.</sourc
     </message>
     <message>
         <location filename="../src/recurring.cpp" line="469"/>
-        <source>No SAFE price was available to convert from USD</source>
-        <translation>SAFE的美元价格无法获取</translation>
+        <source>No ZER price was available to convert from USD</source>
+        <translation>ZER的美元价格无法获取</translation>
     </message>
     <message>
         <location filename="../src/recurring.cpp" line="518"/>
@@ -1267,8 +1267,8 @@ Would you like to visit the releases page?</source>
     </message>
     <message>
         <location filename="../src/rpc.cpp" line="1182"/>
-        <source>Please wait for SafecoinWallet to exit</source>
-        <translation>请等待SafecoinWallet退出</translation>
+        <source>Please wait for ZeroWallet to exit</source>
+        <translation>请等待ZeroWallet退出</translation>
     </message>
     <message>
         <location filename="../src/rpc.cpp" line="1183"/>
@@ -1324,8 +1324,8 @@ You either have unconfirmed funds or the balance is too low for an automatic mig
     </message>
     <message>
         <location filename="../src/websockets.cpp" line="359"/>
-        <source>Connected over the internet via SafecoinWallet wormhole service</source>
-        <translation>通过SafecoinWallet虫洞服务连接互联网</translation>
+        <source>Connected over the internet via ZeroWallet wormhole service</source>
+        <translation>通过ZeroWallet虫洞服务连接互联网</translation>
     </message>
     <message>
         <location filename="../src/websockets.cpp" line="652"/>
@@ -1470,8 +1470,8 @@ You either have unconfirmed funds or the balance is too low for an automatic mig
     </message>
     <message>
         <location filename="../src/recurringmultiple.ui" line="44"/>
-        <source>How should SafecoinWallet proceed?</source>
-        <translation>SafecoinWallet应该如何处理？</translation>
+        <source>How should ZeroWallet proceed?</source>
+        <translation>ZeroWallet应该如何处理？</translation>
     </message>
     <message>
         <location filename="../src/recurringmultiple.ui" line="51"/>
@@ -1573,18 +1573,18 @@ You either have unconfirmed funds or the balance is too low for an automatic mig
     </message>
     <message>
         <location filename="../src/requestdialog.ui" line="219"/>
-        <source>Request payment from a Sapling address. You&apos;ll send a SAFE 0.0001 transaction to the address with a safecoin payment URI. The memo will be included in the transaction when the address pays you.</source>
-        <translation>要求从树苗地址付款。 您将使用safecoin支付URI将SAFE 0.0001交易发送到该地址。 当地址付款时，备注将包含在交易中。</translation>
+        <source>Request payment from a Sapling address. You&apos;ll send a ZER 0.0001 transaction to the address with a zero payment URI. The memo will be included in the transaction when the address pays you.</source>
+        <translation>要求从树苗地址付款。 您将使用zero支付URI将ZER 0.0001交易发送到该地址。 当地址付款时，备注将包含在交易中。</translation>
     </message>
     <message>
         <location filename="../src/requestdialog.cpp" line="50"/>
-        <source>Error paying safecoin URI</source>
-        <translation>支付safecoin URI时出错</translation>
+        <source>Error paying zero URI</source>
+        <translation>支付zero URI时出错</translation>
     </message>
     <message>
         <location filename="../src/requestdialog.cpp" line="51"/>
-        <source>URI should be of the form &apos;safecoin:&lt;addr&gt;?amt=x&amp;memo=y</source>
-        <translation>URI的格式应为&apos;safecoin:&lt;addr&gt;?amt=x&amp;memo=y‘</translation>
+        <source>URI should be of the form &apos;zero:&lt;addr&gt;?amt=x&amp;memo=y</source>
+        <translation>URI的格式应为&apos;zero:&lt;addr&gt;?amt=x&amp;memo=y‘</translation>
     </message>
     <message>
         <location filename="../src/requestdialog.cpp" line="65"/>
@@ -1701,13 +1701,13 @@ You either have unconfirmed funds or the balance is too low for an automatic mig
     </message>
     <message>
         <location filename="../src/settings.ui" line="273"/>
-        <source>Connect to the internet to fetch SAFE prices</source>
-        <translation>连接到互联网以获取SAFE价格</translation>
+        <source>Connect to the internet to fetch ZER prices</source>
+        <translation>连接到互联网以获取ZER价格</translation>
     </message>
     <message>
         <location filename="../src/settings.ui" line="280"/>
-        <source>Fetch SAFE / USD prices</source>
-        <translation>获取 SAFE/USD 价格</translation>
+        <source>Fetch ZER / USD prices</source>
+        <translation>获取 ZER/USD 价格</translation>
     </message>
     <message>
         <location filename="../src/settings.ui" line="288"/>
@@ -1721,8 +1721,8 @@ You either have unconfirmed funds or the balance is too low for an automatic mig
     </message>
     <message>
         <location filename="../src/settings.ui" line="301"/>
-        <source>Rescan the blockchain for any missing wallet transactions and to correct your wallet balance. This may take several hours. You need to restart SafecoinWallet for this to take effect</source>
-        <translation>重新扫描区块链以查找任何丢失的钱包交易并更正您的钱包余额。 这可能需要几个小时。 您需要重新启动SafecoinWallet才能使其生效</translation>
+        <source>Rescan the blockchain for any missing wallet transactions and to correct your wallet balance. This may take several hours. You need to restart ZeroWallet for this to take effect</source>
+        <translation>重新扫描区块链以查找任何丢失的钱包交易并更正您的钱包余额。 这可能需要几个小时。 您需要重新启动ZeroWallet才能使其生效</translation>
     </message>
     <message>
         <location filename="../src/settings.ui" line="311"/>
@@ -1731,8 +1731,8 @@ You either have unconfirmed funds or the balance is too low for an automatic mig
     </message>
     <message>
         <location filename="../src/settings.ui" line="345"/>
-        <source>Rebuild the entire blockchain from the genesis block, by rescanning all the block files. This may take several hours to days, depending on your hardware. You need to restart SafecoinWallet for this to take effect</source>
-        <translation>通过重新扫描所有区块文件，从创世块重建整个区块链。 这可能需要几个小时到几天，具体取决于您的硬件环境。 您需要重新启动SafecoinWallet才能使其生效</translation>
+        <source>Rebuild the entire blockchain from the genesis block, by rescanning all the block files. This may take several hours to days, depending on your hardware. You need to restart ZeroWallet for this to take effect</source>
+        <translation>通过重新扫描所有区块文件，从创世块重建整个区块链。 这可能需要几个小时到几天，具体取决于您的硬件环境。 您需要重新启动ZeroWallet才能使其生效</translation>
     </message>
 </context>
 <context>
@@ -1899,62 +1899,62 @@ You either have unconfirmed funds or the balance is too low for an automatic mig
 <context>
     <name>createZcashConf</name>
     <message>
-        <location filename="../src/createsafecoinconfdialog.ui" line="14"/>
+        <location filename="../src/createzeroconfdialog.ui" line="14"/>
         <source>Configure zero.conf</source>
         <translation>配置 zero.conf</translation>
     </message>
     <message>
-        <location filename="../src/createsafecoinconfdialog.ui" line="20"/>
-        <source>Your safecoin node will be configured for you automatically</source>
-        <translation>您的safecoin节点将自动为您配置</translation>
+        <location filename="../src/createzeroconfdialog.ui" line="20"/>
+        <source>Your zero node will be configured for you automatically</source>
+        <translation>您的zero节点将自动为您配置</translation>
     </message>
     <message>
-        <location filename="../src/createsafecoinconfdialog.ui" line="30"/>
+        <location filename="../src/createzeroconfdialog.ui" line="30"/>
         <source>Enable Fast Sync</source>
         <translation>启用快速同步</translation>
     </message>
     <message>
-        <location filename="../src/createsafecoinconfdialog.ui" line="42"/>
+        <location filename="../src/createzeroconfdialog.ui" line="42"/>
         <source>Show Advanced Configuration</source>
         <translation>显示高级配置</translation>
     </message>
     <message>
-        <location filename="../src/createsafecoinconfdialog.ui" line="112"/>
-        <source>Allow connections to the internet to check for updates, get SAFE/USD prices etc...</source>
-        <translation>允许连接到互联网检查更新，获得SAFE/USD价格等…</translation>
+        <location filename="../src/createzeroconfdialog.ui" line="112"/>
+        <source>Allow connections to the internet to check for updates, get ZER/USD prices etc...</source>
+        <translation>允许连接到互联网检查更新，获得ZER/USD价格等…</translation>
     </message>
     <message>
-        <location filename="../src/createsafecoinconfdialog.ui" line="119"/>
+        <location filename="../src/createzeroconfdialog.ui" line="119"/>
         <source>Use custom datadir</source>
         <translation>使用自定义datadir</translation>
     </message>
     <message>
-        <location filename="../src/createsafecoinconfdialog.ui" line="128"/>
+        <location filename="../src/createzeroconfdialog.ui" line="128"/>
         <source>Choose directory</source>
         <translation>选择目录</translation>
     </message>
     <message>
-        <location filename="../src/createsafecoinconfdialog.ui" line="157"/>
+        <location filename="../src/createzeroconfdialog.ui" line="157"/>
         <source>Please note that you&apos;ll need to already have a Tor service configured on port 9050</source>
         <translation>请注意，您需要在端口9050上已经配置了Tor服务</translation>
     </message>
     <message>
-        <location filename="../src/createsafecoinconfdialog.ui" line="164"/>
+        <location filename="../src/createzeroconfdialog.ui" line="164"/>
         <source>Connect to the internet for updates and price feeds</source>
         <translation>连接到internet获取更新和价格数据</translation>
     </message>
     <message>
-        <location filename="../src/createsafecoinconfdialog.ui" line="174"/>
+        <location filename="../src/createzeroconfdialog.ui" line="174"/>
         <source>Please choose a directory to store your wallet.dat and blockchain</source>
         <translation>请选择一个目录来存储您的wallet.dat和区块链数据</translation>
     </message>
     <message>
-        <location filename="../src/createsafecoinconfdialog.ui" line="181"/>
+        <location filename="../src/createzeroconfdialog.ui" line="181"/>
         <source>Connect over Tor</source>
         <translation>连接到Tor</translation>
     </message>
     <message>
-        <location filename="../src/createsafecoinconfdialog.ui" line="205"/>
+        <location filename="../src/createzeroconfdialog.ui" line="205"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Skips the most expensive checks during the initial block download. &lt;a href=&quot;https://docs.zecwallet.co/using-zecwallet/#fastsync&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;Learn More&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
         <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;在初始块下载期间跳过了最费时的检查。 &lt;a href=&quot;https://docs.zecwallet.co/using-zecwallet/#fastsync&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;了解更多&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>

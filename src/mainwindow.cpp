@@ -29,7 +29,7 @@ MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
 {
-	    
+
 	// Include css
     QString theme_name;
     try
@@ -48,14 +48,14 @@ MainWindow::MainWindow(QWidget *parent) :
       this->setStyleSheet(styleSheet);
     }
 
-	    
+
     ui->setupUi(this);
     logger = new Logger(this, QDir(QStandardPaths::writableLocation(QStandardPaths::AppDataLocation)).filePath("zero-qt-wallet.log"));
 
     // Status Bar
     setupStatusBar();
-    
-    // Settings editor 
+
+    // Settings editor
     setupSettingsModal();
 
     // Set up exit action
@@ -67,12 +67,12 @@ MainWindow::MainWindow(QWidget *parent) :
     QObject::connect(ui->actionDiscord, &QAction::triggered, this, &MainWindow::discord);
 
     QObject::connect(ui->actionWebsite, &QAction::triggered, this, &MainWindow::website);
-	
-    QObject::connect(ui->actionSafeNodes, &QAction::triggered, this, &MainWindow::safenodes);
+
+    // QObject::connect(ui->actionSafeNodes, &QAction::triggered, this, &MainWindow::safenodes);
 
     // File a bug
     QObject::connect(ui->actionFile_a_bug, &QAction::triggered, [=]() {
-        QDesktopServices::openUrl(QUrl("https://github.com/Fair-Exchange/safecoinwallet/issues/new"));
+        QDesktopServices::openUrl(QUrl("https://github.com/zerocurrencycoin/zerowallet/issues/new"));
     });
 
     // Set up check for updates action
@@ -81,17 +81,17 @@ MainWindow::MainWindow(QWidget *parent) :
         rpc->checkForUpdate(false);
     });
 
-    // Recurring payments 
+    // Recurring payments
     QObject::connect(ui->action_Recurring_Payments, &QAction::triggered, [=]() {
         Recurring::getInstance()->showRecurringDialog(this);
     });
 
-    // Request safecoin
+    // Request zero
     QObject::connect(ui->actionRequest_zcash, &QAction::triggered, [=]() {
         RequestDialog::showRequestZcash(this);
     });
 
-    // Pay Safecoin URI
+    // Pay Zero URI
     QObject::connect(ui->actionPay_URI, &QAction::triggered, [=] () {
         payZcashURI();
     });
@@ -137,7 +137,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
         QString version    = QString("Version ") % QString(APP_VERSION) % " (" % QString(__DATE__) % ")";
         about.versionLabel->setText(version);
-        
+
         aboutDialog.exec();
     });
 
@@ -149,8 +149,8 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->tabWidget->removeTab(4);
 
     // The safenodes tab is hidden by default, and only later added in if the embedded zerod is started
-    safenodestab = ui->tabWidget->widget(3);
-    ui->tabWidget->removeTab(3);
+    // safenodestab = ui->tabWidget->widget(3);
+    // ui->tabWidget->removeTab(3);
 
     setupSendTab();
     setupTransactionsTab();
@@ -158,7 +158,8 @@ MainWindow::MainWindow(QWidget *parent) :
     setupBalancesTab();
 //    setupTurnstileDialog();
     setupZcashdTab();
-    SafeNodesTab();
+    setupGZNodes();
+//    SafeNodesTab();
 
     rpc = new RPC(this);
 
@@ -174,7 +175,7 @@ MainWindow::MainWindow(QWidget *parent) :
         createWebsocket(wormholecode);
     }
 }
- 
+
 void MainWindow::createWebsocket(QString wormholecode) {
     qDebug() << "Listening for app connections on port 8237";
     // Create the websocket server, for listening to direct connections
@@ -216,6 +217,9 @@ void MainWindow::restoreSavedStates() {
     // non-expandable.
     ui->transactionsTable->horizontalHeader()->setSectionResizeMode(3, QHeaderView::Interactive);
     ui->transactionsTable->horizontalHeader()->setSectionResizeMode(4, QHeaderView::Interactive);
+
+    ui->tableZeroNodeGlobal->horizontalHeader()->restoreState(s.value("gzntablegeometry").toByteArray());
+    ui->tableZeroNodeLocal->horizontalHeader()->restoreState(s.value("lzntablegeometry").toByteArray());
 }
 
 void MainWindow::doClose() {
@@ -228,6 +232,8 @@ void MainWindow::closeEvent(QCloseEvent* event) {
     s.setValue("geometry", saveGeometry());
     s.setValue("baltablegeometry", ui->balancesTable->horizontalHeader()->saveState());
     s.setValue("tratablegeometry", ui->transactionsTable->horizontalHeader()->saveState());
+    s.setValue("gzntablegeometry", ui->tableZeroNodeGlobal->horizontalHeader()->saveState());
+    s.setValue("lzntablegeometry", ui->tableZeroNodeLocal->horizontalHeader()->saveState());
 
     s.sync();
 
@@ -253,12 +259,12 @@ void MainWindow::turnstileProgress() {
         // Get the plan progress
         if (rpc->getTurnstile()->isMigrationPresent()) {
             auto curProgress = rpc->getTurnstile()->getPlanProgress();
-            
+
             progress.progressTxt->setText(QString::number(curProgress.step) % QString(" / ") % QString::number(curProgress.totalSteps));
             progress.progressBar->setValue(100 * curProgress.step / curProgress.totalSteps);
-            
+
             auto nextTxBlock = curProgress.nextBlock - Settings::getInstance()->getBlockNumber();
-            
+
             progress.fromAddr->setText(curProgress.from);
             progress.toAddr->setText(curProgress.to);
 
@@ -270,12 +276,12 @@ void MainWindow::turnstileProgress() {
                 }
                 progress.nextTx->setText(txt);
             } else {
-                progress.nextTx->setText(QString("Next transaction in ") 
+                progress.nextTx->setText(QString("Next transaction in ")
                                     % QString::number(nextTxBlock < 0 ? 0 : nextTxBlock)
-                                    % " blocks via " % curProgress.via % "\n" 
+                                    % " blocks via " % curProgress.via % "\n"
                                     % (nextTxBlock <= 0 ? "(waiting for confirmations)" : ""));
             }
-            
+
         } else {
             progress.progressTxt->setText("");
             progress.progressBar->setValue(0);
@@ -283,11 +289,11 @@ void MainWindow::turnstileProgress() {
         }
     };
 
-    QTimer progressTimer(this);        
+    QTimer progressTimer(this);
     QObject::connect(&progressTimer, &QTimer::timeout, fnUpdateProgressUI);
     progressTimer.start(Settings::updateSpeed);
     fnUpdateProgressUI();
-    
+
     auto curProgress = rpc->getTurnstile()->getPlanProgress();
 
     // Abort button
@@ -310,11 +316,11 @@ void MainWindow::turnstileProgress() {
         }
     });
 
-    d.exec();    
+    d.exec();
     if (migrationFinished || curProgress.step == curProgress.totalSteps) {
         // Finished, so delete the file
         rpc->getTurnstile()->removeFile();
-    }    
+    }
 }
 
 void MainWindow::turnstileDoMigration(QString fromAddr) {
@@ -372,12 +378,12 @@ void MainWindow::turnstileDoMigration(QString fromAddr) {
         } else {
             bal = rpc->getAllBalances()->value(addr);
         }
-        
+
         auto balTxt = Settings::getZECUSDDisplayFormat(bal);
-        
+
         if (bal < Turnstile::minMigrationAmount) {
             turnstile.fromBalance->setStyleSheet("color: red;");
-            turnstile.fromBalance->setText(balTxt % " [You need at least " 
+            turnstile.fromBalance->setText(balTxt % " [You need at least "
                         % Settings::getZECDisplayFormat(Turnstile::minMigrationAmount)
                         % " for automatic migration]");
             turnstile.buttonBox->button(QDialogButtonBox::Ok)->setEnabled(false);
@@ -391,14 +397,14 @@ void MainWindow::turnstileDoMigration(QString fromAddr) {
     if (!fromAddr.isEmpty())
         turnstile.migrateZaddList->setCurrentText(fromAddr);
 
-    fnUpdateSproutBalance(turnstile.migrateZaddList->currentText());    
+    fnUpdateSproutBalance(turnstile.migrateZaddList->currentText());
 
     // Combo box selection event
     QObject::connect(turnstile.migrateZaddList, &QComboBox::currentTextChanged, fnUpdateSproutBalance);
-        
+
     // Privacy level combobox
     // Num tx over num blocks
-    QList<std::tuple<int, int>> privOptions; 
+    QList<std::tuple<int, int>> privOptions;
     privOptions.push_back(std::make_tuple<int, int>(3, 576));
     privOptions.push_back(std::make_tuple<int, int>(5, 1152));
     privOptions.push_back(std::make_tuple<int, int>(10, 2304));
@@ -415,38 +421,38 @@ void MainWindow::turnstileDoMigration(QString fromAddr) {
                                      QString::number(std::get<0>(i)) % " txns)"
         );
     }
-    
+
     turnstile.buttonBox->button(QDialogButtonBox::Ok)->setText("Start");
 
     if (d.exec() == QDialog::Accepted) {
         auto privLevel = privOptions[turnstile.privLevel->currentIndex()];
         rpc->getTurnstile()->planMigration(
-            turnstile.migrateZaddList->currentText(), 
+            turnstile.migrateZaddList->currentText(),
             turnstile.migrateTo->currentText(),
             std::get<0>(privLevel), std::get<1>(privLevel));
 
-        QMessageBox::information(this, "Backup your wallet.dat", 
-                                    "The migration will now start. You can check progress in the File -> Sapling Turnstile menu.\n\nYOU MUST BACKUP YOUR wallet.dat NOW!\n\nNew Addresses have been added to your wallet which will be used for the migration.", 
+        QMessageBox::information(this, "Backup your wallet.dat",
+                                    "The migration will now start. You can check progress in the File -> Sapling Turnstile menu.\n\nYOU MUST BACKUP YOUR wallet.dat NOW!\n\nNew Addresses have been added to your wallet which will be used for the migration.",
                                     QMessageBox::Ok);
     }
 }
 
 /*
-void MainWindow::setupTurnstileDialog() {        
+void MainWindow::setupTurnstileDialog() {
     // Turnstile migration
     QObject::connect(ui->actionTurnstile_Migration, &QAction::triggered, [=] () {
         // If the underlying zerod has support for the migration and there is no existing migration
-        // in progress, use that.         
+        // in progress, use that.
         if (rpc->getMigrationStatus()->available && !rpc->getTurnstile()->isMigrationPresent()) {
             Turnstile::showZcashdMigration(this);
         } else {
-            // Else, show the SafecoinWallet turnstile tool
+            // Else, show the ZeroWallet turnstile tool
 
             // If there is current migration that is present, show the progress button
             if (rpc->getTurnstile()->isMigrationPresent())
                 turnstileProgress();
-            else    
-                turnstileDoMigration();        
+            else
+                turnstileDoMigration();
         }
     });
 
@@ -495,7 +501,7 @@ void MainWindow::setupStatusBar() {
     ui->statusBar->addPermanentWidget(statusIcon);
 }
 
-void MainWindow::setupSettingsModal() {    
+void MainWindow::setupSettingsModal() {
     // Set up File -> Settings action
     QObject::connect(ui->actionSettings, &QAction::triggered, [=]() {
         QDialog settingsDialog(this);
@@ -555,59 +561,6 @@ void MainWindow::setupSettingsModal() {
             settings.chkTor->setToolTip(tooltip);
             settings.lblTor->setToolTip(tooltip);
         }
-		
-//SAFENODES
-    // Use SafeNode
-        bool isUsingSafeNode = false;
-        if (rpc->getConnection() != nullptr) {
-            isUsingSafeNode = !rpc->getConnection()->config->safenode.isEmpty();
-        }
-        settings.chkSafeNode->setChecked(isUsingSafeNode);
-        if (rpc->getEZcashD() == nullptr) {
-            settings.chkSafeNode->setEnabled(false);
-            settings.safeheight->setEnabled(false);
-            settings.safepass->setEnabled(false);
-            settings.safekey->setEnabled(false);
-            settings.parentkey->setEnabled(false);
-        }
-        if (rpc->getEZcashD() == nullptr || !rpc->getConnection()->config->safenode.isEmpty()) {
-            settings.safeheight->setEnabled(false);
-            settings.safepass->setEnabled(false);
-            settings.safekey->setEnabled(false);
-            settings.parentkey->setEnabled(false);
-        }
-
-    // Use Addressindex
-        bool isUsingAddressindex = false;
-        if (rpc->getConnection() != nullptr) {
-            isUsingAddressindex = !rpc->getConnection()->config->addrindex.isEmpty();
-        }
-        settings.chkAddressindex->setChecked(isUsingAddressindex);
-        if (rpc->getEZcashD() == nullptr) {
-            settings.chkAddressindex->setEnabled(false);
-        }
-		
-    // Use Timestampindex
-        bool isUsingTimestampindex = false;
-        if (rpc->getConnection() != nullptr) {
-            isUsingTimestampindex = !rpc->getConnection()->config->timeindex.isEmpty();
-        }
-        settings.chkTimestampindex->setChecked(isUsingTimestampindex);
-        if (rpc->getEZcashD() == nullptr) {
-            settings.chkTimestampindex->setEnabled(false);
-        }
-		
-    // Use Spentindex
-        bool isUsingSpentindex = false;
-        if (rpc->getConnection() != nullptr) {
-            isUsingSpentindex = !rpc->getConnection()->config->spentindex.isEmpty();
-        }
-        settings.chkSpentindex->setChecked(isUsingSpentindex);
-        if (rpc->getEZcashD() == nullptr) {
-            settings.chkSpentindex->setEnabled(false);
-        }
-
-//END_SAFENODES
 
         // Connection Settings
         QIntValidator validator(0, 65535);
@@ -630,7 +583,7 @@ void MainWindow::setupSettingsModal() {
             settings.rpcpassword->setEnabled(true);
         }
 
-        // Load current values into the dialog        
+        // Load current values into the dialog
         auto conf = Settings::getInstance()->getSettings();
         settings.hostname->setText(conf.host);
         settings.port->setText(conf.port);
@@ -671,8 +624,8 @@ void MainWindow::setupSettingsModal() {
                 Settings::addToZcashConf(zcashConfLocation, "proxy=127.0.0.1:9050");
                 rpc->getConnection()->config->proxy = "proxy=127.0.0.1:9050";
 
-                QMessageBox::information(this, tr("Enable Tor"), 
-                    tr("Connection over Tor has been enabled. To use this feature, you need to restart SafecoinWallet."), 
+                QMessageBox::information(this, tr("Enable Tor"),
+                    tr("Connection over Tor has been enabled. To use this feature, you need to restart ZeroWallet."),
                     QMessageBox::Ok);
             }
 
@@ -682,112 +635,9 @@ void MainWindow::setupSettingsModal() {
                 rpc->getConnection()->config->proxy.clear();
 
                 QMessageBox::information(this, tr("Disable Tor"),
-                    tr("Connection over Tor has been disabled. To fully disconnect from Tor, you need to restart SafecoinWallet."),
+                    tr("Connection over Tor has been disabled. To fully disconnect from Tor, you need to restart ZeroWallet."),
                     QMessageBox::Ok);
             }
-
-//SAFENODES
-        // Use SafeNodes
-
-            if (!isUsingSafeNode && settings.chkSafeNode->isChecked()) {
-            // If "use SafeNode" was previously unchecked and now checked
-            Settings::addToZcashConf(zcashConfLocation, "safeheight=" + settings.safeheight->text() + "\n"
-                                                        "safepass=" + settings.safepass->text() + "\n"
-                                                        "safekey=" + settings.safekey->text() + "\n"
-                                                        "parentkey=" + settings.parentkey->text());
-
-            rpc->getConnection()->config->safenode = "safekey=" + settings.safekey->text();
-			
-
-            QMessageBox::information(this, tr("SafeNode Configured" ),
-                tr("SafeNode Configured. To use this feature, you need to restart SafecoinWallet."),
-                QMessageBox::Ok);
-            QTimer::singleShot(1, [=]() { this->close(); });
-            }
-
-            if (isUsingSafeNode && !settings.chkSafeNode->isChecked()) {
-            // If "use SafeNode" was previously checked and now is unchecked
-            Settings::removeFromZcashConf(zcashConfLocation, "safeheight");
-            Settings::removeFromZcashConf(zcashConfLocation, "safepass");
-            Settings::removeFromZcashConf(zcashConfLocation, "safekey");
-            Settings::removeFromZcashConf(zcashConfLocation, "parentkey");
-            rpc->getConnection()->config->safenode.clear();
-
-            QMessageBox::information(this, tr("Disable SafeNode Configuration"),
-                tr("Configuration SafeNode disabled. To fully disabled SafeNode Configuration, you need to restart SafecoinWallet."),
-            QMessageBox::Ok);
-            QTimer::singleShot(1, [=]() { this->close(); });
-            }
-
-    //Addressindex
-
-            if (!isUsingAddressindex && settings.chkAddressindex->isChecked()) {
-                // If "use Addressindex" was previously unchecked and now checked
-                Settings::addToZcashConf(zcashConfLocation, "addressindex=1\n");
-                rpc->getConnection()->config->addrindex = "addressindex=1";
-
-                QMessageBox::information(this, tr("Enable Addressindex"), 
-                    tr("Addressindex enabled. To use this feature, you need to restart SafecoinWallet."), 
-                    QMessageBox::Ok);
-            QTimer::singleShot(1, [=]() { this->close(); });
-            }
-
-            if (isUsingAddressindex && !settings.chkAddressindex->isChecked()) {
-                // If "use Addressindex" was previously checked and now is unchecked
-                Settings::removeFromZcashConf(zcashConfLocation, "addressindex");
-                rpc->getConnection()->config->addrindex.clear();
-
-                QMessageBox::information(this, tr("Disable Addressindex"),
-                    tr("Addressindex disabled. To fully disabled Addressindex, you need to restart SafecoinWallet."),
-                    QMessageBox::Ok);
-            QTimer::singleShot(1, [=]() { this->close(); });
-            }
-
-    //Timestampindex
-
-            if (!isUsingTimestampindex && settings.chkTimestampindex->isChecked()) {
-                // If "use Timestampindex" was previously unchecked and now checked
-                Settings::addToZcashConf(zcashConfLocation, "timestampindex=1\n");
-                rpc->getConnection()->config->timeindex = "timestampindex=1";
-
-                QMessageBox::information(this, tr("Enable Timestampindex"), 
-                    tr("Timestampindex enabled. To use this feature, you need to restart SafecoinWallet."), 
-                    QMessageBox::Ok);
-            }
-
-            if (isUsingTimestampindex && !settings.chkTimestampindex->isChecked()) {
-                // If "use Timestampindex" was previously checked and now is unchecked
-                Settings::removeFromZcashConf(zcashConfLocation, "timestampindex");
-                rpc->getConnection()->config->timeindex.clear();
-
-                QMessageBox::information(this, tr("Disable Timestampindex"),
-                    tr("Timestampindex disabled. To fully disabled Timestampindex, you need to restart SafecoinWallet."),
-                    QMessageBox::Ok);
-            }
-
-    //Spentindex
-
-            if (!isUsingSpentindex && settings.chkSpentindex->isChecked()) {
-                // If "use Spentindex" was previously unchecked and now checked
-                Settings::addToZcashConf(zcashConfLocation, "spentindex=1\n");
-                rpc->getConnection()->config->spentindex = "spentindex=1";
-
-                QMessageBox::information(this, tr("Enable Spentindex"), 
-                    tr("Spentindex enabled. To use this feature, you need to restart SafecoinWallet."), 
-                    QMessageBox::Ok);
-            }
-
-            if (isUsingSpentindex && !settings.chkSpentindex->isChecked()) {
-                // If "use Spentindex" was previously checked and now is unchecked
-                Settings::removeFromZcashConf(zcashConfLocation, "spentindex");
-                rpc->getConnection()->config->spentindex.clear();
-
-                QMessageBox::information(this, tr("Disable Spentindex"),
-                    tr("Spentindex disabled. To fully disabled Spentindex, you need to restart SafecoinWallet."),
-                    QMessageBox::Ok);
-            }
-				
-//END_SAFENODES
 
             if (zcashConfLocation.isEmpty()) {
                 // Save settings
@@ -796,7 +646,7 @@ void MainWindow::setupSettingsModal() {
                     settings.port->text(),
                     settings.rpcuser->text(),
                     settings.rpcpassword->text());
-                
+
                 auto cl = new ConnectionLoader(this, rpc);
                 cl->loadConnection();
             }
@@ -814,9 +664,9 @@ void MainWindow::setupSettingsModal() {
             }
 
             if (showRestartInfo) {
-                auto desc = tr("SafecoinWallet needs to restart to rescan/reindex. SafecoinWallet will now close, please restart SafecoinWallet to continue");
-                
-                QMessageBox::information(this, tr("Restart SafecoinWallet"), desc, QMessageBox::Ok);
+                auto desc = tr("ZeroWallet needs to restart to rescan/reindex. ZeroWallet will now close, please restart ZeroWallet to continue");
+
+                QMessageBox::information(this, tr("Restart ZeroWallet"), desc, QMessageBox::Ok);
                 QTimer::singleShot(1, [=]() { this->close(); });
             }
         }
@@ -843,14 +693,14 @@ void MainWindow::discord() {
 }
 
 void MainWindow::website() {
-    QString url = "https://safecoin.org";
+    QString url = "https://zero.org";
     QDesktopServices::openUrl(QUrl(url));
 }
 
-void MainWindow::safenodes() {
-    QString url = "https://safenodes.org/";
-    QDesktopServices::openUrl(QUrl(url));
-}
+// void MainWindow::safenodes() {
+//     QString url = "https://safenodes.org/";
+//     QDesktopServices::openUrl(QUrl(url));
+// }
 
 void MainWindow::donate() {
     // Set up a donation to me :)
@@ -859,9 +709,9 @@ void MainWindow::donate() {
     ui->Address1->setText(Settings::getDonationAddr());
     ui->Address1->setCursorPosition(0);
     ui->Amount1->setText("0.00");
-    ui->MemoTxt1->setText(tr("Some feedback about SafecoinWallet or Safecoin...!"));
+    ui->MemoTxt1->setText(tr("Some feedback about ZeroWallet or Zero...!"));
 
-    ui->statusBar->showMessage(tr("Send OleksandrBlack feedback about ") % Settings::getTokenName() % tr(" or SafecoinWallet"));
+    ui->statusBar->showMessage(tr("Send OleksandrBlack feedback about ") % Settings::getTokenName() % tr(" or ZeroWallet"));
 
     // And switch to the send tab.
     ui->tabWidget->setCurrentIndex(1);
@@ -877,7 +727,7 @@ void MainWindow::validateAddress() {
 
     // First thing is ask the user for an address
     bool ok;
-    auto address = QInputDialog::getText(this, tr("Enter Address to validate"), 
+    auto address = QInputDialog::getText(this, tr("Enter Address to validate"),
         tr("Transparent or Shielded Address:") + QString(" ").repeated(140),    // Pad the label so the dialog box is wide enough
         QLineEdit::Normal, "", &ok);
     if (!ok)
@@ -992,7 +842,7 @@ void MainWindow::postToZBoard() {
     if (d.exec() == QDialog::Accepted) {
         // Create a transaction.
         Tx tx;
-        
+
         // Send from your first sapling address that has a balance.
         tx.fromAddr = zb.fromAddr->currentText();
         if (tx.fromAddr.isEmpty()) {
@@ -1032,14 +882,14 @@ void MainWindow::doImport(QList<QString>* keys) {
 
     if (key.startsWith("SK") ||
         key.startsWith("secret")) { // Z key
-        rpc->importZPrivKey(key, rescan, [=] (auto) { this->doImport(keys); });                   
+        rpc->importZPrivKey(key, rescan, [=] (auto) { this->doImport(keys); });
     } else {
         rpc->importTPrivKey(key, rescan, [=] (auto) { this->doImport(keys); });
     }
 }
 
 
-// Callback invoked when the RPC has finished loading all the balances, and the UI 
+// Callback invoked when the RPC has finished loading all the balances, and the UI
 // is now ready to send transactions.
 void MainWindow::balancesReady() {
     // First-time check
@@ -1052,7 +902,7 @@ void MainWindow::balancesReady() {
     // There is a pending URI payment (from the command line, or from a secondary instance),
     // process it.
     if (!pendingURIPayment.isEmpty()) {
-        qDebug() << "Paying Safecoin URI";
+        qDebug() << "Paying Zero URI";
         payZcashURI(pendingURIPayment);
         pendingURIPayment = "";
     }
@@ -1075,7 +925,7 @@ bool MainWindow::eventFilter(QObject *object, QEvent *event) {
 }
 
 
-// Pay the Safecoin URI by showing a confirmation window. If the URI parameter is empty, the UI
+// Pay the Zero URI by showing a confirmation window. If the URI parameter is empty, the UI
 // will prompt for one. If the myAddr is empty, then the default from address is used to send
 // the transaction.
 void MainWindow::payZcashURI(QString uri, QString myAddr) {
@@ -1088,8 +938,8 @@ void MainWindow::payZcashURI(QString uri, QString myAddr) {
 
     // If there was no URI passed, ask the user for one.
     if (uri.isEmpty()) {
-        uri = QInputDialog::getText(this, tr("Paste Safecoin URI"),
-            "Safecoin URI" + QString(" ").repeated(180));
+        uri = QInputDialog::getText(this, tr("Paste Zero URI"),
+            "Zero URI" + QString(" ").repeated(180));
     }
 
     // If there's no URI, just exit
@@ -1100,8 +950,8 @@ void MainWindow::payZcashURI(QString uri, QString myAddr) {
     qDebug() << "Received URI " << uri;
     PaymentURI paymentInfo = Settings::parseURI(uri);
     if (!paymentInfo.error.isEmpty()) {
-        QMessageBox::critical(this, tr("Error paying safecoin URI"), 
-                tr("URI should be of the form 'safecoin:<addr>?amt=x&memo=y") + "\n" + paymentInfo.error);
+        QMessageBox::critical(this, tr("Error paying zero URI"),
+                tr("URI should be of the form 'zero:<addr>?amt=x&memo=y") + "\n" + paymentInfo.error);
         return;
     }
 
@@ -1138,7 +988,7 @@ void MainWindow::importPrivKey() {
     pui.buttonBox->button(QDialogButtonBox::Save)->setVisible(false);
     pui.helpLbl->setText(QString() %
                         tr("Please paste your private keys (z-Addr or t-Addr) here, one per line") % ".\n" %
-                        tr("The keys will be imported into your connected zerod node"));  
+                        tr("The keys will be imported into your connected zerod node"));
 
     if (d.exec() == QDialog::Accepted && !pui.privKeyTxt->toPlainText().trimmed().isEmpty()) {
         auto rawkeys = pui.privKeyTxt->toPlainText().trimmed().split("\n");
@@ -1154,8 +1004,8 @@ void MainWindow::importPrivKey() {
             return key.trimmed().split(" ")[0];
         });
 
-        // Special case. 
-        // Sometimes, when importing from a paperwallet or such, the key is split by newlines, and might have 
+        // Special case.
+        // Sometimes, when importing from a paperwallet or such, the key is split by newlines, and might have
         // been pasted like that. So check to see if the whole thing is one big private key
         if (Settings::getInstance()->isValidSaplingPrivateKey(keys->join(""))) {
             auto multiline = keys;
@@ -1167,31 +1017,31 @@ void MainWindow::importPrivKey() {
         // Start the import. The function takes ownership of keys
         QTimer::singleShot(1, [=]() {doImport(keys);});
 
-        // Show the dialog that keys will be imported. 
+        // Show the dialog that keys will be imported.
         QMessageBox::information(this,
             "Imported", tr("The keys were imported. It may take several minutes to rescan the blockchain. Until then, functionality may be limited"),
             QMessageBox::Ok);
     }
 }
 
-/** 
+/**
  * Export transaction history into a CSV file
  */
 void MainWindow::exportTransactions() {
     // First, get the export file name
-    QString exportName = "safecoin-transactions-" + QDateTime::currentDateTime().toString("yyyyMMdd") + ".csv";
+    QString exportName = "zero-transactions-" + QDateTime::currentDateTime().toString("yyyyMMdd") + ".csv";
 
-    QUrl csvName = QFileDialog::getSaveFileUrl(this, 
+    QUrl csvName = QFileDialog::getSaveFileUrl(this,
             tr("Export transactions"), exportName, "CSV file (*.csv)");
 
     if (csvName.isEmpty())
         return;
 
     if (!rpc->getTransactionsModel()->exportToCsv(csvName.toLocalFile())) {
-        QMessageBox::critical(this, tr("Error"), 
+        QMessageBox::critical(this, tr("Error"),
             tr("Error exporting transactions, file was not saved"), QMessageBox::Ok);
     }
-} 
+}
 
 /**
  * Backup the wallet.dat file. This is kind of a hack, since it has to read from the filesystem rather than an RPC call
@@ -1202,26 +1052,26 @@ void MainWindow::backupWalletDat() {
         return;
 
     QDir zcashdir(rpc->getConnection()->config->zcashDir);
-    QString backupDefaultName = "safecoin-wallet-backup-" + QDateTime::currentDateTime().toString("yyyyMMdd") + ".dat";
+    QString backupDefaultName = "zero-wallet-backup-" + QDateTime::currentDateTime().toString("yyyyMMdd") + ".dat";
 
     if (Settings::getInstance()->isTestnet()) {
         zcashdir.cd("testnet3");
         backupDefaultName = "testnet-" + backupDefaultName;
     }
-    
+
     QFile wallet(zcashdir.filePath("wallet.dat"));
     if (!wallet.exists()) {
         QMessageBox::critical(this, tr("No wallet.dat"), tr("Couldn't find the wallet.dat on this computer") + "\n" +
             tr("You need to back it up from the machine zerod is running on"), QMessageBox::Ok);
         return;
     }
-    
+
     QUrl backupName = QFileDialog::getSaveFileUrl(this, tr("Backup wallet.dat"), backupDefaultName, "Data file (*.dat)");
     if (backupName.isEmpty())
         return;
 
     if (!wallet.copy(backupName.toLocalFile())) {
-        QMessageBox::critical(this, tr("Couldn't backup"), tr("Couldn't backup the wallet.dat file.") + 
+        QMessageBox::critical(this, tr("Couldn't backup"), tr("Couldn't backup the wallet.dat file.") +
             tr("You need to back it up manually."), QMessageBox::Ok);
     }
 }
@@ -1236,7 +1086,7 @@ void MainWindow::exportKeys(QString addr) {
     QDialog d(this);
     Ui_PrivKey pui;
     pui.setupUi(&d);
-    
+
     // Make the window big by default
     auto ps = this->geometry();
     QMargins margin = QMargins() + 50;
@@ -1260,12 +1110,12 @@ void MainWindow::exportKeys(QString addr) {
     // Wire up save button
     QObject::connect(pui.buttonBox->button(QDialogButtonBox::Save), &QPushButton::clicked, [=] () {
         QString fileName = QFileDialog::getSaveFileName(this, tr("Save File"),
-                           allKeys ? "safecoin-all-privatekeys.txt" : "safecoin-privatekey.txt");
+                           allKeys ? "zero-all-privatekeys.txt" : "zero-privatekey.txt");
         QFile file(fileName);
         if (!file.open(QIODevice::WriteOnly)) {
             QMessageBox::information(this, tr("Unable to open file"), file.errorString());
             return;
-        }        
+        }
         QTextStream out(&file);
         out << pui.privKeyTxt->toPlainText();
     });
@@ -1289,7 +1139,7 @@ void MainWindow::exportKeys(QString addr) {
     if (allKeys) {
         rpc->getAllPrivKeys(fnUpdateUIWithKeys);
     }
-    else {        
+    else {
         auto fnAddKey = [=](json key) {
             QList<QPair<QString, QString>> singleAddrKey;
             singleAddrKey.push_back(QPair<QString, QString>(addr, QString::fromStdString(key.get<json::string_t>())));
@@ -1301,9 +1151,9 @@ void MainWindow::exportKeys(QString addr) {
         }
         else {
             rpc->getTPrivKey(addr, fnAddKey);
-        }        
+        }
     }
-    
+
     d.exec();
     *isDialogAlive = false;
 }
@@ -1344,7 +1194,7 @@ void MainWindow::setupBalancesTab() {
     QObject::connect(ui->balancesTable, &QTableView::doubleClicked, [=](auto index) {
         index = index.sibling(index.row(), 0);
         auto addr = AddressBook::addressFromAddressLabel(ui->balancesTable->model()->data(index).toString());
-        
+
         fnDoSendFrom(addr);
     });
 
@@ -1362,7 +1212,7 @@ void MainWindow::setupBalancesTab() {
 
         menu.addAction(tr("Copy address"), [=] () {
             QClipboard *clipboard = QGuiApplication::clipboard();
-            clipboard->setText(addr);            
+            clipboard->setText(addr);
             ui->statusBar->showMessage(tr("Copied to clipboard"), 3 * 1000);
         });
 
@@ -1393,17 +1243,17 @@ void MainWindow::setupBalancesTab() {
             });
         }
 
-        menu.exec(ui->balancesTable->viewport()->mapToGlobal(pos));            
+        menu.exec(ui->balancesTable->viewport()->mapToGlobal(pos));
     });
 }
 
 void MainWindow::setupZcashdTab() {
-    ui->safecoinlogo->setPixmap(QPixmap(":/img/res/zerodlogo.gif").scaled(256, 256, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+    ui->zerologo->setPixmap(QPixmap(":/img/res/zerodlogo.gif").scaled(256, 256, Qt::KeepAspectRatio, Qt::SmoothTransformation));
 }
 
-void MainWindow::SafeNodesTab() {
-    ui->safenodelogo->setPixmap(QPixmap(":/img/res/zero.png").scaled(128, 128, Qt::KeepAspectRatio, Qt::SmoothTransformation));
-}
+//void MainWindow::SafeNodesTab() {
+//    ui->safenodelogo->setPixmap(QPixmap(":/img/res/zero.png").scaled(128, 128, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+//}
 
 void MainWindow::setupTransactionsTab() {
     // Double click opens up memo if one exists
@@ -1434,7 +1284,7 @@ void MainWindow::setupTransactionsTab() {
         QString memo = txModel->getMemo(index.row());
         QString addr = txModel->getAddr(index.row());
 
-        menu.addAction(tr("Copy txid"), [=] () {            
+        menu.addAction(tr("Copy txid"), [=] () {
             QGuiApplication::clipboard()->setText(txid);
             ui->statusBar->showMessage(tr("Copied to clipboard"), 3 * 1000);
         });
@@ -1451,7 +1301,7 @@ void MainWindow::setupTransactionsTab() {
         });
 
         // Payment Request
-        if (!memo.isEmpty() && memo.startsWith("safecoin:")) {
+        if (!memo.isEmpty() && memo.startsWith("zero:")) {
             menu.addAction(tr("View Payment Request"), [=] () {
                 RequestDialog::showPaymentConfirmation(this, memo);
             });
@@ -1459,7 +1309,7 @@ void MainWindow::setupTransactionsTab() {
 
         // View Memo
         if (!memo.isEmpty()) {
-            menu.addAction(tr("View Memo"), [=] () {               
+            menu.addAction(tr("View Memo"), [=] () {
                 QMessageBox mb(QMessageBox::Information, tr("Memo"), memo, QMessageBox::Ok, this);
                 mb.setTextInteractionFlags(Qt::TextSelectableByMouse | Qt::TextSelectableByKeyboard);
                 mb.exec();
@@ -1470,8 +1320,8 @@ void MainWindow::setupTransactionsTab() {
         if (!memo.isEmpty()) {
             int lastPost     = memo.trimmed().lastIndexOf(QRegExp("[\r\n]+"));
             QString lastWord = memo.right(memo.length() - lastPost - 1);
-            
-            if (Settings::getInstance()->isSaplingAddress(lastWord) || 
+
+            if (Settings::getInstance()->isSaplingAddress(lastWord) ||
                 Settings::getInstance()->isSproutAddress(lastWord)) {
                 menu.addAction(tr("Reply to ") + lastWord.left(25) + "...", [=]() {
                     // First, cancel any pending stuff in the send tab by pretending to click
@@ -1494,7 +1344,21 @@ void MainWindow::setupTransactionsTab() {
             }
         }
 
-        menu.exec(ui->transactionsTable->viewport()->mapToGlobal(pos));        
+        menu.exec(ui->transactionsTable->viewport()->mapToGlobal(pos));
+    });
+}
+
+void MainWindow::setupGZNodes() {
+    // Double click opens up memo if one exists
+    QObject::connect(ui->tableZeroNodeGlobal, &QTableView::doubleClicked, [=] (auto index) {
+        auto gznModel = dynamic_cast<GlobalZNTableModel *>(ui->tableZeroNodeGlobal->model());
+        qint64 rank = gznModel->getGZNRank(index.row());
+
+        if (rank > 0) {
+            QMessageBox mb(QMessageBox::Information, tr("Rank"), QString::number(rank), QMessageBox::Ok, this);
+            mb.setTextInteractionFlags(Qt::TextSelectableByMouse | Qt::TextSelectableByKeyboard);
+            mb.exec();
+        }
     });
 }
 
@@ -1506,11 +1370,11 @@ void MainWindow::addNewZaddr(bool sapling) {
 
         // Just double make sure the z-address is still checked
         if ( sapling && ui->rdioZSAddr->isChecked() ) {
-            ui->listReceiveAddresses->insertItem(0, addr); 
+            ui->listReceiveAddresses->insertItem(0, addr);
             ui->listReceiveAddresses->setCurrentIndex(0);
 
             ui->statusBar->showMessage(QString::fromStdString("Created new zAddr") %
-                                       (sapling ? "(Sapling)" : "(Sprout)"), 
+                                       (sapling ? "(Sapling)" : "(Sprout)"),
                                        10 * 1000);
         }
     });
@@ -1520,8 +1384,8 @@ void MainWindow::addNewZaddr(bool sapling) {
 // Adds sapling or sprout z-addresses to the combo box. Technically, returns a
 // lambda, which can be connected to the appropriate signal
 std::function<void(bool)> MainWindow::addZAddrsToComboList(bool sapling) {
-    return [=] (bool checked) { 
-        if (checked && this->rpc->getAllZAddresses() != nullptr) { 
+    return [=] (bool checked) {
+        if (checked && this->rpc->getAllZAddresses() != nullptr) {
             auto addrs = this->rpc->getAllZAddresses();
 
             // Save the current address, so we can update it later
@@ -1536,8 +1400,8 @@ std::function<void(bool)> MainWindow::addZAddrsToComboList(bool sapling) {
                             ui->listReceiveAddresses->addItem(addr, bal);
                         }
                 }
-            }); 
-            
+            });
+
             if (!zaddr.isEmpty() && Settings::isZAddress(zaddr)) {
                 ui->listReceiveAddresses->setCurrentText(zaddr);
             }
@@ -1546,7 +1410,7 @@ std::function<void(bool)> MainWindow::addZAddrsToComboList(bool sapling) {
             if (addrs->isEmpty()) {
                 addNewZaddr(sapling);
             }
-        } 
+        }
     };
 }
 
@@ -1568,12 +1432,12 @@ void MainWindow::setupReceiveTab() {
     };
 
     // Connect t-addr radio button
-    QObject::connect(ui->rdioTAddr, &QRadioButton::toggled, [=] (bool checked) { 
+    QObject::connect(ui->rdioTAddr, &QRadioButton::toggled, [=] (bool checked) {
         // Whenever the t-address is selected, we generate a new address, because we don't
         // want to reuse t-addrs
-        if (checked && this->rpc->getUTXOs() != nullptr) { 
+        if (checked && this->rpc->getUTXOs() != nullptr) {
             updateTAddrCombo(checked);
-        } 
+        }
 
         // Toggle the "View all addresses" button as well
         ui->btnViewAllAddresses->setVisible(checked);
@@ -1606,7 +1470,7 @@ void MainWindow::setupReceiveTab() {
             QString addr = viewaddrs.tblAddresses->model()->data(index).toString();
 
             QMenu menu(this);
-            menu.addAction(tr("Export Private Key"), [=] () {                
+            menu.addAction(tr("Export Private Key"), [=] () {
                 if (addr.isEmpty())
                     return;
 
@@ -1641,7 +1505,7 @@ void MainWindow::setupReceiveTab() {
             // Switched to receive tab, select the z-addr radio button
             ui->rdioZSAddr->setChecked(true);
             ui->btnViewAllAddresses->setVisible(false);
-            
+
             // And then select the first one
             ui->listReceiveAddresses->setCurrentIndex(0);
         }
@@ -1652,7 +1516,7 @@ void MainWindow::setupReceiveTab() {
     ui->rcvLabel->setValidator(v);
 
     // Select item in address list
-    QObject::connect(ui->listReceiveAddresses, 
+    QObject::connect(ui->listReceiveAddresses,
         QOverload<int>::of(&QComboBox::currentIndexChanged), [=] (int index) {
         QString addr = ui->listReceiveAddresses->itemText(index);
         if (addr.isEmpty()) {
@@ -1672,18 +1536,18 @@ void MainWindow::setupReceiveTab() {
         else {
             ui->rcvUpdateLabel->setText("Update Label");
         }
-        
+
         ui->rcvLabel->setText(label);
         ui->rcvBal->setText(Settings::getZECUSDDisplayFormat(rpc->getAllBalances()->value(addr)));
-        ui->txtReceive->setPlainText(addr);       
+        ui->txtReceive->setPlainText(addr);
         ui->qrcodeDisplay->setQrcodeString(addr);
         if (rpc->getUsedAddresses()->value(addr, false)) {
             ui->rcvBal->setToolTip(tr("Address has been previously used"));
         } else {
             ui->rcvBal->setToolTip(tr("Address is unused"));
         }
-        
-    });    
+
+    });
 
     // Receive tab add/update label
     QObject::connect(ui->rcvUpdateLabel, &QPushButton::clicked, [=]() {
@@ -1754,7 +1618,7 @@ void MainWindow::updateTAddrCombo(bool checked) {
                 addrs.insert(addr);
             }
         });
-        
+
         // 2. Add all t addresses that have a label
         auto allTaddrs = this->rpc->getAllTAddresses();
         QSet<QString> labels;
@@ -1762,7 +1626,7 @@ void MainWindow::updateTAddrCombo(bool checked) {
             labels.insert(p.second);
         }
         std::for_each(allTaddrs->begin(), allTaddrs->end(), [=, &addrs] (auto& taddr) {
-            // If the address is in the address book, add it. 
+            // If the address is in the address book, add it.
             if (labels.contains(taddr) && !addrs.contains(taddr)) {
                 addrs.insert(taddr);
                 ui->listReceiveAddresses->addItem(taddr, 0);

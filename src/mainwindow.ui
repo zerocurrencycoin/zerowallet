@@ -6,12 +6,12 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>550</width>
-    <height>600</height>
+    <width>1200</width>
+    <height>800</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>SafecoinWallet</string>
+   <string>ZeroWallet</string>
   </property>
   <property name="windowIcon">
    <iconset resource="../application.qrc">
@@ -19,10 +19,10 @@
   </property>
   <widget class="QWidget" name="centralWidget">
    <layout class="QGridLayout" name="gridLayout_3">
-    <item row="0" column="0">
+    <item row="0" column="1">
      <widget class="QTabWidget" name="tabWidget">
       <property name="currentIndex">
-       <number>0</number>
+       <number>3</number>
       </property>
       <widget class="QWidget" name="tab">
        <attribute name="title">
@@ -454,8 +454,8 @@
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>504</width>
-                <height>329</height>
+                <width>1152</width>
+                <height>485</height>
                </rect>
               </property>
               <layout class="QVBoxLayout" name="sendToLayout">
@@ -990,767 +990,92 @@
         </item>
        </layout>
       </widget>
-      <widget class="QWidget" name="tab_5">
+      <widget class="QWidget" name="tab_4">
        <attribute name="title">
-        <string>SafeNodes</string>
+        <string>ZeroNodes</string>
        </attribute>
-       <layout class="QVBoxLayout" name="verticalLayout_11">
+       <layout class="QHBoxLayout" name="horizontalLayout_31">
         <item>
-         <widget class="QLabel" name="safenodelogo">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="text">
-           <string/>
-          </property>
-          <property name="scaledContents">
-           <bool>false</bool>
-          </property>
-          <property name="alignment">
-           <set>Qt::AlignCenter</set>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <layout class="QHBoxLayout" name="horizontalLayout_17">
+         <layout class="QVBoxLayout" name="verticalLayout_2">
           <item>
-           <widget class="QGroupBox" name="groupBox_5">
-            <property name="title">
-             <string/>
+           <widget class="QLabel" name="label_8">
+            <property name="text">
+             <string>Local ZeroNodes</string>
             </property>
-            <layout class="QGridLayout" name="gridLayout_6">
-             <item row="3" column="1" colspan="2">
-              <widget class="QGroupBox" name="verticalGroupBox_4">
-               <property name="autoFillBackground">
-                <bool>true</bool>
-               </property>
-               <property name="alignment">
-                <set>Qt::AlignCenter</set>
-               </property>
-               <layout class="QVBoxLayout" name="verticalLayout_18">
-                <property name="sizeConstraint">
-                 <enum>QLayout::SetMinimumSize</enum>
-                </property>
-                <item>
-                 <layout class="QHBoxLayout" name="horizontalLayout_19">
-                  <item alignment="Qt::AlignRight">
-                   <widget class="QLabel" name="node_countlabel">
-                    <property name="maximumSize">
-                     <size>
-                      <width>100</width>
-                      <height>16777215</height>
-                     </size>
-                    </property>
-                    <property name="text">
-                     <string>Node Count</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item alignment="Qt::AlignHCenter">
-                   <widget class="QLabel" name="node_countsep">
-                    <property name="minimumSize">
-                     <size>
-                      <width>20</width>
-                      <height>0</height>
-                     </size>
-                    </property>
-                    <property name="sizeIncrement">
-                     <size>
-                      <width>20</width>
-                      <height>0</height>
-                     </size>
-                    </property>
-                    <property name="text">
-                     <string>|</string>
-                    </property>
-                    <property name="alignment">
-                     <set>Qt::AlignCenter</set>
-                    </property>
-                   </widget>
-                  </item>
-                  <item alignment="Qt::AlignLeft">
-                   <widget class="QLabel" name="node_count">
-                    <property name="maximumSize">
-                     <size>
-                      <width>100</width>
-                      <height>16777215</height>
-                     </size>
-                    </property>
-                    <property name="text">
-                     <string>Loading...</string>
-                    </property>
-                   </widget>
-                  </item>
-                 </layout>
-                </item>
-                <item>
-                 <layout class="QHBoxLayout" name="horizontalLayout_20">
-                  <item alignment="Qt::AlignRight">
-                   <widget class="QLabel" name="tier_0_label">
-                    <property name="text">
-                     <string>Tier 0</string>
-                    </property>
-                    <property name="alignment">
-                     <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
-                    </property>
-                   </widget>
-                  </item>
-                  <item alignment="Qt::AlignHCenter">
-                   <widget class="QLabel" name="tier_0_sep">
-                    <property name="text">
-                     <string>|</string>
-                    </property>
-                    <property name="alignment">
-                     <set>Qt::AlignCenter</set>
-                    </property>
-                   </widget>
-                  </item>
-                  <item alignment="Qt::AlignLeft">
-                   <widget class="QLabel" name="tier_0_count">
-                    <property name="text">
-                     <string>Loading...</string>
-                    </property>
-                   </widget>
-                  </item>
-                 </layout>
-                </item>
-                <item>
-                 <layout class="QHBoxLayout" name="horizontalLayout_21">
-                  <item alignment="Qt::AlignRight">
-                   <widget class="QLabel" name="tier_1_label">
-                    <property name="text">
-                     <string>Tier 1</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item alignment="Qt::AlignHCenter">
-                   <widget class="QLabel" name="tier_1_sep">
-                    <property name="text">
-                     <string>|</string>
-                    </property>
-                    <property name="alignment">
-                     <set>Qt::AlignCenter</set>
-                    </property>
-                   </widget>
-                  </item>
-                  <item alignment="Qt::AlignLeft">
-                   <widget class="QLabel" name="tier_1_count">
-                    <property name="text">
-                     <string>Loading...</string>
-                    </property>
-                   </widget>
-                  </item>
-                 </layout>
-                </item>
-                <item>
-                 <layout class="QHBoxLayout" name="horizontalLayout_22">
-                  <item alignment="Qt::AlignRight">
-                   <widget class="QLabel" name="tier_2_label">
-                    <property name="text">
-                     <string>Tier 2</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item alignment="Qt::AlignHCenter">
-                   <widget class="QLabel" name="tier_2_sep">
-                    <property name="text">
-                     <string>|</string>
-                    </property>
-                    <property name="alignment">
-                     <set>Qt::AlignCenter</set>
-                    </property>
-                   </widget>
-                  </item>
-                  <item alignment="Qt::AlignLeft">
-                   <widget class="QLabel" name="tier_2_count">
-                    <property name="text">
-                     <string>Loading...</string>
-                    </property>
-                   </widget>
-                  </item>
-                 </layout>
-                </item>
-                <item>
-                 <layout class="QHBoxLayout" name="horizontalLayout_23">
-                  <item alignment="Qt::AlignRight">
-                   <widget class="QLabel" name="tier_3_label">
-                    <property name="text">
-                     <string>Tier 3</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item alignment="Qt::AlignHCenter">
-                   <widget class="QLabel" name="tier_3_sep">
-                    <property name="text">
-                     <string>|</string>
-                    </property>
-                    <property name="alignment">
-                     <set>Qt::AlignCenter</set>
-                    </property>
-                   </widget>
-                  </item>
-                  <item alignment="Qt::AlignLeft">
-                   <widget class="QLabel" name="tier_3_count">
-                    <property name="text">
-                     <string>Loading...</string>
-                    </property>
-                   </widget>
-                  </item>
-                 </layout>
-                </item>
-                <item>
-                 <layout class="QHBoxLayout" name="horizontalLayout_24">
-                  <item alignment="Qt::AlignRight">
-                   <widget class="QLabel" name="collateral_total_label">
-                    <property name="font">
-                     <font>
-                      <weight>75</weight>
-                      <bold>true</bold>
-                     </font>
-                    </property>
-                    <property name="text">
-                     <string>Collateral Total</string>
-                    </property>
-                    <property name="alignment">
-                     <set>Qt::AlignJustify|Qt::AlignVCenter</set>
-                    </property>
-                   </widget>
-                  </item>
-                  <item alignment="Qt::AlignHCenter">
-                   <widget class="QLabel" name="collateral_totalsep">
-                    <property name="font">
-                     <font>
-                      <weight>75</weight>
-                      <bold>true</bold>
-                     </font>
-                    </property>
-                    <property name="text">
-                     <string>:</string>
-                    </property>
-                    <property name="alignment">
-                     <set>Qt::AlignCenter</set>
-                    </property>
-                   </widget>
-                  </item>
-                  <item alignment="Qt::AlignLeft">
-                   <widget class="QLabel" name="collateral_total">
-                    <property name="font">
-                     <font>
-                      <weight>75</weight>
-                      <bold>true</bold>
-                     </font>
-                    </property>
-                    <property name="text">
-                     <string>Loading...</string>
-                    </property>
-                   </widget>
-                  </item>
-                 </layout>
-                </item>
-                <item>
-                 <layout class="QHBoxLayout" name="horizontalLayout_25">
-                  <item>
-                   <widget class="QLabel" name="label_19">
-                    <property name="text">
-                     <string/>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QLabel" name="label_18">
-                    <property name="text">
-                     <string/>
-                    </property>
-                   </widget>
-                  </item>
-                  <item alignment="Qt::AlignLeft">
-                   <widget class="QLabel" name="collateral_total_usd">
-                    <property name="font">
-                     <font>
-                      <weight>75</weight>
-                      <bold>true</bold>
-                     </font>
-                    </property>
-                    <property name="text">
-                     <string>Loading...</string>
-                    </property>
-                    <property name="alignment">
-                     <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
-                    </property>
-                   </widget>
-                  </item>
-                 </layout>
-                </item>
-               </layout>
-              </widget>
-             </item>
-             <item row="7" column="0" colspan="4">
-              <layout class="QVBoxLayout" name="verticalLayout_15">
-               <item>
-                <widget class="Line" name="line_5">
-                 <property name="orientation">
-                  <enum>Qt::Horizontal</enum>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QLabel" name="label_16">
-                 <property name="font">
-                  <font>
-                   <weight>75</weight>
-                   <bold>true</bold>
-                  </font>
-                 </property>
-                 <property name="text">
-                  <string>SafeNodes Info</string>
-                 </property>
-                 <property name="alignment">
-                  <set>Qt::AlignCenter</set>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="Line" name="line_6">
-                 <property name="orientation">
-                  <enum>Qt::Horizontal</enum>
-                 </property>
-                </widget>
-               </item>
-              </layout>
-             </item>
-             <item row="1" column="0" colspan="4">
-              <layout class="QVBoxLayout" name="verticalLayout_14">
-               <item>
-                <widget class="Line" name="line_4">
-                 <property name="orientation">
-                  <enum>Qt::Horizontal</enum>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QLabel" name="label_15">
-                 <property name="font">
-                  <font>
-                   <weight>75</weight>
-                   <bold>true</bold>
-                  </font>
-                 </property>
-                 <property name="text">
-                  <string>Active SafeNodes</string>
-                 </property>
-                 <property name="alignment">
-                  <set>Qt::AlignCenter</set>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="Line" name="line_3">
-                 <property name="orientation">
-                  <enum>Qt::Horizontal</enum>
-                 </property>
-                </widget>
-               </item>
-              </layout>
-             </item>
-             <item row="3" column="3">
-              <spacer name="horizontalSpacer_10">
-               <property name="orientation">
-                <enum>Qt::Horizontal</enum>
-               </property>
-               <property name="sizeHint" stdset="0">
-                <size>
-                 <width>40</width>
-                 <height>20</height>
-                </size>
-               </property>
-              </spacer>
-             </item>
-             <item row="3" column="0">
-              <spacer name="horizontalSpacer_11">
-               <property name="orientation">
-                <enum>Qt::Horizontal</enum>
-               </property>
-               <property name="sizeHint" stdset="0">
-                <size>
-                 <width>40</width>
-                 <height>20</height>
-                </size>
-               </property>
-              </spacer>
-             </item>
-             <item row="23" column="2">
-              <widget class="QGroupBox" name="groupBox_9">
-               <property name="autoFillBackground">
-                <bool>true</bool>
-               </property>
-               <property name="title">
-                <string/>
-               </property>
-               <layout class="QGridLayout" name="gridLayout_5">
-                <item row="0" column="0">
-                 <layout class="QVBoxLayout" name="verticalLayout_12">
-                  <item>
-                   <layout class="QGridLayout" name="gridLayout_Info">
-                    <item row="7" column="2">
-                     <widget class="QLabel" name="last_reg_height">
-                      <property name="text">
-                       <string>not configured</string>
-                      </property>
-                     </widget>
-                    </item>
-                    <item row="2" column="1">
-                     <widget class="QLabel" name="balancesep">
-                      <property name="text">
-                       <string>=</string>
-                      </property>
-                      <property name="alignment">
-                       <set>Qt::AlignCenter</set>
-                      </property>
-                     </widget>
-                    </item>
-                    <item row="2" column="0">
-                     <widget class="QLabel" name="balancelabel">
-                      <property name="text">
-                       <string>Balance</string>
-                      </property>
-                     </widget>
-                    </item>
-                    <item row="4" column="1">
-                     <widget class="QLabel" name="collateralsep">
-                      <property name="text">
-                       <string>=</string>
-                      </property>
-                      <property name="alignment">
-                       <set>Qt::AlignCenter</set>
-                      </property>
-                     </widget>
-                    </item>
-                    <item row="2" column="2">
-                     <widget class="QLabel" name="balance">
-                      <property name="text">
-                       <string>not configured</string>
-                      </property>
-                     </widget>
-                    </item>
-                    <item row="4" column="0">
-                     <widget class="QLabel" name="collaterallabel">
-                      <property name="text">
-                       <string>Collateral</string>
-                      </property>
-                     </widget>
-                    </item>
-                    <item row="4" column="2">
-                     <widget class="QLabel" name="collateral">
-                      <property name="text">
-                       <string>not configured</string>
-                      </property>
-                     </widget>
-                    </item>
-                    <item row="3" column="2">
-                     <widget class="QLabel" name="balance_usd">
-                      <property name="text">
-                       <string>not configured</string>
-                      </property>
-                     </widget>
-                    </item>
-                    <item row="6" column="2">
-                     <widget class="QLabel" name="tier">
-                      <property name="text">
-                       <string>not configured</string>
-                      </property>
-                     </widget>
-                    </item>
-                    <item row="6" column="1">
-                     <widget class="QLabel" name="tiersep">
-                      <property name="text">
-                       <string>=</string>
-                      </property>
-                      <property name="alignment">
-                       <set>Qt::AlignCenter</set>
-                      </property>
-                     </widget>
-                    </item>
-                    <item row="6" column="0">
-                     <widget class="QLabel" name="tierlabel">
-                      <property name="text">
-                       <string>Tier</string>
-                      </property>
-                     </widget>
-                    </item>
-                    <item row="5" column="2">
-                     <widget class="QLabel" name="collateral_usd">
-                      <property name="text">
-                       <string>not configured</string>
-                      </property>
-                     </widget>
-                    </item>
-                    <item row="7" column="0">
-                     <widget class="QLabel" name="last_reg_heightlabel">
-                      <property name="text">
-                       <string>Reg. Height</string>
-                      </property>
-                     </widget>
-                    </item>
-                    <item row="7" column="1">
-                     <widget class="QLabel" name="last_reg_heightsep">
-                      <property name="text">
-                       <string>=</string>
-                      </property>
-                      <property name="alignment">
-                       <set>Qt::AlignCenter</set>
-                      </property>
-                     </widget>
-                    </item>
-                    <item row="8" column="0">
-                     <widget class="QLabel" name="valid_thru_heightlabel">
-                      <property name="text">
-                       <string>Valid. Height</string>
-                      </property>
-                     </widget>
-                    </item>
-                    <item row="8" column="1">
-                     <widget class="QLabel" name="valid_thru_heightsep">
-                      <property name="text">
-                       <string>=</string>
-                      </property>
-                      <property name="alignment">
-                       <set>Qt::AlignCenter</set>
-                      </property>
-                     </widget>
-                    </item>
-                    <item row="8" column="2">
-                     <widget class="QLabel" name="valid_thru_height">
-                      <property name="text">
-                       <string>not configured</string>
-                      </property>
-                     </widget>
-                    </item>
-                   </layout>
-                  </item>
-                 </layout>
-                </item>
-               </layout>
-              </widget>
-             </item>
-             <item row="23" column="1">
-              <widget class="QGroupBox" name="groupBox_10">
-               <property name="autoFillBackground">
-                <bool>true</bool>
-               </property>
-               <property name="title">
-                <string/>
-               </property>
-               <layout class="QGridLayout" name="gridLayout_7">
-                <item row="0" column="0">
-                 <layout class="QVBoxLayout" name="verticalLayout_13">
-                  <item>
-                   <layout class="QGridLayout" name="gridLayout_Info2">
-                    <item row="4" column="1">
-                     <widget class="QLabel" name="safeheightsep">
-                      <property name="text">
-                       <string>=</string>
-                      </property>
-                      <property name="alignment">
-                       <set>Qt::AlignCenter</set>
-                      </property>
-                     </widget>
-                    </item>
-                    <item row="6" column="1">
-                     <widget class="QLabel" name="validsep">
-                      <property name="text">
-                       <string>=</string>
-                      </property>
-                      <property name="alignment">
-                       <set>Qt::AlignCenter</set>
-                      </property>
-                     </widget>
-                    </item>
-                    <item row="3" column="2">
-                     <widget class="QLabel" name="safekey">
-                      <property name="text">
-                       <string>not configured</string>
-                      </property>
-                     </widget>
-                    </item>
-                    <item row="6" column="2">
-                     <widget class="QLabel" name="is_valid">
-                      <property name="text">
-                       <string>not configured</string>
-                      </property>
-                     </widget>
-                    </item>
-                    <item row="3" column="1">
-                     <widget class="QLabel" name="safekeysep">
-                      <property name="text">
-                       <string>=</string>
-                      </property>
-                      <property name="alignment">
-                       <set>Qt::AlignCenter</set>
-                      </property>
-                     </widget>
-                    </item>
-                    <item row="4" column="2">
-                     <widget class="QLabel" name="safeheight">
-                      <property name="text">
-                       <string>not configured</string>
-                      </property>
-                     </widget>
-                    </item>
-                    <item row="5" column="2">
-                     <widget class="QLabel" name="safeaddress">
-                      <property name="text">
-                       <string>not configured</string>
-                      </property>
-                     </widget>
-                    </item>
-                    <item row="5" column="0">
-                     <widget class="QLabel" name="safeaddresslabel">
-                      <property name="text">
-                       <string>SAFE Address</string>
-                      </property>
-                     </widget>
-                    </item>
-                    <item row="5" column="1">
-                     <widget class="QLabel" name="safeaddresssep">
-                      <property name="text">
-                       <string>=</string>
-                      </property>
-                      <property name="alignment">
-                       <set>Qt::AlignCenter</set>
-                      </property>
-                     </widget>
-                    </item>
-                    <item row="4" column="0">
-                     <widget class="QLabel" name="safeheightlabel">
-                      <property name="text">
-                       <string>SafeHeight</string>
-                      </property>
-                     </widget>
-                    </item>
-                    <item row="3" column="0">
-                     <widget class="QLabel" name="safekeylabel">
-                      <property name="text">
-                       <string>SafeKey</string>
-                      </property>
-                     </widget>
-                    </item>
-                    <item row="6" column="0">
-                     <widget class="QLabel" name="validlabel">
-                      <property name="text">
-                       <string>Valid</string>
-                      </property>
-                     </widget>
-                    </item>
-                    <item row="1" column="0">
-                     <widget class="QLabel" name="parentkeylabel">
-                      <property name="text">
-                       <string>ParentKey</string>
-                      </property>
-                     </widget>
-                    </item>
-                    <item row="1" column="1">
-                     <widget class="QLabel" name="parentkeysep">
-                      <property name="text">
-                       <string>=</string>
-                      </property>
-                      <property name="alignment">
-                       <set>Qt::AlignCenter</set>
-                      </property>
-                     </widget>
-                    </item>
-                    <item row="1" column="2">
-                     <widget class="QLabel" name="parentkey">
-                      <property name="text">
-                       <string>not configured</string>
-                      </property>
-                     </widget>
-                    </item>
-                   </layout>
-                  </item>
-                 </layout>
-                </item>
-               </layout>
-              </widget>
-             </item>
-             <item row="26" column="0" rowspan="3" colspan="4">
-              <widget class="QGroupBox" name="groupBox_8">
-               <property name="autoFillBackground">
-                <bool>true</bool>
-               </property>
-               <property name="title">
-                <string/>
-               </property>
-               <layout class="QGridLayout" name="gridLayout_8">
-                <item row="1" column="0">
-                 <layout class="QFormLayout" name="formLayout">
-                  <item row="1" column="1">
-                   <widget class="QLabel" name="errors">
-                    <property name="font">
-                     <font>
-                      <weight>75</weight>
-                      <bold>true</bold>
-                     </font>
-                    </property>
-                    <property name="styleSheet">
-                     <string notr="true">color:red;</string>
-                    </property>
-                    <property name="text">
-                     <string/>
-                    </property>
-                    <property name="wordWrap">
-                     <bool>false</bool>
-                    </property>
-                   </widget>
-                  </item>
-                 </layout>
-                </item>
-               </layout>
-              </widget>
-             </item>
-             <item row="23" column="3">
-              <spacer name="horizontalSpacer_9">
-               <property name="orientation">
-                <enum>Qt::Horizontal</enum>
-               </property>
-               <property name="sizeHint" stdset="0">
-                <size>
-                 <width>40</width>
-                 <height>20</height>
-                </size>
-               </property>
-              </spacer>
-             </item>
-             <item row="23" column="0">
-              <spacer name="horizontalSpacer_8">
-               <property name="orientation">
-                <enum>Qt::Horizontal</enum>
-               </property>
-               <property name="sizeHint" stdset="0">
-                <size>
-                 <width>40</width>
-                 <height>20</height>
-                </size>
-               </property>
-              </spacer>
-             </item>
-             <item row="25" column="0" colspan="4">
-              <spacer name="verticalSpacer_6">
-               <property name="orientation">
-                <enum>Qt::Vertical</enum>
-               </property>
-               <property name="sizeHint" stdset="0">
-                <size>
-                 <width>20</width>
-                 <height>40</height>
-                </size>
-               </property>
-              </spacer>
-             </item>
-            </layout>
            </widget>
+          </item>
+          <item>
+           <widget class="QTableView" name="tableZeroNodeLocal"/>
+          </item>
+          <item>
+           <widget class="QLabel" name="label_9">
+            <property name="text">
+             <string>Global ZeroNodes</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QTableView" name="tableZeroNodeGlobal"/>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="horizontalLayout_27">
+            <item>
+             <widget class="QPushButton" name="pushButton_8">
+              <property name="text">
+               <string>PushButton</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="pushButton_7">
+              <property name="text">
+               <string>PushButton</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="pushButton_6">
+              <property name="text">
+               <string>PushButton</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="pushButton_5">
+              <property name="text">
+               <string>PushButton</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="pushButton_4">
+              <property name="text">
+               <string>PushButton</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="pushButton_3">
+              <property name="text">
+               <string>PushButton</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="pushButton_2">
+              <property name="text">
+               <string>PushButton</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="pushButton">
+              <property name="text">
+               <string>PushButton</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
           </item>
          </layout>
         </item>
@@ -1764,7 +1089,7 @@
         <item>
          <layout class="QHBoxLayout" name="horizontalLayout_14">
           <item>
-           <widget class="QLabel" name="safecoinlogo">
+           <widget class="QLabel" name="zerologo">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
               <horstretch>0</horstretch>
@@ -1788,80 +1113,24 @@
              <string/>
             </property>
             <layout class="QGridLayout" name="gridLayout_9">
-             <item row="12" column="0" colspan="3">
-              <widget class="Line" name="line_2">
-               <property name="orientation">
-                <enum>Qt::Horizontal</enum>
-               </property>
-              </widget>
-             </item>
-             <item row="21" column="1">
-              <widget class="QLabel" name="rpcportpacer">
+             <item row="2" column="1">
+              <widget class="QLabel" name="nsolutionspacer">
                <property name="text">
                 <string>|</string>
                </property>
               </widget>
              </item>
-             <item row="20" column="0">
-              <widget class="QLabel" name="p2pportlabel">
-               <property name="text">
-                <string>P2P Port</string>
-               </property>
-              </widget>
-             </item>
-             <item row="19" column="0">
-              <widget class="QLabel" name="versionlabel">
-               <property name="text">
-                <string>Version</string>
-               </property>
-              </widget>
-             </item>
-             <item row="22" column="2">
+             <item row="4" column="2">
               <widget class="QLabel" name="clientname">
                <property name="text">
                 <string>Loading...</string>
                </property>
               </widget>
              </item>
-             <item row="19" column="1">
-              <widget class="QLabel" name="versionpacer">
-               <property name="text">
-                <string>|</string>
-               </property>
-              </widget>
-             </item>
-             <item row="20" column="2">
-              <widget class="QLabel" name="p2pport">
-               <property name="text">
-                <string>Loading...</string>
-               </property>
-              </widget>
-             </item>
-             <item row="15" column="2">
-              <widget class="QLabel" name="notarizedhashvalue">
-               <property name="text">
-                <string>Loading...</string>
-               </property>
-              </widget>
-             </item>
-             <item row="15" column="0">
-              <widget class="QLabel" name="notarizedhashlabel">
-               <property name="text">
-                <string>Notarized Hash</string>
-               </property>
-              </widget>
-             </item>
-             <item row="13" column="0" colspan="3">
+             <item row="11" column="0" colspan="3">
               <widget class="QLabel" name="notmininglable">
                <property name="text">
                 <string>You are currently not mining</string>
-               </property>
-              </widget>
-             </item>
-             <item row="18" column="1">
-              <widget class="QLabel" name="protocolversionpacer">
-               <property name="text">
-                <string>|</string>
                </property>
               </widget>
              </item>
@@ -1872,38 +1141,38 @@
                </property>
               </widget>
              </item>
+             <item row="10" column="0" colspan="3">
+              <widget class="Line" name="line_2">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="0">
+              <widget class="QLabel" name="heightLabel">
+               <property name="text">
+                <string>Block height</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="1">
+              <widget class="QLabel" name="blockheightspacer">
+               <property name="text">
+                <string>|</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="2">
+              <widget class="QLabel" name="blockheight">
+               <property name="text">
+                <string>Loading...</string>
+               </property>
+              </widget>
+             </item>
              <item row="2" column="0">
               <widget class="QLabel" name="nsolutionlable">
                <property name="text">
                 <string>Network solution rate</string>
-               </property>
-              </widget>
-             </item>
-             <item row="18" column="0">
-              <widget class="QLabel" name="protocolversionlabel">
-               <property name="text">
-                <string>Protocol Version</string>
-               </property>
-              </widget>
-             </item>
-             <item row="22" column="1">
-              <widget class="QLabel" name="clientnamepacer">
-               <property name="text">
-                <string>|</string>
-               </property>
-              </widget>
-             </item>
-             <item row="17" column="1">
-              <widget class="QLabel" name="safeversionpacer">
-               <property name="text">
-                <string>|</string>
-               </property>
-              </widget>
-             </item>
-             <item row="15" column="1">
-              <widget class="QLabel" name="notarizedhashspacer">
-               <property name="text">
-                <string>|</string>
                </property>
               </widget>
              </item>
@@ -1921,98 +1190,7 @@
                </property>
               </widget>
              </item>
-             <item row="16" column="2">
-              <widget class="QLabel" name="notarizedtxidvalue">
-               <property name="text">
-                <string>Loading...</string>
-               </property>
-              </widget>
-             </item>
-             <item row="16" column="0">
-              <widget class="QLabel" name="notarizedtxidlabel">
-               <property name="text">
-                <string>Notarized txid</string>
-               </property>
-              </widget>
-             </item>
-             <item row="19" column="2">
-              <widget class="QLabel" name="version">
-               <property name="text">
-                <string>Loading...</string>
-               </property>
-              </widget>
-             </item>
-             <item row="1" column="1">
-              <widget class="QLabel" name="blockheightspacer">
-               <property name="text">
-                <string>|</string>
-               </property>
-              </widget>
-             </item>
-             <item row="3" column="1">
-              <widget class="QLabel" name="connectionsspacer">
-               <property name="text">
-                <string>|</string>
-               </property>
-              </widget>
-             </item>
-             <item row="18" column="2">
-              <widget class="QLabel" name="protocolversion">
-               <property name="text">
-                <string>Loading...</string>
-               </property>
-              </widget>
-             </item>
-             <item row="22" column="0">
-              <widget class="QLabel" name="clientnamelabel">
-               <property name="text">
-                <string>Client Name</string>
-               </property>
-              </widget>
-             </item>
-             <item row="1" column="2">
-              <widget class="QLabel" name="blockheight">
-               <property name="text">
-                <string>Loading...</string>
-               </property>
-              </widget>
-             </item>
-             <item row="3" column="0">
-              <widget class="QLabel" name="connectionslable">
-               <property name="text">
-                <string>Connections</string>
-               </property>
-              </widget>
-             </item>
-             <item row="16" column="1">
-              <widget class="QLabel" name="notarizedtxidspacer">
-               <property name="text">
-                <string>|</string>
-               </property>
-              </widget>
-             </item>
-             <item row="17" column="2">
-              <widget class="QLabel" name="safeversion">
-               <property name="text">
-                <string>Loading...</string>
-               </property>
-              </widget>
-             </item>
-             <item row="4" column="0">
-              <widget class="QLabel" name="tls_connectionslabel">
-               <property name="text">
-                <string>TLS Connections</string>
-               </property>
-              </widget>
-             </item>
-             <item row="17" column="0">
-              <widget class="QLabel" name="safeversionlabel">
-               <property name="text">
-                <string>SAFE Version</string>
-               </property>
-              </widget>
-             </item>
-             <item row="23" column="0" colspan="3">
+             <item row="12" column="0" colspan="3">
               <spacer name="verticalSpacer_4">
                <property name="orientation">
                 <enum>Qt::Vertical</enum>
@@ -2025,28 +1203,28 @@
                </property>
               </spacer>
              </item>
-             <item row="20" column="1">
-              <widget class="QLabel" name="p2pportpacer">
+             <item row="4" column="0">
+              <widget class="QLabel" name="clientnamelabel">
+               <property name="text">
+                <string>Client Name</string>
+               </property>
+              </widget>
+             </item>
+             <item row="3" column="0">
+              <widget class="QLabel" name="connectionslable">
+               <property name="text">
+                <string>Connections</string>
+               </property>
+              </widget>
+             </item>
+             <item row="3" column="1">
+              <widget class="QLabel" name="connectionsspacer">
                <property name="text">
                 <string>|</string>
                </property>
               </widget>
              </item>
-             <item row="2" column="1">
-              <widget class="QLabel" name="nsolutionspacer">
-               <property name="text">
-                <string>|</string>
-               </property>
-              </widget>
-             </item>
-             <item row="21" column="0">
-              <widget class="QLabel" name="rpcportlabel">
-               <property name="text">
-                <string>RPC Port</string>
-               </property>
-              </widget>
-             </item>
-             <item row="0" column="0">
+             <item row="0" column="0" colspan="3">
               <spacer name="verticalSpacer_3">
                <property name="orientation">
                 <enum>Qt::Vertical</enum>
@@ -2058,82 +1236,6 @@
                 </size>
                </property>
               </spacer>
-             </item>
-             <item row="1" column="0">
-              <widget class="QLabel" name="heightLabel">
-               <property name="text">
-                <string>Block height</string>
-               </property>
-              </widget>
-             </item>
-             <item row="21" column="2">
-              <widget class="QLabel" name="rpcport">
-               <property name="text">
-                <string>Loading...</string>
-               </property>
-              </widget>
-             </item>
-             <item row="4" column="2">
-              <widget class="QLabel" name="tls_connections">
-               <property name="text">
-                <string>Loading...</string>
-               </property>
-              </widget>
-             </item>
-             <item row="14" column="0" colspan="3">
-              <spacer name="verticalSpacer_7">
-               <property name="orientation">
-                <enum>Qt::Vertical</enum>
-               </property>
-               <property name="sizeHint" stdset="0">
-                <size>
-                 <width>20</width>
-                 <height>40</height>
-                </size>
-               </property>
-              </spacer>
-             </item>
-             <item row="5" column="0">
-              <widget class="QLabel" name="longestlable">
-               <property name="text">
-                <string>Longest Chain</string>
-               </property>
-              </widget>
-             </item>
-             <item row="5" column="1">
-              <widget class="QLabel" name="longestspacer">
-               <property name="text">
-                <string>|</string>
-               </property>
-              </widget>
-             </item>
-             <item row="5" column="2">
-              <widget class="QLabel" name="longestchain">
-               <property name="text">
-                <string>Loading...</string>
-               </property>
-              </widget>
-             </item>
-             <item row="6" column="0">
-              <widget class="QLabel" name="notarizedlable">
-               <property name="text">
-                <string>Notarized</string>
-               </property>
-              </widget>
-             </item>
-             <item row="6" column="1">
-              <widget class="QLabel" name="notarizedspacer">
-               <property name="text">
-                <string>|</string>
-               </property>
-              </widget>
-             </item>
-             <item row="6" column="2">
-              <widget class="QLabel" name="notarized">
-               <property name="text">
-                <string>Loading...</string>
-               </property>
-              </widget>
              </item>
             </layout>
            </widget>
@@ -2151,8 +1253,8 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>637</width>
-     <height>21</height>
+     <width>1200</width>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -2228,12 +1330,12 @@
   </action>
   <action name="actionDiscord">
    <property name="text">
-    <string>&amp;Safecoin Discord</string>
+    <string>&amp;Zero Discord</string>
    </property>
   </action>
   <action name="actionWebsite">
    <property name="text">
-    <string>&amp;Safecoin Website</string>
+    <string>&amp;Zero Website</string>
    </property>
   </action>
   <action name="actionCheck_for_Updates">
@@ -2279,7 +1381,7 @@
   </action>
   <action name="actionPay_URI">
    <property name="text">
-    <string>Pay safecoin &amp;URI...</string>
+    <string>Pay zero &amp;URI...</string>
    </property>
   </action>
   <action name="action_Recurring_Payments">
@@ -2292,7 +1394,7 @@
     <bool>false</bool>
    </property>
    <property name="text">
-    <string>Request safecoin...</string>
+    <string>Request zero...</string>
    </property>
   </action>
   <action name="actionFile_a_bug">
@@ -2320,7 +1422,6 @@
   </customwidget>
  </customwidgets>
  <tabstops>
-  <tabstop>tabWidget</tabstop>
   <tabstop>inputsCombo</tabstop>
   <tabstop>Address1</tabstop>
   <tabstop>Amount1</tabstop>

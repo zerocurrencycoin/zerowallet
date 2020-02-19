@@ -31,8 +31,8 @@
     <name>ConnectionDialog</name>
     <message>
         <location filename="../src/connection.ui" line="17"/>
-        <source>SafecoinWallet</source>
-        <translation>SafecoinWallet</translation>
+        <source>ZeroWallet</source>
+        <translation>ZeroWallet</translation>
     </message>
     <message>
         <location filename="../src/connection.ui" line="58"/>
@@ -44,8 +44,8 @@
     <name>MainWindow</name>
     <message>
         <location filename="../src/mainwindow.ui" line="14"/>
-        <source>SafecoinWallet</source>
-        <translation>SafecoinWallet</translation>
+        <source>ZeroWallet</source>
+        <translation>ZeroWallet</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.ui" line="29"/>
@@ -397,7 +397,7 @@
     </message>
     <message>
         <location filename="../src/mainwindow.ui" line="1179"/>
-        <source>Pay safecoin &amp;URI...</source>
+        <source>Pay zero &amp;URI...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -417,7 +417,7 @@
     </message>
     <message>
         <location filename="../src/mainwindow.ui" line="1197"/>
-        <source>Request safecoin...</source>
+        <source>Request zero...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -447,7 +447,7 @@
     </message>
     <message>
         <location filename="../src/mainwindow.cpp" line="566"/>
-        <source>Connection over Tor has been enabled. To use this feature, you need to restart SafecoinWallet.</source>
+        <source>Connection over Tor has been enabled. To use this feature, you need to restart ZeroWallet.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -457,13 +457,13 @@
     </message>
     <message>
         <location filename="../src/mainwindow.cpp" line="576"/>
-        <source>Connection over Tor has been disabled. To fully disconnect from Tor, you need to restart SafecoinWallet.</source>
+        <source>Connection over Tor has been disabled. To fully disconnect from Tor, you need to restart ZeroWallet.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../src/mainwindow.cpp" line="637"/>
-        <source>Thanks for supporting SafecoinWallet!</source>
-        <translation>Gracias por apoyar SafecoinWallet!</translation>
+        <source>Thanks for supporting ZeroWallet!</source>
+        <translation>Gracias por apoyar ZeroWallet!</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.cpp" line="639"/>
@@ -472,8 +472,8 @@
     </message>
     <message>
         <location filename="../src/mainwindow.cpp" line="639"/>
-        <source> to support SafecoinWallet</source>
-        <translation> para apoyar SafecoinWallet</translation>
+        <source> to support ZeroWallet</source>
+        <translation> para apoyar ZeroWallet</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.cpp" line="676"/>
@@ -503,27 +503,27 @@
     </message>
     <message>
         <location filename="../src/mainwindow.cpp" line="605"/>
-        <source>SafecoinWallet needs to restart to rescan/reindex. SafecoinWallet will now close, please restart SafecoinWallet to continue</source>
+        <source>ZeroWallet needs to restart to rescan/reindex. ZeroWallet will now close, please restart ZeroWallet to continue</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../src/mainwindow.cpp" line="607"/>
-        <source>Restart SafecoinWallet</source>
+        <source>Restart ZeroWallet</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../src/mainwindow.cpp" line="849"/>
-        <source>Error paying safecoin URI</source>
+        <source>Error paying zero URI</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../src/mainwindow.cpp" line="850"/>
-        <source>URI should be of the form &apos;safecoin:&lt;addr&gt;?amt=x&amp;memo=y</source>
+        <source>URI should be of the form &apos;zero:&lt;addr&gt;?amt=x&amp;memo=y</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../src/mainwindow.cpp" line="837"/>
-        <source>Paste Safecoin URI</source>
+        <source>Paste Zero URI</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -840,17 +840,17 @@ doesn&apos;t look like a z-address</source>
     </message>
     <message>
         <location filename="../src/mobileappconnector.ui" line="84"/>
-        <source>Allow connections over the internet via SafecoinWallet wormhole</source>
+        <source>Allow connections over the internet via ZeroWallet wormhole</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../src/mobileappconnector.ui" line="36"/>
-        <source>Scan this QRCode from your SafecoinWallet companion app to connect your phone</source>
+        <source>Scan this QRCode from your ZeroWallet companion app to connect your phone</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../src/mobileappconnector.ui" line="94"/>
-        <source>SafecoinWallet Companion App</source>
+        <source>ZeroWallet Companion App</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -994,8 +994,8 @@ Would you like to visit the releases page?</source>
     </message>
     <message>
         <location filename="../src/rpc.cpp" line="1182"/>
-        <source>Please wait for SafecoinWallet to exit</source>
-        <translation>Por favor, espere que SafecoinWallet salga</translation>
+        <source>Please wait for ZeroWallet to exit</source>
+        <translation>Por favor, espere que ZeroWallet salga</translation>
     </message>
     <message>
         <location filename="../src/rpc.cpp" line="1183"/>
@@ -1107,12 +1107,12 @@ Por favor, especificar el host/puerta y usario/contraseña en el menú Editar-&g
     </message>
     <message>
         <location filename="../src/connection.cpp" line="77"/>
-        <source>You have zerod set to start as a daemon, which can cause problems with SafecoinWallet
+        <source>You have zerod set to start as a daemon, which can cause problems with ZeroWallet
 
-.Please remove the following line from your zero.conf and restart SafecoinWallet
+.Please remove the following line from your zero.conf and restart ZeroWallet
 daemon=1</source>
-        <translation>Has configurado zerod para ejecutar como demonio, lo que puede causar problemas con SafecoinWallet.
-Por favor, eliminar la siguente linea de zerod.conf y reinicia SafecoinWallet
+        <translation>Has configurado zerod para ejecutar como demonio, lo que puede causar problemas con ZeroWallet.
+Por favor, eliminar la siguente linea de zerod.conf y reinicia ZeroWallet
 daemon=1</translation>
     </message>
     <message>
@@ -1235,12 +1235,12 @@ El saldo es insuficiente para una migración automática.
         <translation>Error en el formato de la dirección.</translation>
     </message>
     <message>
-        <source> doesn&apos;t seem to be a valid Safecoin address.</source>
-        <translation type="vanished">no parece ser una dirección Safecoin válida</translation>
+        <source> doesn&apos;t seem to be a valid Zero address.</source>
+        <translation type="vanished">no parece ser una dirección Zero válida</translation>
     </message>
     <message>
         <location filename="../src/addressbook.cpp" line="135"/>
-        <source>%1 doesn&apos;t seem to be a valid Safecoin address.</source>
+        <source>%1 doesn&apos;t seem to be a valid Zero address.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -1295,7 +1295,7 @@ El saldo es insuficiente para una migración automática.
     </message>
     <message>
         <location filename="../src/websockets.cpp" line="359"/>
-        <source>Connected over the internet via SafecoinWallet wormhole service</source>
+        <source>Connected over the internet via ZeroWallet wormhole service</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -1310,7 +1310,7 @@ El saldo es insuficiente para una migración automática.
     </message>
     <message>
         <location filename="../src/recurring.cpp" line="469"/>
-        <source>No SAFE price was available to convert from USD</source>
+        <source>No ZER price was available to convert from USD</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -1478,7 +1478,7 @@ El saldo es insuficiente para una migración automática.
     </message>
     <message>
         <location filename="../src/recurringmultiple.ui" line="44"/>
-        <source>How should SafecoinWallet proceed?</source>
+        <source>How should ZeroWallet proceed?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -1581,17 +1581,17 @@ El saldo es insuficiente para una migración automática.
     </message>
     <message>
         <location filename="../src/requestdialog.ui" line="219"/>
-        <source>Request payment from a Sapling address. You&apos;ll send a SAFE 0.0001 transaction to the address with a safecoin payment URI. The memo will be included in the transaction when the address pays you.</source>
+        <source>Request payment from a Sapling address. You&apos;ll send a ZER 0.0001 transaction to the address with a zero payment URI. The memo will be included in the transaction when the address pays you.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../src/requestdialog.cpp" line="50"/>
-        <source>Error paying safecoin URI</source>
+        <source>Error paying zero URI</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../src/requestdialog.cpp" line="51"/>
-        <source>URI should be of the form &apos;safecoin:&lt;addr&gt;?amt=x&amp;memo=y</source>
+        <source>URI should be of the form &apos;zero:&lt;addr&gt;?amt=x&amp;memo=y</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -1679,12 +1679,12 @@ El saldo es insuficiente para una migración automática.
     </message>
     <message>
         <location filename="../src/settings.ui" line="273"/>
-        <source>Connect to the internet to fetch SAFE prices</source>
+        <source>Connect to the internet to fetch ZER prices</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../src/settings.ui" line="280"/>
-        <source>Fetch SAFE / USD prices</source>
+        <source>Fetch ZER / USD prices</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -1699,7 +1699,7 @@ El saldo es insuficiente para una migración automática.
     </message>
     <message>
         <location filename="../src/settings.ui" line="301"/>
-        <source>Rescan the blockchain for any missing wallet transactions and to correct your wallet balance. This may take several hours. You need to restart SafecoinWallet for this to take effect</source>
+        <source>Rescan the blockchain for any missing wallet transactions and to correct your wallet balance. This may take several hours. You need to restart ZeroWallet for this to take effect</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -1709,7 +1709,7 @@ El saldo es insuficiente para una migración automática.
     </message>
     <message>
         <location filename="../src/settings.ui" line="345"/>
-        <source>Rebuild the entire blockchain from the genesis block, by rescanning all the block files. This may take several hours to days, depending on your hardware. You need to restart SafecoinWallet for this to take effect</source>
+        <source>Rebuild the entire blockchain from the genesis block, by rescanning all the block files. This may take several hours to days, depending on your hardware. You need to restart ZeroWallet for this to take effect</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -1918,7 +1918,7 @@ El saldo es insuficiente para una migración automática.
     </message>
     <message>
         <location filename="../src/createzcashconfdialog.ui" line="20"/>
-        <source>Your safecoin node will be configured for you automatically</source>
+        <source>Your zero node will be configured for you automatically</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -1928,7 +1928,7 @@ El saldo es insuficiente para una migración automática.
     </message>
     <message>
         <location filename="../src/createzcashconfdialog.ui" line="112"/>
-        <source>Allow connections to the internet to check for updates, get SAFE/USD prices etc...</source>
+        <source>Allow connections to the internet to check for updates, get ZER/USD prices etc...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -2050,7 +2050,7 @@ El saldo es insuficiente para una migración automática.
     <message>
         <location filename="../src/zboard.ui" line="85"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;ZBoard: Fully anonymous and untraceable chat messages based on the ZCash blockchain. &lt;a href=&quot;http://www.z-board.net/&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;http://www.z-board.net/&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;ZBoard: Mensajes de chat totalmente anónimos e imposibles de rastrear basados en la cadena de bloques Safecoin. &lt;a href=&quot;http://www.z-board.net/&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;http://www.z-board.net/&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;ZBoard: Mensajes de chat totalmente anónimos e imposibles de rastrear basados en la cadena de bloques Zero. &lt;a href=&quot;http://www.z-board.net/&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;http://www.z-board.net/&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location filename="../src/zboard.ui" line="107"/>

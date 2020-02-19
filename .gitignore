@@ -20,7 +20,7 @@ zero-qt-wallet-mingw*
 zero-qt-wallet.vcxproj*
 zecwallet.vcxproj*
 zero-qt-wallet.sln
-safecoinwallet.pro.user
+zerowallet.pro.user
 Makefile
 Makefile.*
 qrc_application.cpp

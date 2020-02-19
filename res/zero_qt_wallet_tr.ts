@@ -19,7 +19,7 @@
     <message>
         <location filename="../src/connection.ui" line="17"/>
         <source>zero-qt-wallet</source>
-        <translation>SafecoinWallet</translation>
+        <translation>ZeroWallet</translation>
     </message>
     <message>
         <location filename="../src/connection.ui" line="58"/>
@@ -32,7 +32,7 @@
     <message>
         <location filename="../src/mainwindow.ui" line="14"/>
         <source>zero-qt-wallet</source>
-        <translation>SafecoinWallet</translation>
+        <translation>ZeroWallet</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.ui" line="29"/>
@@ -346,7 +346,7 @@
     <message>
         <location filename="../src/mainwindow.cpp" line="471"/>
         <source>Thanks for supporting zero-qt-wallet!</source>
-        <translation>SafecoinWallet&apos;i desteklediğiniz için teşekkür ederiz!</translation>
+        <translation>ZeroWallet&apos;i desteklediğiniz için teşekkür ederiz!</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.cpp" line="473"/>
@@ -357,7 +357,7 @@
         <location filename="../src/mainwindow.cpp" line="473"/>
         <source> to support zero-qt-wallet</source>
         <translatorcomment>0.01 Bağış yap yazısının devamı</translatorcomment>
-        <translation>ve SafecoinWallet&apos;i destekle</translation>
+        <translation>ve ZeroWallet&apos;i destekle</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.cpp" line="509"/>
@@ -602,7 +602,7 @@ z-adres&apos;i gibi görünmüyor</translation>
 daemon=1</source>
         <translation>zerod, zero-qt-wallet ile sorunlara neden olan bir daemon olarak başlayacak şekilde ayarladınız.
 
-.Lütfen aşağıdaki satırı zero.conf dosyanızdan kaldırın ve SafecoinWallet&apos;ı yeniden başlatın
+.Lütfen aşağıdaki satırı zero.conf dosyanızdan kaldırın ve ZeroWallet&apos;ı yeniden başlatın
 daemon=1</translation>
     </message>
     <message>
@@ -730,7 +730,7 @@ Not starting embedded zerod because --no-embedded was passed</source>
     <message>
         <location filename="../src/rpc.cpp" line="953"/>
         <source>Please wait for zero-qt-wallet to exit</source>
-        <translation>Lütfen çıkmak için SafecoinWallet&apos;ı bekleyin</translation>
+        <translation>Lütfen çıkmak için ZeroWallet&apos;ı bekleyin</translation>
     </message>
     <message>
         <location filename="../src/rpc.cpp" line="954"/>
@@ -805,8 +805,8 @@ Lütfen Düzenle-&gt;Ayarlar menüsünde sunucu/bağlantı noktası ve kullanıc
     </message>
     <message>
         <location filename="../src/addressbook.cpp" line="127"/>
-        <source> doesn&apos;t seem to be a valid Safecoin address.</source>
-        <translation> geçerli bir Safecoin adresi gibi görünmüyor.</translation>
+        <source> doesn&apos;t seem to be a valid Zero address.</source>
+        <translation> geçerli bir Zero adresi gibi görünmüyor.</translation>
     </message>
     <message>
         <location filename="../src/addressbook.cpp" line="171"/>

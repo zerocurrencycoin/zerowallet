@@ -148,7 +148,7 @@ public:
 
         // Command line parser
         QCommandLineParser parser;
-        parser.setApplicationDescription("Shielded desktop wallet and embedded full node for Safecoin");
+        parser.setApplicationDescription("Shielded desktop wallet and embedded full node for Zero");
         parser.addHelpOption();
 
         // A boolean option for running it headless
@@ -164,12 +164,12 @@ public:
                                           "confFile");
         parser.addOption(confOption);
 
-        // Positional argument will specify a safecoin payment URI
-        parser.addPositionalArgument("zcashURI", "An optional safecoin URI to pay");
+        // Positional argument will specify a zero payment URI
+        parser.addPositionalArgument("zcashURI", "An optional zero URI to pay");
 
         parser.process(a);
 
-        // Check for a positional argument indicating a safecoin payment URI
+        // Check for a positional argument indicating a zero payment URI
         if (a.isSecondary()) {
             if (parser.positionalArguments().length() > 0) {
                 a.sendMessage(parser.positionalArguments()[0].toUtf8());    
@@ -228,14 +228,14 @@ public:
         }
 
         w = new MainWindow();
-        w->setWindowTitle("SafecoinWallet v" + QString(APP_VERSION));
+        w->setWindowTitle("ZeroWallet v" + QString(APP_VERSION));
 
         // If there was a payment URI on the command line, pay it
         if (parser.positionalArguments().length() > 0) {
             w->payZcashURI(parser.positionalArguments()[0]);
         }
 
-        // Listen for any secondary instances telling us about a safecoin payment URI
+        // Listen for any secondary instances telling us about a zero payment URI
         QObject::connect(&a, &SingleApplication::receivedMessage, [=] (quint32, QByteArray msg) {
             QString uri(msg);
 

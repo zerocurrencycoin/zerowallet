@@ -18,7 +18,7 @@
     <name>ConnectionDialog</name>
     <message>
         <location filename="../src/connection.ui" line="17"/>
-        <source>safecoinwallet</source>
+        <source>zerowallet</source>
         <translation type="unfinished">YOUR_TRANSLATION_HERE</translation>
     </message>
     <message>
@@ -31,7 +31,7 @@
     <name>MainWindow</name>
     <message>
         <location filename="../src/mainwindow.ui" line="14"/>
-        <source>safecoinwallet</source>
+        <source>zerowallet</source>
         <translation type="unfinished">YOUR_TRANSLATION_HERE</translation>
     </message>
     <message>
@@ -345,7 +345,7 @@
     </message>
     <message>
         <location filename="../src/mainwindow.cpp" line="471"/>
-        <source>Thanks for supporting safecoinwallet!</source>
+        <source>Thanks for supporting zerowallet!</source>
         <translation type="unfinished">YOUR_TRANSLATION_HERE</translation>
     </message>
     <message>
@@ -355,7 +355,7 @@
     </message>
     <message>
         <location filename="../src/mainwindow.cpp" line="473"/>
-        <source> to support safecoinwallet</source>
+        <source> to support zerowallet</source>
         <translation type="unfinished">YOUR_TRANSLATION_HERE</translation>
     </message>
     <message>
@@ -592,9 +592,9 @@ doesn&apos;t look like a z-address</source>
     </message>
     <message>
         <location filename="../src/connection.cpp" line="75"/>
-        <source>You have zerod set to start as a daemon, which can cause problems with safecoinwallet
+        <source>You have zerod set to start as a daemon, which can cause problems with zerowallet
 
-.Please remove the following line from your zcash.conf and restart safecoinwallet
+.Please remove the following line from your zcash.conf and restart zerowallet
 daemon=1</source>
         <translation type="unfinished">YOUR_TRANSLATION_HERE</translation>
     </message>
@@ -714,7 +714,7 @@ Not starting embedded zerod because --no-embedded was passed</source>
     </message>
     <message>
         <location filename="../src/rpc.cpp" line="953"/>
-        <source>Please wait for safecoinwallet to exit</source>
+        <source>Please wait for zerowallet to exit</source>
         <translation type="unfinished">YOUR_TRANSLATION_HERE</translation>
     </message>
     <message>

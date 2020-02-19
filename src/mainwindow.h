@@ -14,7 +14,7 @@ class WormholeClient;
 
 using json = nlohmann::json;
 
-// Struct used to hold destination info when sending a Tx. 
+// Struct used to hold destination info when sending a Tx.
 struct ToFields {
     QString addr;
     double  amount;
@@ -22,7 +22,7 @@ struct ToFields {
     QString encodedMemo;
 };
 
-// Struct used to represent a Transaction. 
+// Struct used to represent a Transaction.
 struct Tx {
     QString         fromAddr;
     QList<ToFields> toAddrs;
@@ -76,7 +76,7 @@ public:
     QLabel*             statusIcon;
     QLabel*             loadingLabel;
     QWidget*            zcashdtab;
-    QWidget*            safenodestab;
+    QWidget*            zeronodestab;
 
     Logger*      logger;
 
@@ -85,11 +85,12 @@ public:
 public slots:
     void slot_change_theme(const QString& themeName);
 
-private:    
+private:
     void closeEvent(QCloseEvent* event);
 
     void setupSendTab();
     void setupTransactionsTab();
+    void setupGZNodes();
     void setupReceiveTab();
     void setupBalancesTab();
     void setupZcashdTab();
@@ -98,7 +99,7 @@ private:
     void setupTurnstileDialog();
     void setupSettingsModal();
     void setupStatusBar();
-    
+
     void clearSendForm();
 
     Tx   createTxFromSendPage();
@@ -123,13 +124,13 @@ private:
 
     void memoButtonClicked(int number, bool includeReplyTo = false);
     void setMemoEnabled(int number, bool enabled);
-    
+
     void donate();
-	
+
     void website();
     void discord();
-    void safenodes();
-	
+    // void safenodes();
+
     void addressBook();
     void postToZBoard();
     void importPrivKey();

@@ -8,16 +8,16 @@ if [ -z $APP_VERSION ]; then echo "APP_VERSION is not set"; exit 1; fi
 if [ -z $PREV_VERSION ]; then echo "PREV_VERSION is not set"; exit 1; fi
 
 if [ -z $ZCASH_DIR ]; then
-    echo "ZCASH_DIR is not set. Please set it to the base directory of a Safecoin project with built Safecoin binaries."
+    echo "ZCASH_DIR is not set. Please set it to the base directory of a Zero project with built Zero binaries."
     exit 1;
 fi
 
-if [ ! -f $ZCASH_DIR/artifacts/zerod ]; then
+if [ ! -f $ZCASH_DIR/zerod ]; then
     echo "Couldn't find zerod in $ZCASH_DIR/artifacts/. Please build zerod."
     exit 1;
 fi
 
-if [ ! -f $ZCASH_DIR/artifacts/zero-cli ]; then
+if [ ! -f $ZCASH_DIR/zero-cli ]; then
     echo "Couldn't find zero-cli in $ZCASH_DIR/artifacts/. Please build zerod."
     exit 1;
 fi
@@ -68,43 +68,43 @@ echo "[OK]"
 
 echo -n "Building..............."
 rm -rf bin/zero-qt-wallet* > /dev/null
-rm -rf bin/safecoinwallet* > /dev/null
+rm -rf bin/zerowallet* > /dev/null
 make clean > /dev/null
 make -j$(nproc) > /dev/null
 echo "[OK]"
 
 
 # Test for Qt
-echo -n "Static link............"
-if [[ $(ldd safecoinwallet | grep -i "Qt") ]]; then
-    echo "FOUND QT; ABORT";
-    exit 1
-fi
-echo "[OK]"
+#echo -n "Static link............"
+#if [[ $(ldd zerowallet | grep -i "Qt") ]]; then
+#    echo "FOUND QT; ABORT";
+#    exit 1
+#fi
+#echo "[OK]"
 
 
 echo -n "Packaging.............."
-mkdir bin/safecoinwallet-v$APP_VERSION > /dev/null
-strip safecoinwallet
+mkdir bin/zerowallet-v$APP_VERSION > /dev/null
+strip zerowallet
 
-cp safecoinwallet                  bin/safecoinwallet-v$APP_VERSION > /dev/null
-cp $ZCASH_DIR/artifacts/zerod    bin/safecoinwallet-v$APP_VERSION > /dev/null
-cp $ZCASH_DIR/artifacts/zero-cli bin/safecoinwallet-v$APP_VERSION > /dev/null
-cp README.md                      bin/safecoinwallet-v$APP_VERSION > /dev/null
-cp LICENSE                        bin/safecoinwallet-v$APP_VERSION > /dev/null
+cp zerowallet                     bin/zerowallet-v$APP_VERSION > /dev/null
+cp $ZCASH_DIR/zerod               bin/zerowallet-v$APP_VERSION > /dev/null
+cp $ZCASH_DIR/zero-cli            bin/zerowallet-v$APP_VERSION > /dev/null
+cp README.md                      bin/zerowallet-v$APP_VERSION > /dev/null
+cp LICENSE                        bin/zerowallet-v$APP_VERSION > /dev/null
 
-cd bin && tar czf linux-safecoinwallet-v$APP_VERSION.tar.gz safecoinwallet-v$APP_VERSION/ > /dev/null
+cd bin && tar czf linux-zerowallet-v$APP_VERSION.tar.gz zerowallet-v$APP_VERSION/ > /dev/null
 cd ..
 
 mkdir artifacts >/dev/null 2>&1
-cp bin/linux-safecoinwallet-v$APP_VERSION.tar.gz ./artifacts/linux-binaries-safecoinwallet-v$APP_VERSION.tar.gz
+cp bin/linux-zerowallet-v$APP_VERSION.tar.gz ./artifacts/linux-binaries-zerowallet-v$APP_VERSION.tar.gz
 echo "[OK]"
 
 
-if [ -f artifacts/linux-binaries-safecoinwallet-v$APP_VERSION.tar.gz ] ; then
+if [ -f artifacts/linux-binaries-zerowallet-v$APP_VERSION.tar.gz ] ; then
     echo -n "Package contents......."
     # Test if the package is built OK
-    if tar tf "artifacts/linux-binaries-safecoinwallet-v$APP_VERSION.tar.gz" | wc -l | grep -q "6"; then
+    if tar tf "artifacts/linux-binaries-zerowallet-v$APP_VERSION.tar.gz" | wc -l | grep -q "6"; then
         echo "[OK]"
     else
         echo "[ERROR]"
@@ -116,24 +116,24 @@ else
 fi
 
 echo -n "Building deb..........."
-debdir=bin/deb/safecoinwallet-v$APP_VERSION
+debdir=bin/deb/zerowallet-v$APP_VERSION
 mkdir -p $debdir > /dev/null
 mkdir    $debdir/DEBIAN
 mkdir -p $debdir/usr/local/bin
 
 cat src/scripts/control | sed "s/RELEASE_VERSION/$APP_VERSION/g" > $debdir/DEBIAN/control
 
-cp safecoinwallet                   $debdir/usr/local/bin/
+cp zerowallet                   $debdir/usr/local/bin/
 cp $ZCASH_DIR/artifacts/zerod $debdir/usr/local/bin/zerod
 
 mkdir -p $debdir/usr/share/pixmaps/
 cp res/zero.xpm           $debdir/usr/share/pixmaps/
 
 mkdir -p $debdir/usr/share/applications
-cp src/scripts/desktopentry    $debdir/usr/share/applications/safecoinwallet.desktop
+cp src/scripts/desktopentry    $debdir/usr/share/applications/zerowallet.desktop
 
 dpkg-deb --build $debdir >/dev/null
-cp $debdir.deb                 artifacts/linux-deb-safecoinwallet-v$APP_VERSION.deb
+cp $debdir.deb                 artifacts/linux-deb-zerowallet-v$APP_VERSION.deb
 echo "[OK]"
 
 
@@ -176,22 +176,22 @@ echo "[OK]"
 
 
 echo -n "Packaging.............."
-mkdir release/safecoinwallet-v$APP_VERSION
-cp release/safecoinwallet.exe          release/safecoinwallet-v$APP_VERSION
-cp $ZCASH_DIR/artifacts/zerod.exe    release/safecoinwallet-v$APP_VERSION > /dev/null
-cp $ZCASH_DIR/artifacts/zero-cli.exe release/safecoinwallet-v$APP_VERSION > /dev/null
-cp README.md                          release/safecoinwallet-v$APP_VERSION
-cp LICENSE                            release/safecoinwallet-v$APP_VERSION
-cd release && zip -r Windows-binaries-safecoinwallet-v$APP_VERSION.zip safecoinwallet-v$APP_VERSION/ > /dev/null
+mkdir release/zerowallet-v$APP_VERSION
+cp release/zerowallet.exe          release/zerowallet-v$APP_VERSION
+cp $ZCASH_DIR/artifacts/zerod.exe    release/zerowallet-v$APP_VERSION > /dev/null
+cp $ZCASH_DIR/artifacts/zero-cli.exe release/zerowallet-v$APP_VERSION > /dev/null
+cp README.md                          release/zerowallet-v$APP_VERSION
+cp LICENSE                            release/zerowallet-v$APP_VERSION
+cd release && zip -r Windows-binaries-zerowallet-v$APP_VERSION.zip zerowallet-v$APP_VERSION/ > /dev/null
 cd ..
 
 mkdir artifacts >/dev/null 2>&1
-cp release/Windows-binaries-safecoinwallet-v$APP_VERSION.zip ./artifacts/
+cp release/Windows-binaries-zerowallet-v$APP_VERSION.zip ./artifacts/
 echo "[OK]"
 
-if [ -f artifacts/Windows-binaries-safecoinwallet-v$APP_VERSION.zip ] ; then
+if [ -f artifacts/Windows-binaries-zerowallet-v$APP_VERSION.zip ] ; then
     echo -n "Package contents......."
-    if unzip -l "artifacts/Windows-binaries-safecoinwallet-v$APP_VERSION.zip" | wc -l | grep -q "11"; then
+    if unzip -l "artifacts/Windows-binaries-zerowallet-v$APP_VERSION.zip" | wc -l | grep -q "11"; then
         echo "[OK]"
     else
         echo "[ERROR]"

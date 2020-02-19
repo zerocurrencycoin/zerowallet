@@ -2,12 +2,12 @@ param (
     [Parameter(Mandatory=$true)][string]$version
 )
 
-$target="safecoinwallet-v$version"
+$target="zerowallet-v$version"
 
 Remove-Item -Path release/wininstaller -Recurse -ErrorAction Ignore  | Out-Null
 New-Item release/wininstaller -itemtype directory                    | Out-Null
 
-Copy-Item release/$target/safecoinwallet.exe     release/wininstaller/
+Copy-Item release/$target/zerowallet.exe     release/wininstaller/
 Copy-Item release/$target/LICENSE           release/wininstaller/
 Copy-Item release/$target/README.md         release/wininstaller/
 Copy-Item release/$target/zerod.exe        release/wininstaller/
@@ -20,10 +20,10 @@ if (!$?) {
     exit 1;
 }
 
-light.exe -ext WixUIExtension -cultures:en-us release/wininstaller/zero-qt-wallet.wixobj -out release/wininstaller/safecoinwallet.msi 
+light.exe -ext WixUIExtension -cultures:en-us release/wininstaller/zero-qt-wallet.wixobj -out release/wininstaller/zerowallet.msi 
 if (!$?) {
     exit 1;
 }
 
 New-Item artifacts -itemtype directory -Force | Out-Null
-Copy-Item release/wininstaller/safecoinwallet.msi ./artifacts/Windows-installer-$target.msi
+Copy-Item release/wininstaller/zerowallet.msi ./artifacts/Windows-installer-$target.msi
