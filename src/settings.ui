@@ -313,6 +313,22 @@
          </property>
          <item>
           <property name="text">
+           <string>zero</string>
+          </property>
+          <property name="icon">
+           <iconset>
+            <normaloff>../res/images/blue/unchecked.png</normaloff>
+            <normalon>../res/images/blue/unchecked.png</normalon>
+            <disabledoff>../res/images/blue/unchecked.png</disabledoff>
+            <disabledon>../res/images/blue/unchecked.png</disabledon>
+            <activeoff>../res/images/blue/checked.png</activeoff>
+            <activeon>../res/images/blue/checked.png</activeon>
+            <selectedoff>../res/images/blue/checked.png</selectedoff>
+            <selectedon>../res/images/blue/checked.png</selectedon>../res/images/blue/unchecked.png</iconset>
+          </property>
+         </item>
+         <item>
+          <property name="text">
            <string>light</string>
           </property>
           <property name="icon">

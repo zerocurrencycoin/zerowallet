@@ -29,7 +29,8 @@
         <file>res/css/default.css</file>
         <file>res/css/light.css</file>
         <file>res/css/matrix.css</file>
-	<file>res/css/classic.css</file>
+        <file>res/css/zero.css</file>
+	      <file>res/css/classic.css</file>
     </qresource>
     <qresource prefix="/images/blue">
         <file>res/images/blue/unchecked.png</file>
@@ -43,6 +44,7 @@
     </qresource>
     <qresource prefix="backgrounds">
         <file>res/images/backgrounds/matrix.jpg</file>
+        <file>res/images/backgrounds/zero.jpg</file>
     </qresource>
     <qresource prefix="icons">
         <file>res/images/icons/tick-white.png</file>

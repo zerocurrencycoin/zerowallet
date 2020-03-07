@@ -90,7 +90,7 @@ private:
 
     void setupSendTab();
     void setupTransactionsTab();
-    void setupGZNodes();
+    void setupZNodesTab();
     void setupReceiveTab();
     void setupBalancesTab();
     void setupZcashdTab();
@@ -119,8 +119,8 @@ private:
     void addressChanged(int number, const QString& text);
     void amountChanged (int number, const QString& text);
 
-    void addNewZaddr(bool sapling);
-    std::function<void(bool)> addZAddrsToComboList(bool sapling);
+    void addNewZaddr();
+    std::function<void(bool)> addZAddrsToComboList();
 
     void memoButtonClicked(int number, bool includeReplyTo = false);
     void setMemoEnabled(int number, bool enabled);

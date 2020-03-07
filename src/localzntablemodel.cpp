@@ -1,6 +1,10 @@
 #include "localzntablemodel.h"
+//#include "globalzntablemodel.h"
 #include "settings.h"
+#include "mainwindow.h"
 #include "rpc.h"
+
+
 
 QList<LocalZeroNodes> zeroNodeSettings;
 
@@ -13,6 +17,7 @@ LocalZNTableModel::LocalZNTableModel(QObject *parent)
 LocalZNTableModel::~LocalZNTableModel() {
     delete modeldata;
     delete znData;
+    delete outputs;
 }
 
 void LocalZNTableModel::addLocalZNData() {
@@ -21,6 +26,158 @@ void LocalZNTableModel::addLocalZNData() {
     std::copy(zeroNodeSettings.begin(), zeroNodeSettings.end(), std::back_inserter(*znData));
 
     updateAllLZNData();
+}
+
+void LocalZNTableModel::setupZeroNode(MainWindow* main, Ui_znsetup* zn, QDialog* d, const LocalZeroNodes &lineNode) {
+
+    int portIndex = lineNode.ipAddress.lastIndexOf(":");
+    zn->txtZNAlias->setText(lineNode.alias);
+    zn->txtZNIpAddress->setText(lineNode.ipAddress.left(portIndex));
+    zn->txtZNPort->setText(QString::number(23801));
+    zn->txtZNPrivateKey->setText(lineNode.privateKey);
+    zn->txtZNOutput->setText(lineNode.txid);
+    if (lineNode.txid.length() > 0) {
+        zn->txtZNIndex->setText(QString::number(lineNode.index));
+    } else {
+        zn->txtZNIndex->setText(QString::number(0));
+    }
+
+    QObject::connect(zn->btnZNNewPrivKey, &QPushButton::clicked, [=] () {
+        main->getRPC()->getZNPrivateKey(zn);
+    });
+
+    QObject::connect(zn->btnZNGetOutput, &QPushButton::clicked, [=] () {
+
+        if (outputs == nullptr)
+            outputs = new QList<ZNOutputs>;
+
+        if (znData == nullptr)
+            znData = new QList<LocalZeroNodes>;
+
+        main->getRPC()->getZNOutputs(zn, outputs, znData);
+
+    });
+
+    QObject::connect(zn->btnZNUpdate, &QPushButton::clicked, [=] () {
+        bool ok = false;
+        qint64 index = zn->txtZNIndex->text().QString::toLongLong(&ok);
+
+        if (zn->txtZNAlias->text().length() > 0 &&
+            zn->txtZNIpAddress->text().length() > 0 &&
+            zn->txtZNPort->text().length() > 0 &&
+            zn->txtZNPrivateKey->text().length() > 0 &&
+            zn->txtZNOutput->text().length() > 0 &&
+            ok) {
+
+            LocalZeroNodes newNode{
+              "RESTART",
+              zn->txtZNAlias->text(),
+              zn->txtZNIpAddress->text() + ":" + zn->txtZNPort->text(),
+              zn->txtZNPrivateKey->text(),
+              zn->txtZNOutput->text(),
+              index
+            };
+
+            if (lineNode.alias.length() == 0) {
+                zeroNodeSettings.push_back(newNode);
+                addLocalZNData();
+                writeZeroNodeSetup();
+            } else {
+                updateZeroNodeSetup(lineNode, newNode);
+            }
+
+            d->accept();
+        }
+    });
+
+    QObject::connect(zn->btnZNUpdateClose, &QPushButton::clicked, [=] () {
+        d->reject();
+    });
+
+}
+
+void LocalZNTableModel::deleteZeroNodeFromSetup(const LocalZeroNodes &delNode) {
+
+  QList<LocalZeroNodes> newZeroNodeList = zeroNodeSettings;
+  zeroNodeSettings.clear();
+
+  for(auto& it : newZeroNodeList) {
+      if (!(delNode.status == it.status &&
+          delNode.alias == it.alias &&
+          delNode.ipAddress == it.ipAddress &&
+          delNode.privateKey == it.privateKey &&
+          delNode.txid == it.txid &&
+          delNode.index == it.index)) {
+          zeroNodeSettings.push_back(it);
+      }
+  }
+
+  //Update Ui
+  addLocalZNData();
+  writeZeroNodeSetup();
+
+}
+
+void LocalZNTableModel::writeZeroNodeSetup() {
+
+    QList<QString> zeroNodes;
+    for(auto& it : zeroNodeSettings) {
+        QString zeroNode = it.alias + " " + it.ipAddress + " " + it.privateKey + " " + it.txid + " " + QString::number(it.index);
+        zeroNodes.push_back(zeroNode);
+    }
+
+    QString confLocation = Settings::getInstance()->zeroNodeConfWritableLocation();
+    Settings::getInstance()->updateToZeroNodeConf(confLocation, zeroNodes);
+
+}
+
+void LocalZNTableModel::updateZeroNodeSetup(const LocalZeroNodes &lineNode, LocalZeroNodes &updatedNode) {
+    QList<LocalZeroNodes> newZeroNodeList = zeroNodeSettings;
+    zeroNodeSettings.clear();
+
+    for(auto& it : newZeroNodeList) {
+        if (!(lineNode.status == it.status &&
+            lineNode.alias == it.alias &&
+            lineNode.ipAddress == it.ipAddress &&
+            lineNode.privateKey == it.privateKey &&
+            lineNode.txid == it.txid &&
+            lineNode.index == it.index)) {
+            zeroNodeSettings.push_back(it);
+        } else {
+            zeroNodeSettings.push_back(updatedNode);
+        }
+    }
+
+    //Update Ui
+    addLocalZNData();
+    writeZeroNodeSetup();
+}
+
+void LocalZNTableModel::updateZNPrivKeySetup(Ui_znsetup* zn, QString* newKey) {
+    zn->txtZNPrivateKey->setText(*newKey);
+}
+
+void LocalZNTableModel::updateZNOutput(Ui_znsetup* zn) {
+    if (!outputs->empty()) {
+          if (outputIndex + 1 >= outputs->length()) {
+            outputIndex = 0;
+          } else {
+            outputIndex++;
+          }
+          zn->txtZNOutput->setText(outputs->at(outputIndex).txid);
+          zn->txtZNIndex->setText(QString::number(outputs->at(outputIndex).index));
+    }
+}
+
+bool LocalZNTableModel::isLocal(QString txid) {
+
+  for (auto it : zeroNodeSettings) {
+      if (txid == it.txid)
+          return true;
+  }
+
+  return false;
+
 }
 
 // bool TxTableModel::exportToCsv(QString fileName) const {

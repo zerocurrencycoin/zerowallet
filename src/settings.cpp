@@ -32,7 +32,7 @@ QString Settings::locateZeroNodeConfFile() {
 #elif defined(Q_OS_DARWIN)
     auto zeroNodeConfLocation = QStandardPaths::locate(QStandardPaths::HomeLocation, "Library/Application Support/Zero/zeronode.conf");
 #else
-    auto zeroNodeConfLocation = QStandardPaths::locate(QStandardPaths::AppDataLocation, "../../Zero/zeronode.conf");
+    auto zeroNodeConfLocation = QStandardPaths::locate(QStandardPaths::AppDataLocation, "../../zero/zeronode.conf");
 #endif
 
     return QDir::cleanPath(zeroNodeConfLocation);
@@ -44,7 +44,7 @@ QString Settings::zeroNodeConfWritableLocation() {
 #elif defined(Q_OS_DARWIN)
     auto zeroNodeConfLocation = QDir(QStandardPaths::writableLocation(QStandardPaths::HomeLocation)).filePath("Library/Application Support/Zero/zeronode.conf");
 #else
-    auto zeroNodeConfLocation = QDir(QStandardPaths::writableLocation(QStandardPaths::AppDataLocation)).filePath("../../Zero/zeronode.conf");
+    auto zeroNodeConfLocation = QDir(QStandardPaths::writableLocation(QStandardPaths::AppDataLocation)).filePath("../../zero/zeronode.conf");
 #endif
 
     return QDir::cleanPath(zeroNodeConfLocation);
@@ -161,7 +161,7 @@ bool Settings::isTAddress(QString addr) {
     if (!isValidAddress(addr))
         return false;
 
-    return addr.startsWith("R");
+    return addr.startsWith("t");
 }
 
 int Settings::getZcashdVersion() {
@@ -233,7 +233,7 @@ void Settings::setAllowCustomFees(bool allow) {
 
 QString Settings::get_theme_name() {
     // Load from the QT Settings.
-    return QSettings().value("options/theme_name", "matrix").toString();
+    return QSettings().value("options/theme_name", "zero").toString();
 }
 
 void Settings::set_theme_name(QString theme_name) {
@@ -336,7 +336,7 @@ const QString Settings::txidStatusMessage = QString(QObject::tr("Tx submitted (r
 
 QString Settings::getTokenName() {
     if (Settings::getInstance()->isTestnet()) {
-        return "ZERT";
+        return "ZET";
     } else {
         return "ZER";
     }
@@ -347,6 +347,21 @@ QString Settings::getDonationAddr() {
             return "ztestsaplingXXX";
     else
             return "RtU6tF2d1YE6hw9DHMAyNRb2uUk4PwSCZr";
+}
+
+bool Settings::updateToZeroNodeConf(QString confLocation, QList<QString> zeroNodes) {
+    QFile file(confLocation);
+    if (!file.open(QIODevice::ReadWrite | QIODevice::Truncate))
+        return false;
+
+
+    QTextStream out(&file);
+    for (auto& it : zeroNodes) {
+        out << it << "\n";
+    }
+    file.close();
+
+    return true;
 }
 
 bool Settings::addToZcashConf(QString confLocation, QString line) {

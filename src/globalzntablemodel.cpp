@@ -60,6 +60,9 @@ void GlobalZNTableModel::updateAllZNData() {
 
     // Sort by reverse time
     std::sort(newmodeldata->begin(), newmodeldata->end(), [=] (auto a, auto b) {
+        if (a.local != b.local)
+          return a.local > b.local;
+
         return a.rank < b.rank; // reverse sort
     });
 

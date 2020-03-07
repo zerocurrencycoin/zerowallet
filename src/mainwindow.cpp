@@ -13,6 +13,7 @@
 #include "ui_turnstileprogress.h"
 #include "ui_viewalladdresses.h"
 #include "ui_validateaddress.h"
+#include "ui_znsetup.h"
 #include "rpc.h"
 #include "balancestablemodel.h"
 #include "settings.h"
@@ -146,10 +147,10 @@ MainWindow::MainWindow(QWidget *parent) :
 
     // The zerod tab is hidden by default, and only later added in if the embedded zerod is started
     zcashdtab = ui->tabWidget->widget(4);
-    ui->tabWidget->removeTab(4);
+    //ui->tabWidget->removeTab(4);
 
     // The safenodes tab is hidden by default, and only later added in if the embedded zerod is started
-    // safenodestab = ui->tabWidget->widget(3);
+    zeronodestab = ui->tabWidget->widget(3);
     // ui->tabWidget->removeTab(3);
 
     setupSendTab();
@@ -158,7 +159,7 @@ MainWindow::MainWindow(QWidget *parent) :
     setupBalancesTab();
 //    setupTurnstileDialog();
     setupZcashdTab();
-    setupGZNodes();
+    setupZNodesTab();
 //    SafeNodesTab();
 
     rpc = new RPC(this);
@@ -675,7 +676,8 @@ void MainWindow::setupSettingsModal() {
 
 void MainWindow::addressBook() {
     // Check to see if there is a target.
-    QRegExp re("Address[0-9]+", Qt::CaseInsensitive);
+    //QRegExp re("Address[0-9]+", Qt::CaseInsensitive);
+    const QRegularExpression re("Address[0-9]+", QRegularExpression::CaseInsensitiveOption);
     for (auto target: ui->sendToWidgets->findChildren<QLineEdit *>(re)) {
         if (target->hasFocus()) {
             AddressBook::open(this, target);
@@ -1348,33 +1350,133 @@ void MainWindow::setupTransactionsTab() {
     });
 }
 
-void MainWindow::setupGZNodes() {
-    // Double click opens up memo if one exists
-    QObject::connect(ui->tableZeroNodeGlobal, &QTableView::doubleClicked, [=] (auto index) {
-        auto gznModel = dynamic_cast<GlobalZNTableModel *>(ui->tableZeroNodeGlobal->model());
-        qint64 rank = gznModel->getGZNRank(index.row());
+void MainWindow::setupZNodesTab() {
 
-        if (rank > 0) {
-            QMessageBox mb(QMessageBox::Information, tr("Rank"), QString::number(rank), QMessageBox::Ok, this);
-            mb.setTextInteractionFlags(Qt::TextSelectableByMouse | Qt::TextSelectableByKeyboard);
-            mb.exec();
+
+    //auto lznModel = rpc->localZeroNodesTableModel;
+    // Double click opens up memo if one exists
+//    QObject::connect(ui->tableZeroNodeGlobal, &QTableView::doubleClicked, [=] (auto index) {
+//        auto gznModel = dynamic_cast<GlobalZNTableModel *>(ui->tableZeroNodeGlobal->model());
+//        qint64 rank = gznModel->getGZNRank(index.row());
+//    });
+
+    int row = -1;
+    ui->tableZeroNodeLocal->setContextMenuPolicy(Qt::CustomContextMenu);
+    QObject::connect(ui->tableZeroNodeLocal, &QTableView::customContextMenuRequested, [=] (QPoint pos) mutable {
+        auto lznModel = dynamic_cast<LocalZNTableModel *>(ui->tableZeroNodeLocal->model());
+
+        QModelIndex index = ui->tableZeroNodeLocal->indexAt(pos);
+        if (index.row() < 0) return;
+
+        row = index.row();
+
+        LocalZeroNodes lineNode {
+            ui->tableZeroNodeLocal->model()->data(index.sibling(index.row(), 0)).toString(),
+            ui->tableZeroNodeLocal->model()->data(index.sibling(index.row(), 1)).toString(),
+            ui->tableZeroNodeLocal->model()->data(index.sibling(index.row(), 2)).toString(),
+            ui->tableZeroNodeLocal->model()->data(index.sibling(index.row(), 3)).toString(),
+            ui->tableZeroNodeLocal->model()->data(index.sibling(index.row(), 4)).toString(),
+            ui->tableZeroNodeLocal->model()->data(index.sibling(index.row(), 5)).toLongLong()
+        };
+
+        QMenu menu(this);
+        menu.addAction(tr("Start"), [=]() {
+
+        });
+        if (lineNode.alias.startsWith("#")) {
+            menu.addAction(tr("Enable"), [=] () {
+                LocalZeroNodes updatedNode {
+                  "RESTART",
+                  lineNode.alias.right(lineNode.alias.length() - 1),
+                  lineNode.ipAddress,
+                  lineNode.privateKey,
+                  lineNode.txid,
+                  lineNode.index
+                };
+                // updatedNode.status = QString::fromStdString("RESTART");
+                // updatedNode.alias = lineNode.alias.replace("#","")
+                lznModel->updateZeroNodeSetup(lineNode, updatedNode);
+            });
+        } else {
+            menu.addAction(tr("Disable"), [=]() {
+                LocalZeroNodes updatedNode {
+                  "RESTART",
+                  QString::fromStdString("#") + lineNode.alias,
+                  lineNode.ipAddress,
+                  lineNode.privateKey,
+                  lineNode.txid,
+                  lineNode.index
+                };
+                // updatedNode.status = QString::fromStdString("RESTART");
+                // updatedNode.alias = QString::fromStdString("#") + lineNode.alias;
+                lznModel->updateZeroNodeSetup(lineNode, updatedNode);
+            });
         }
+
+
+        menu.addAction(tr("Edit"), [=]() {
+          auto lznModel = dynamic_cast<LocalZNTableModel *>(ui->tableZeroNodeLocal->model());
+          Ui_znsetup znSetup;
+          QDialog dialog(this);
+          znSetup.setupUi(&dialog);
+          lznModel->setupZeroNode(this, &znSetup, &dialog, lineNode);
+          dialog.exec();
+        });
+
+        menu.addAction(tr("Delete"), [=]() {
+          lznModel->deleteZeroNodeFromSetup(lineNode);
+        });
+
+        menu.exec(ui->tableZeroNodeLocal->viewport()->mapToGlobal(pos));
+    });
+
+
+
+    QObject::connect(ui->btnZNRefresh, &QPushButton::clicked, [=] () {
+        rpc->refreshGZeroNodes();
+    });
+
+    QObject::connect(ui->btnZNNew, &QPushButton::clicked, [=] () {
+        auto lznModel = dynamic_cast<LocalZNTableModel *>(ui->tableZeroNodeLocal->model());
+        Ui_znsetup znSetup;
+        QDialog dialog(this);
+        znSetup.setupUi(&dialog);
+        const LocalZeroNodes newNode {"","","","","",0};
+        lznModel->setupZeroNode(this, &znSetup, &dialog, newNode);
+        dialog.exec();
+    });
+
+    QObject::connect(ui->btnZNStart, &QPushButton::clicked, [=] () {
+
+        QPoint pos;
+        QModelIndex index = ui->tableZeroNodeLocal->indexAt(pos);
+        if (index.row() < 0) return;
+
+        rpc->startZNAlias(ui->tableZeroNodeLocal->model()->data(index.sibling(index.row(), 0)).toString());
+
+    });
+
+    QObject::connect(ui->btnZNStartAll, &QPushButton::clicked, [=] () {
+        rpc->startZNAll();
+    });
+
+    QObject::connect(ui->btnZNClearCache, &QPushButton::clicked, [=] () {
     });
 }
 
-void MainWindow::addNewZaddr(bool sapling) {
-    rpc->newZaddr(sapling, [=] (json reply) {
+void MainWindow::addNewZaddr() {
+    rpc->newZaddr([=] (json reply) {
         QString addr = QString::fromStdString(reply.get<json::string_t>());
         // Make sure the RPC class reloads the z-addrs for future use
         rpc->refreshAddresses();
 
         // Just double make sure the z-address is still checked
-        if ( sapling && ui->rdioZSAddr->isChecked() ) {
+        if (ui->rdioZSAddr->isChecked() ) {
             ui->listReceiveAddresses->insertItem(0, addr);
             ui->listReceiveAddresses->setCurrentIndex(0);
 
             ui->statusBar->showMessage(QString::fromStdString("Created new zAddr") %
-                                       (sapling ? "(Sapling)" : "(Sprout)"),
+                                       ("(Sapling)"),
                                        10 * 1000);
         }
     });
@@ -1383,7 +1485,7 @@ void MainWindow::addNewZaddr(bool sapling) {
 
 // Adds sapling or sprout z-addresses to the combo box. Technically, returns a
 // lambda, which can be connected to the appropriate signal
-std::function<void(bool)> MainWindow::addZAddrsToComboList(bool sapling) {
+std::function<void(bool)> MainWindow::addZAddrsToComboList() {
     return [=] (bool checked) {
         if (checked && this->rpc->getAllZAddresses() != nullptr) {
             auto addrs = this->rpc->getAllZAddresses();
@@ -1393,8 +1495,8 @@ std::function<void(bool)> MainWindow::addZAddrsToComboList(bool sapling) {
             ui->listReceiveAddresses->clear();
 
             std::for_each(addrs->begin(), addrs->end(), [=] (auto addr) {
-                if ( (sapling &&  Settings::getInstance()->isSaplingAddress(addr)) ||
-                    (!sapling && !Settings::getInstance()->isSaplingAddress(addr))) {
+                if ( (Settings::getInstance()->isSaplingAddress(addr)) ||
+                    (!Settings::getInstance()->isSaplingAddress(addr))) {
                         if (rpc->getAllBalances()) {
                             auto bal = rpc->getAllBalances()->value(addr);
                             ui->listReceiveAddresses->addItem(addr, bal);
@@ -1408,7 +1510,7 @@ std::function<void(bool)> MainWindow::addZAddrsToComboList(bool sapling) {
 
             // If z-addrs are empty, then create a new one.
             if (addrs->isEmpty()) {
-                addNewZaddr(sapling);
+                addNewZaddr();
             }
         }
     };
@@ -1485,7 +1587,7 @@ void MainWindow::setupReceiveTab() {
         d.exec();
     });
 
-    QObject::connect(ui->rdioZSAddr, &QRadioButton::toggled, addZAddrsToComboList(true));
+    QObject::connect(ui->rdioZSAddr, &QRadioButton::toggled, addZAddrsToComboList());
 
     // Explicitly get new address button.
     QObject::connect(ui->btnReceiveNewAddr, &QPushButton::clicked, [=] () {
@@ -1493,7 +1595,7 @@ void MainWindow::setupReceiveTab() {
             return;
 
         if (ui->rdioZSAddr->isChecked()) {
-            addNewZaddr(true);
+            addNewZaddr();
         } else if (ui->rdioTAddr->isChecked()) {
             addNewTAddr();
         }
@@ -1673,7 +1775,7 @@ void MainWindow::updateLabels() {
         updateTAddrCombo(true);
     }
     else {
-        addZAddrsToComboList(ui->rdioZSAddr->isChecked())(true);
+        addZAddrsToComboList();
     }
 
     // Update the Send Tab

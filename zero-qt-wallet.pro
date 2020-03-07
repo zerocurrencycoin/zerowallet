@@ -114,18 +114,19 @@ FORMS += \
     src/recurringdialog.ui \
     src/newrecurring.ui \
     src/requestdialog.ui \
-    src/recurringmultiple.ui
+    src/recurringmultiple.ui \
+    src/znsetup.ui
 
 
-TRANSLATIONS = res/zec_qt_wallet_es.ts \
-               res/zec_qt_wallet_fr.ts \
-               res/zec_qt_wallet_de.ts \
-               res/zec_qt_wallet_pt.ts \
-               res/zec_qt_wallet_it.ts \
-               res/zec_qt_wallet_zh.ts \
-               res/zec_qt_wallet_ru.ts \
-               res/zec_qt_wallet_uk.ts \
-               res/zec_qt_wallet_tr.ts
+TRANSLATIONS = res/zero_qt_wallet_es.ts \
+               res/zero_qt_wallet_fr.ts \
+               res/zero_qt_wallet_de.ts \
+               res/zero_qt_wallet_pt.ts \
+               res/zero_qt_wallet_it.ts \
+               res/zero_qt_wallet_zh.ts \
+               res/zero_qt_wallet_ru.ts \
+               res/zero_qt_wallet_uk.ts \
+               res/zero_qt_wallet_tr.ts
 
 include(singleapplication/singleapplication.pri)
 DEFINES += QAPPLICATION_CLASS=QApplication

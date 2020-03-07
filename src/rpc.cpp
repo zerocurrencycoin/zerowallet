@@ -106,8 +106,8 @@ RPC::~RPC() {
 void RPC::setEZcashd(QProcess* p) {
     ezcashd = p;
 
-    if ((ezcashd && ui->tabWidget->widget(4) == nullptr) && (ezcashd && ui->tabWidget->widget(5) == nullptr)) {
-		ui->tabWidget->addTab(main->zeronodestab, "Zero Nodes") && ui->tabWidget->addTab(main->zcashdtab, "Zero");
+    if ((ezcashd && ui->tabWidget->widget(3) == nullptr) && (ezcashd && ui->tabWidget->widget(4) == nullptr)) {
+		    ui->tabWidget->addTab(main->zeronodestab, "Zero Nodes") && ui->tabWidget->addTab(main->zcashdtab, "Zero");
     }
 }
 
@@ -136,6 +136,48 @@ void RPC::setConnection(Connection* c) {
     // Force update, because this might be coming from a settings update
     // where we need to immediately refresh
     refresh(true);
+}
+
+void RPC::startZeroNodeAll (const std::function<void(json)>& cb) {
+  json payload = {
+      {"jsonrpc", "1.0"},
+      {"id", "someid"},
+      {"method", "startzeronode"},
+      {"params", {"all"}}
+  };
+
+  conn->doRPCWithDefaultErrorHandling(payload, cb);
+}
+
+void RPC::startZeroNodeAlias (QString alias, const std::function<void(json)>& cb) {
+  json payload = {
+      {"jsonrpc", "1.0"},
+      {"id", "someid"},
+      {"method", "startalias"},
+      {"params", { alias.toStdString() }}
+  };
+
+  conn->doRPCWithDefaultErrorHandling(payload, cb);
+}
+
+void RPC::getCreateZeroNodeKey (const std::function<void(json)>& cb) {
+  json payload = {
+      {"jsonrpc", "1.0"},
+      {"id", "someid"},
+      {"method", "createzeronodekey"},
+  };
+
+  conn->doRPCWithDefaultErrorHandling(payload, cb);
+}
+
+void RPC::getZeroNodeOutputs (const std::function<void(json)>& cb) {
+  json payload = {
+      {"jsonrpc", "1.0"},
+      {"id", "someid"},
+      {"method", "getzeronodeoutputs"},
+  };
+
+  conn->doRPCWithDefaultErrorHandling(payload, cb);
 }
 
 void RPC::getGZeroNodeList(const std::function<void(json)>& cb) {
@@ -192,12 +234,12 @@ void RPC::getZUnspent(const std::function<void(json)>& cb) {
     conn->doRPCWithDefaultErrorHandling(payload, cb);
 }
 
-void RPC::newZaddr(bool sapling, const std::function<void(json)>& cb) {
+void RPC::newZaddr(const std::function<void(json)>& cb) {
     json payload = {
         {"jsonrpc", "1.0"},
         {"id", "someid"},
         {"method", "z_getnewaddress"},
-        {"params", { sapling ? "sapling" : "sprout" }},
+        {"params", { "" }},
     };
 
     conn->doRPCWithDefaultErrorHandling(payload, cb);
@@ -524,7 +566,7 @@ void RPC::refreshReceivedZTrans(QList<QString> zaddrs) {
             }
 
             // 2. For all txids, go and get the details of that txid.
-            conn->doBatchRPC<QString>(txids.toList(),
+            conn->doBatchRPC<QString>(txids.values(),
                 [=] (QString txid) {
                     json payload = {
                         {"jsonrpc", "1.0"},
@@ -794,7 +836,8 @@ void RPC::refreshGZeroNodes() {
                 (qint64)it["lastseen"].get<json::number_unsigned_t>(),
                 (qint64)it["lastpaid"].get<json::number_unsigned_t>(),
                 QString::fromStdString(it["txhash"]),
-                QString::fromStdString(it["ip"])
+                QString::fromStdString(it["ip"]),
+                localZeroNodesTableModel->isLocal(QString::fromStdString(it["txhash"]))
                 };
 
             gzndata.push_back(gzn);
@@ -805,6 +848,91 @@ void RPC::refreshGZeroNodes() {
         globalZeroNodesTableModel->addGlobalZNData(gzndata);
     });
 
+}
+
+void RPC::startZNAll() {
+
+    if (conn == nullptr)
+        return noConnection();
+
+    auto fnStartAlias = [=] (json reply) {
+        main->logger->write(QString::fromStdString(reply.get<json::string_t>()));
+    };
+
+    startZeroNodeAll(fnStartAlias);
+}
+
+void RPC::startZNAlias(QString alias) {
+
+    if (conn == nullptr)
+        return noConnection();
+
+    auto fnStartAlias = [=] (json reply) {
+        main->logger->write(QString::fromStdString(reply.get<json::string_t>()));
+    };
+
+    startZeroNodeAlias(alias, fnStartAlias);
+}
+
+void RPC::getZNPrivateKey(Ui_znsetup* zn) {
+
+    if (conn == nullptr)
+        return noConnection();
+
+
+
+    getCreateZeroNodeKey([=] (json reply) mutable {
+          auto key = QString::fromStdString(reply.get<json::string_t>());
+          localZeroNodesTableModel->updateZNPrivKeySetup(zn, &key);
+    });
+}
+
+void RPC::getZNOutputs(Ui_znsetup* zn, QList<ZNOutputs>* outputs, QList<LocalZeroNodes>* znData) {
+
+    if (conn == nullptr)
+        return noConnection();
+
+    getZeroNodeOutputs([=] (json reply) {
+        auto newOutputs = new QList<ZNOutputs>;
+        for (auto& it : reply.get<json::array_t>()) {
+
+            ZNOutputs newOutput{
+                QString::fromStdString(it["txhash"]),
+                (qint64)it["outputidx"].get<json::number_unsigned_t>()
+            };
+            newOutputs->push_back(newOutput);
+        }
+
+
+        auto usedOutputs = new QList<ZNOutputs>;
+        for(auto& it: *znData) {
+          ZNOutputs usedOutput {
+            it.txid,
+            it.index
+          };
+          usedOutputs->push_back(usedOutput);
+        }
+
+        outputs->clear();
+        for (auto& it: *newOutputs) {
+            bool isUsed = false;
+
+            for (auto& uit: *usedOutputs) {
+                if (it.txid == uit.txid && it.index == uit.index) {
+                    isUsed = true;
+                    continue;
+                }
+            }
+            if (!isUsed)
+              outputs->push_back(it);
+        }
+
+        localZeroNodesTableModel->updateZNOutput(zn);
+
+        delete usedOutputs;
+        delete newOutputs;
+
+    });
 }
 
 void RPC::refreshAddresses() {
@@ -840,10 +968,13 @@ void RPC::refreshAddresses() {
         taddresses = newtaddresses;
 
         // If there are no t Addresses, create one
-        newTaddr([=] (json reply) {
-            // What if taddress gets deleted before this executes?
-            taddresses->append(QString::fromStdString(reply.get<json::string_t>()));
-        });
+        if (taddresses->size() == 0) {
+            newTaddr([=] (json reply) {
+                // What if taddress gets deleted before this executes?
+                taddresses->append(QString::fromStdString(reply.get<json::string_t>()));
+            });
+        }
+
     });
 }
 

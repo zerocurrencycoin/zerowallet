@@ -8,6 +8,7 @@
 #include "globalzntablemodel.h"
 #include "localzntablemodel.h"
 #include "ui_mainwindow.h"
+#include "ui_znsetup.h"
 #include "mainwindow.h"
 #include "connection.h"
 
@@ -25,6 +26,7 @@ struct GlobalZeroNodes{
     qint64          lastPaid;
     QString         txid;
     QString         ipAddress;
+    bool            local;
 };
 
 struct TransactionItem {
@@ -69,6 +71,10 @@ public:
     void refresh(bool force = false);
 
     void refreshGZeroNodes();
+    void startZNAlias(QString alias);
+    void startZNAll();
+    void getZNPrivateKey(Ui_znsetup* zn);
+    void getZNOutputs(Ui_znsetup* zn, QList<ZNOutputs>* outputs, QList<LocalZeroNodes>* znData);
     void refreshAddresses();
 
     void checkForUpdate(bool silent = true);
@@ -98,7 +104,7 @@ public:
     const QMap<QString, double>*      getAllBalances()          { return allBalances; }
     const QMap<QString, bool>*        getUsedAddresses()        { return usedAddresses; }
 
-    void newZaddr(bool sapling, const std::function<void(json)>& cb);
+    void newZaddr(const std::function<void(json)>& cb);
     void newTaddr(const std::function<void(json)>& cb);
 
     void getZPrivKey(QString addr, const std::function<void(json)>& cb);
@@ -142,7 +148,10 @@ private:
     void getTransactions        (const std::function<void(json)>& cb);
     void getZAddresses          (const std::function<void(json)>& cb);
     void getTAddresses          (const std::function<void(json)>& cb);
-
+    void startZeroNodeAll       (const std::function<void(json)>& cb);
+    void startZeroNodeAlias     (QString alias, const std::function<void(json)>& cb);
+    void getCreateZeroNodeKey   (const std::function<void(json)>& cb);
+    void getZeroNodeOutputs     (const std::function<void(json)>& cb);
     void getGZeroNodeList       (const std::function<void(json)>& cb);
 
     Connection*                 conn                        = nullptr;
