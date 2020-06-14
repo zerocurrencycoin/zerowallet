@@ -690,12 +690,12 @@ void MainWindow::addressBook() {
 }
 
 void MainWindow::discord() {
-    QString url = "https://discordapp.com/invite/vQgYGJz";
+    QString url = "https://discordapp.com/invite/Jq5knn5";
     QDesktopServices::openUrl(QUrl(url));
 }
 
 void MainWindow::website() {
-    QString url = "https://zero.org";
+    QString url = "https://zerocurrency.io";
     QDesktopServices::openUrl(QUrl(url));
 }
 

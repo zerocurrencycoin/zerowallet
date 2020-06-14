@@ -346,7 +346,7 @@ QString Settings::getDonationAddr() {
     if (Settings::getInstance()->isTestnet())
             return "ztestsaplingXXX";
     else
-            return "RtU6tF2d1YE6hw9DHMAyNRb2uUk4PwSCZr";
+            return "t1fDbALrS7tZV7DDvadAT7yHi5Sztptj8yP";
 }
 
 bool Settings::updateToZeroNodeConf(QString confLocation, QList<QString> zeroNodes) {

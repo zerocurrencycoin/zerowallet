@@ -827,14 +827,19 @@ void RPC::refreshGZeroNodes() {
 
         for (auto& it : reply.get<json::array_t>()) {
 
+            QDateTime lastSeen;
+            QDateTime lastPaid;
+            lastSeen.setTime_t(it["lastseen"].get<json::number_unsigned_t>());
+            lastPaid.setTime_t(it["lastpaid"].get<json::number_unsigned_t>());
+
             GlobalZeroNodes gzn{
                 (qint64)it["rank"].get<json::number_unsigned_t>(),
                 QString::fromStdString(it["addr"]),
                 (qint64)it["version"].get<json::number_unsigned_t>(),
                 QString::fromStdString(it["status"].get<json::string_t>()),
                 (qint64)it["activetime"].get<json::number_unsigned_t>(),
-                (qint64)it["lastseen"].get<json::number_unsigned_t>(),
-                (qint64)it["lastpaid"].get<json::number_unsigned_t>(),
+                (QString)lastSeen.toString("MM/dd/yyyy hh:mm"),
+                (QString)lastPaid.toString("MM/dd/yyyy hh:mm"),
                 QString::fromStdString(it["txhash"]),
                 QString::fromStdString(it["ip"]),
                 localZeroNodesTableModel->isLocal(QString::fromStdString(it["txhash"]))
@@ -1379,7 +1384,8 @@ void RPC::refreshZECPrice() {
     if  (conn == nullptr)
         return noConnection();
 
-    QUrl cmcURL("https://api.coinmarketcap.com/v1/ticker/zero/");
+    //QUrl cmcURL("https://api.coinmarketcap.com/v1/ticker/zero/");
+    QUrl cmcURL("https://api.coingecko.com/api/v3/simple/price?ids=zero&vs_currencies=usd");
 
     QNetworkRequest req;
     req.setUrl(cmcURL);
@@ -1409,15 +1415,12 @@ void RPC::refreshZECPrice() {
                 return;
             }
 
-            for (const json& item : parsed.get<json::array_t>()) {
-                if (item["symbol"].get<json::string_t>() == Settings::getTokenName().toStdString()) {
-                    QString price = QString::fromStdString(item["price_usd"].get<json::string_t>());
-                    qDebug() << Settings::getTokenName() << " Price=" << price;
-                    Settings::getInstance()->setZECPrice(price.toDouble());
+            auto price = parsed["zero"]["usd"].get<json::number_float_t>();
+            qDebug() << Settings::getTokenName() << " Price=" << price;
+            Settings::getInstance()->setZECPrice(price);
 
-                    return;
-                }
-            }
+            return;
+
         } catch (...) {
             // If anything at all goes wrong, just set the price to 0 and move on.
             qDebug() << QString("Caught something nasty");

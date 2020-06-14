@@ -107,6 +107,10 @@ void GlobalZNTableModel::updateAllZNData() {
     }
 
     if (role == Qt::DisplayRole) {
+
+        QDateTime myDateTime;
+
+
         switch (index.column()) {
         case 0: return dat.rank;
         case 1: return dat.address;
@@ -204,11 +208,11 @@ qint64 GlobalZNTableModel::getGZNActive(int row) const {
     return modeldata->at(row).active;
 }
 
-qint64 GlobalZNTableModel::getGZNLastSeen(int row) const {
+QString GlobalZNTableModel::getGZNLastSeen(int row) const {
     return modeldata->at(row).lastSeen;
 }
 
-qint64 GlobalZNTableModel::getGZNLastPain(int row) const {
+QString GlobalZNTableModel::getGZNLastPaid(int row) const {
     return modeldata->at(row).lastPaid;
 }
 

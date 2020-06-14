@@ -1,13 +1,13 @@
-export QT_STATIC="/home/cryptoforge/Qt/static"
+export QT_STATIC="/home/cryptoforge/Qt/static/5.14.2"
 export APP_VERSION="1.0.0"
 export PREV_VERSION="0.0.0"
 
-export ZCASH_DIR_LINUX="/home/cryptoforge/Dev/zero302/src"
-export ZCASH_DIR_WINDOWS="/home/cryptoforge/Dev/ZeroRelease"
+export ZCASH_DIR_LINUX="/home/cryptoforge/Dev/zero_dev/zero/src"
+export ZCASH_DIR_WINDOWS="/home/cryptoforge/Dev/zero_dev/zero_win/src"
 
 export ZCASH_DIR="/home/cryptoforge/Dev/ZeroRelease"
 
-export MXE_PATH="/home/cryptoforge/Qt/repo/usr/bin"
+export MXE_PATH="/home/cryptoforge/mxe/usr/bin"
 
 cp $ZCASH_DIR_LINUX/zerod           $ZCASH_DIR/zerod
 cp $ZCASH_DIR_LINUX/zero-cli        $ZCASH_DIR/zero-cli

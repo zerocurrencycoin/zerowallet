@@ -22,8 +22,8 @@ struct GlobalZeroNodes{
     qint64          version;
     QString         status;
     qint64          active;
-    qint64          lastSeen;
-    qint64          lastPaid;
+    QString          lastSeen;
+    QString          lastPaid;
     QString         txid;
     QString         ipAddress;
     bool            local;

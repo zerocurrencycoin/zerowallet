@@ -1294,7 +1294,6 @@
     </property>
     <addaction name="actionValidate_Address"/>
     <addaction name="separator"/>
-    <addaction name="actionSafeNodes"/>
    </widget>
    <widget class="QMenu" name="menu_Edit">
     <property name="title">

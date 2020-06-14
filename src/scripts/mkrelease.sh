@@ -185,23 +185,23 @@ echo "[OK]"
 
 
 echo -n "Packaging.............."
-mkdir release
-mkdir release/zerowallet-v$APP_VERSION
-cp zerowallet.exe             release/zerowallet-v$APP_VERSION
+mkdir release >/dev/null 2>&1
+mkdir release/zerowallet-v$APP_VERSION > /dev/null 2>&1
+cp release/zerowallet.exe             release/zerowallet-v$APP_VERSION > /dev/null
 cp $ZCASH_DIR/zerod.exe               release/zerowallet-v$APP_VERSION > /dev/null
 cp $ZCASH_DIR/zero-cli.exe            release/zerowallet-v$APP_VERSION > /dev/null
-cp README.md                          release/zerowallet-v$APP_VERSION
-cp LICENSE                            release/zerowallet-v$APP_VERSION
-cd release && zip -r Windows-binaries-zerowallet-v$APP_VERSION.zip zerowallet-v$APP_VERSION/ > /dev/null
+cp README.md                          release/zerowallet-v$APP_VERSION > /dev/null
+cp LICENSE                            release/zerowallet-v$APP_VERSION > /dev/null
+cd release && zip -r Windows-zerowallet-v$APP_VERSION.zip zerowallet-v$APP_VERSION/ > /dev/null
 cd ..
 
 mkdir artifacts >/dev/null 2>&1
-cp release/Windows-binaries-zerowallet-v$APP_VERSION.zip ./artifacts/
+cp release/Windows-zerowallet-v$APP_VERSION.zip ./artifacts/
 echo "[OK]"
 
-if [ -f artifacts/Windows-binaries-zerowallet-v$APP_VERSION.zip ] ; then
+if [ -f artifacts/Windows-zerowallet-v$APP_VERSION.zip ] ; then
     echo -n "Package contents......."
-    if unzip -l "artifacts/Windows-binaries-zerowallet-v$APP_VERSION.zip" | wc -l | grep -q "11"; then
+    if unzip -l "artifacts/Windows-zerowallet-v$APP_VERSION.zip" | wc -l | grep -q "11"; then
         echo "[OK]"
     else
         echo "[ERROR]"

@@ -18,8 +18,8 @@ public:
     qint64   getGZNVersion(int row) const;
     QString  getGZNStatus(int row) const;
     qint64   getGZNActive(int row) const;
-    qint64   getGZNLastSeen(int row) const;
-    qint64   getGZNLastPain(int row) const;
+    QString  getGZNLastSeen(int row) const;
+    QString  getGZNLastPaid(int row) const;
     QString  getGZNTxid(int row) const;
     QString  getGZNIp(int row) const;
 

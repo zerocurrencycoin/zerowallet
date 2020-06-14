@@ -41,4 +41,4 @@ zerowallet
 IDEWorkspaceChecks.plist
 *.sln
 node_modules
-zero-qt-wallet.pro.user
+zero-qt-wallet.pro.user*
