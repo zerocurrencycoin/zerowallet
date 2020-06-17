@@ -1,4 +1,4 @@
-#!/bin/bash
+QT_STATIC#!/bin/bash
 
 # Accept the variables as command line arguments as well
 POSITIONAL=()
@@ -7,8 +7,8 @@ do
 key="$1"
 
 case $key in
-    -q|--qt_path)
-    QT_PATH="$2"
+    -q|--qt_static)
+    QT_STATIC="$2"
     shift # past argument
     shift # past value
     ;;
@@ -30,9 +30,9 @@ esac
 done
 set -- "${POSITIONAL[@]}" # restore positional parameters
 
-if [ -z $QT_PATH ]; then 
-    echo "QT_PATH is not set. Please set it to the base directory of Qt"; 
-    exit 1; 
+if [ -z $QT_STATIC ]; then
+    echo "QT_STATIC is not set. Please set it to the base directory of Qt";
+    exit 1;
 fi
 
 if [ -z $ZCASH_DIR ]; then
@@ -45,8 +45,8 @@ if [ -z $APP_VERSION ]; then
     exit 1;
 fi
 
-if [ ! -f $ZCASH_DIR/src/zerod ]; then
-    echo "Could not find compiled zerod in $ZCASH_DIR/src/.";
+if [ ! -f $ZCASH_DIR/zerod ]; then
+    echo "Could not find compiled zerod in $ZCASH_DIR/.";
     exit 1;
 fi
 
@@ -67,8 +67,8 @@ echo "[OK]"
 echo -n "Configuring............"
 # Build
 #TODO
-#QT_STATIC=$QT_PATH src/scripts/dotranslations.sh >/dev/null
-$QT_PATH/bin/qmake zero-qt-wallet.pro CONFIG+=release >/dev/null
+./src/scripts/dotranslations.sh >/dev/null
+$QT_STATIC/bin/qmake zero-qt-wallet.pro CONFIG+=release >/dev/null
 echo "[OK]"
 
 
@@ -81,9 +81,9 @@ echo -n "Deploying.............."
 mkdir artifacts >/dev/null 2>&1
 rm -f artifcats/zerowallet.dmg >/dev/null 2>&1
 rm -f artifacts/rw* >/dev/null 2>&1
-cp $ZCASH_DIR/src/zerod zerowallet.app/Contents/MacOS/
-cp $ZCASH_DIR/src/zero-cli zerowallet.app/Contents/MacOS/
-$QT_PATH/bin/macdeployqt zerowallet.app 
+cp $ZCASH_DIR/zerod zerowallet.app/Contents/MacOS/
+cp $ZCASH_DIR/zero-cli zerowallet.app/Contents/MacOS/
+$QT_STATIC/bin/macdeployqt zerowallet.app
 echo "[OK]"
 
 
