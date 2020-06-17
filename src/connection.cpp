@@ -189,7 +189,7 @@ void ConnectionLoader::createZcashConf() {
     out << "server=1\n";
     out << "rpcuser=zero\n";
     out << "rpcpassword=" % randomPassword() << "\n";
-    out << "rpcport=8771\n";
+    out << "rpcport=23811\n";
     out << "rpcworkqueue=256\n";
     out << "txindex=1\n";
     out << "addressindex=1\n";
@@ -651,7 +651,7 @@ std::shared_ptr<ConnectionConfig> ConnectionLoader::autoDetectZcashConf() {
         if (name == "testnet" &&
             value == "1"  &&
             zcashconf->port.isEmpty()) {
-                zcashconf->port = "18770";
+                zcashconf->port = "23812";
         }
         if (name == "fastsync" && value == "1") {
             zcashconf->fastsync = true;
@@ -659,7 +659,7 @@ std::shared_ptr<ConnectionConfig> ConnectionLoader::autoDetectZcashConf() {
     }
 
     // If rpcport is not in the file, and it was not set by the testnet=1 flag, then go to default
-    if (zcashconf->port.isEmpty()) zcashconf->port = "8770";
+    if (zcashconf->port.isEmpty()) zcashconf->port = "23811";
     file.close();
 
     // In addition to the zero.conf file, also double check the params.

@@ -190,7 +190,7 @@ void Settings::setBlockNumber(int number) {
 
 bool Settings::isSaplingActive() {
     return  (isTestnet() && getBlockNumber() > 0) ||
-			(!isTestnet() && getBlockNumber() > 547422);
+			(!isTestnet() && getBlockNumber() > 492850);
 }
 
 double Settings::getZECPrice() {
@@ -281,7 +281,7 @@ void Settings::openAddressInExplorer(QString address) {
     if (Settings::getInstance()->isTestnet()) {
         url = "https://testnet.zero.org/address/" + address;
     } else {
-        url = "https://explorer.zero.org/address/" + address;
+        url = "https://insight.zerocurrency.io/insight/address/" + address;
     }
     QDesktopServices::openUrl(QUrl(url));
 }
@@ -292,7 +292,7 @@ void Settings::openTxInExplorer(QString txid) {
         url = "https://testnet.zero.org/tx/" + txid;
     }
     else {
-        url = "https://explorer.zero.org/tx/" + txid;
+        url = "https://insight.zerocurrency.io/insight/tx/" + txid;
     }
     QDesktopServices::openUrl(QUrl(url));
 }
@@ -424,7 +424,7 @@ QString Settings::getZboardAddr() {
         return getDonationAddr();
     }
     else {
-        return "zs10m00rvkhfm4f7n23e4sxsx275r7ptnggx39ygl0vy46j9mdll5c97gl6dxgpk0njuptg2mn9w5s";
+        return "t1fDbALrS7tZV7DDvadAT7yHi5Sztptj8yP";
     }
 }
 

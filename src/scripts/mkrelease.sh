@@ -23,24 +23,17 @@ if [ ! -f $ZCASH_DIR/zero-cli ]; then
 fi
 
 
-## Ensure that zerod is the right build
-#echo -n "zerod version........."
-#if grep -q "zqwMagicBean" $ZCASH_DIR/artifacts/zerod && ! readelf -s $ZCASH_DIR/artifacts/zerod | grep -q "GLIBC_2\.25"; then
-#    echo "[OK]"
-#else
-#    echo "[ERROR]"
-#    echo "zerod doesn't seem to be a zqwMagicBean build or zerod is built with libc 2.25"
-#    exit 1
-#fi
+## Ensure that zerod is built
+if [ ! -f $ZCASH_DIR/zerod ]; then
+    echo "Couldn't find zerod in $ZCASH_DIR/. Please build zerod"
+    exit 1;
+fi
 
-#echo -n "zerod.exe version....."
-#if grep -q "zqwMagicBean" $ZCASH_DIR/artifacts/zerod.exe; then
-#    echo "[OK]"
-#else
-#    echo "[ERROR]"
-#    echo "zerod doesn't seem to be a zqwMagicBean build"
-#    exit 1
-#fi
+
+if [ ! -f $ZCASH_DIR/zero-cli ]; then
+    echo "Couldn't find zero-cli in $ZCASH_DIR/. Please build zero-cli"
+    exit 1;
+fi
 
 echo -n "Version files.........."
 # Replace the version number in the .pro file so it gets picked up everywhere
@@ -61,7 +54,7 @@ echo "[Building on" `lsb_release -r`"]"
 
 echo -n "Configuring............"
 #TODO
-#QT_STATIC=$QT_STATIC bash src/scripts/dotranslations.sh >/dev/null
+./src/scripts/dotranslations.sh >/dev/null
 $QT_STATIC/bin/qmake zero-qt-wallet.pro -spec linux-clang CONFIG+=release > /dev/null
 echo "[OK]"
 
@@ -97,14 +90,15 @@ cd bin && tar czf linux-zerowallet-v$APP_VERSION.tar.gz zerowallet-v$APP_VERSION
 cd ..
 
 mkdir artifacts >/dev/null 2>&1
-cp bin/linux-zerowallet-v$APP_VERSION.tar.gz ./artifacts/linux-binaries-zerowallet-v$APP_VERSION.tar.gz
+mkdir release >/dev/null 2>&1
+cp bin/linux-zerowallet-v$APP_VERSION.tar.gz ./artifacts/linux-zerowallet-v$APP_VERSION.tar.gz
 echo "[OK]"
 
 
-if [ -f artifacts/linux-binaries-zerowallet-v$APP_VERSION.tar.gz ] ; then
+if [ -f artifacts/linux-zerowallet-v$APP_VERSION.tar.gz ] ; then
     echo -n "Package contents......."
     # Test if the package is built OK
-    if tar tf "artifacts/linux-binaries-zerowallet-v$APP_VERSION.tar.gz" | wc -l | grep -q "6"; then
+    if tar tf "artifacts/linux-zerowallet-v$APP_VERSION.tar.gz" | wc -l | grep -q "6"; then
         echo "[OK]"
     else
         echo "[ERROR]"
@@ -138,7 +132,7 @@ mkdir -p                        $debdir/usr/share/applications
 cp src/scripts/desktopentry     $debdir/usr/share/applications/zerowallet.desktop
 
 dpkg-deb --build                $debdir >/dev/null
-cp $debdir.deb                  artifacts/linux-deb-zerowallet-v$APP_VERSION.deb
+cp $debdir.deb                  artifacts/linux-zerowallet-v$APP_VERSION.deb
 echo "[OK]"
 
 
@@ -152,16 +146,16 @@ if [ -z $MXE_PATH ]; then
     exit 0;
 fi
 
-# if [ ! -f $ZCASH_DIR/zerod.exe ]; then
-#     echo "Couldn't find zerod.exe in $ZCASH_DIR/. Please build zerod.exe"
-#     exit 1;
-# fi
-#
-#
-# if [ ! -f $ZCASH_DIR/zero-cli.exe ]; then
-#     echo "Couldn't find zero-cli.exe in $ZCASH_DIR/. Please build zerod.exe"
-#     exit 1;
-# fi
+if [ ! -f $ZCASH_DIR/zerod.exe ]; then
+    echo "Couldn't find zerod.exe in $ZCASH_DIR/. Please build zerod.exe"
+    exit 1;
+fi
+
+
+if [ ! -f $ZCASH_DIR/zero-cli.exe ]; then
+    echo "Couldn't find zero-cli.exe in $ZCASH_DIR/. Please build zerod.exe"
+    exit 1;
+fi
 
 export PATH=$MXE_PATH:$PATH
 
@@ -185,7 +179,6 @@ echo "[OK]"
 
 
 echo -n "Packaging.............."
-mkdir release >/dev/null 2>&1
 mkdir release/zerowallet-v$APP_VERSION > /dev/null 2>&1
 cp release/zerowallet.exe             release/zerowallet-v$APP_VERSION > /dev/null
 cp $ZCASH_DIR/zerod.exe               release/zerowallet-v$APP_VERSION > /dev/null

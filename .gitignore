@@ -29,6 +29,7 @@ zero-qt-wallet_plugin_import.cpp
 zerowallet_plugin_import.cpp
 zerowallet_resource*
 workspace.code-workspace
+buildrelease.sh
 *.zip
 *.tar.gz
 *.xcsettings
