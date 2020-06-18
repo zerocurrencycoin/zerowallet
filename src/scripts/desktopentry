@@ -1,12 +1,12 @@
 [Desktop Entry]
-Name=SafecoinWallet
-Comment=Full node and wallet for Safecoin
+Name=ZeroWallet
+Comment=Full node and wallet for Zero
 GenericName=Wallet
-Exec=/usr/local/bin/safecoinwallet %u
-Icon=safecoinwallet.xpm
+Exec=/usr/local/bin/zerowallet %u
+Icon=zero.xpm
 Type=Application
 StartupNotify=true
-StartupWMClass=safecoinwallet
+StartupWMClass=zerowallet
 Categories=Utility;
-MimeType=x-scheme-handler/safecoin;
-Keywords=safecoinwallet;
+MimeType=x-scheme-handler/zero;
+Keywords=zerowallet;

@@ -32,13 +32,13 @@
     <name>ConnectionDialog</name>
     <message>
         <location filename="../src/connection.ui" line="17"/>
-        <source>SafecoinWallet</source>
-        <translation>SafecoinWallet</translation>
+        <source>ZeroWallet</source>
+        <translation>ZeroWallet</translation>
     </message>
     <message>
         <location filename="../src/connection.ui" line="58"/>
-        <source>The SafecoinWallet Awakens...</source>
-        <translation>SafecoinWallet Запускається...</translation>
+        <source>The ZeroWallet Awakens...</source>
+        <translation>ZeroWallet Запускається...</translation>
     </message>
 </context>
 <context>
@@ -70,8 +70,8 @@
     </message>
     <message>
         <location filename="../src/mainwindow.ui" line="14"/>
-        <source>SafecoinWallet</source>
-        <translation>SafecoinWallet</translation>
+        <source>ZeroWallet</source>
+        <translation>ZeroWallet</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.ui" line="29"/>
@@ -218,8 +218,8 @@
     </message>
     <message>
         <location filename="../src/mainwindow.ui" line="908"/>
-        <source>safecoind</source>
-        <translation>safecoind</translation>
+        <source>zerod</source>
+        <translation>zerod</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.ui" line="2095"/>
@@ -228,13 +228,13 @@
     </message>
     <message>
         <location filename="../src/mainwindow.ui" line="2128"/>
-        <source>Pay safecoin &amp;URI...</source>
-        <translation>Оплатити safecoin &amp;URI...</translation>
+        <source>Pay zero &amp;URI...</source>
+        <translation>Оплатити zero &amp;URI...</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.ui" line="1237"/>
-        <source>Request safecoin...</source>
-        <translation>Запит safecoin...</translation>
+        <source>Request zero...</source>
+        <translation>Запит zero...</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.ui" line="1247"/>
@@ -380,13 +380,13 @@
     </message>
     <message>
         <location filename="../src/mainwindow.ui" line="2080"/>
-        <source>&amp;Safecoin Discord</source>
-        <translation>&amp;Safecoin Discord</translation>
+        <source>&amp;Zero Discord</source>
+        <translation>&amp;Zero Discord</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.ui" line="2085"/>
-        <source>&amp;Safecoin Website</source>
-        <translation>&amp;Сайт Safecoin</translation>
+        <source>&amp;Zero Website</source>
+        <translation>&amp;Сайт Zero</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.ui" line="2090"/>
@@ -441,8 +441,8 @@
     </message>
     <message>
         <location filename="../src/mainwindow.cpp" line="647"/>
-        <source>Connection over Tor has been enabled. To use this feature, you need to restart SafecoinWallet.</source>
-        <translation>З&apos;єднання через Tor було включено. Щоб скористатися цією функцією, вам потрібно перезапустити SafecoinWallet.</translation>
+        <source>Connection over Tor has been enabled. To use this feature, you need to restart ZeroWallet.</source>
+        <translation>З&apos;єднання через Tor було включено. Щоб скористатися цією функцією, вам потрібно перезапустити ZeroWallet.</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.cpp" line="656"/>
@@ -451,8 +451,8 @@
     </message>
     <message>
         <location filename="../src/mainwindow.cpp" line="657"/>
-        <source>Connection over Tor has been disabled. To fully disconnect from Tor, you need to restart SafecoinWallet.</source>
-        <translation>З&apos;єднання через Tor було відключено. Щоб повністю відключитися від Tor, вам потрібно перезапустити SafecoinWallet.</translation>
+        <source>Connection over Tor has been disabled. To fully disconnect from Tor, you need to restart ZeroWallet.</source>
+        <translation>З&apos;єднання через Tor було відключено. Щоб повністю відключитися від Tor, вам потрібно перезапустити ZeroWallet.</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.cpp" line="915"/>
@@ -481,13 +481,13 @@
     </message>
     <message>
         <location filename="../src/mainwindow.cpp" line="789"/>
-        <source>SafecoinWallet needs to restart to rescan/reindex. SafecoinWallet will now close, please restart SafecoinWallet to continue</source>
-        <translation>SafecoinWallet необхідно перезапустити для повторного сканування / переіндексації. Перезапустіть SafecoinWallet, щоб продовжити</translation>
+        <source>ZeroWallet needs to restart to rescan/reindex. ZeroWallet will now close, please restart ZeroWallet to continue</source>
+        <translation>ZeroWallet необхідно перезапустити для повторного сканування / переіндексації. Перезапустіть ZeroWallet, щоб продовжити</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.cpp" line="791"/>
-        <source>Restart SafecoinWallet</source>
-        <translation>Перезапуск SafecoinWallet</translation>
+        <source>Restart ZeroWallet</source>
+        <translation>Перезапуск ZeroWallet</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.cpp" line="303"/>
@@ -501,8 +501,8 @@
     </message>
     <message>
         <location filename="../src/mainwindow.cpp" line="1113"/>
-        <source>The keys will be imported into your connected safecoind node</source>
-        <translation>Ключі будуть імпортовані в ваш підключений вузол safecoind</translation>
+        <source>The keys will be imported into your connected zerod node</source>
+        <translation>Ключі будуть імпортовані в ваш підключений вузол zerod</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.cpp" line="1163"/>
@@ -526,8 +526,8 @@
     </message>
     <message>
         <location filename="../src/mainwindow.cpp" line="1187"/>
-        <source>You need to back it up from the machine safecoind is running on</source>
-        <translation>Ви повинні зробити резервну копію з машини, на якій працює safecoind</translation>
+        <source>You need to back it up from the machine zerod is running on</source>
+        <translation>Ви повинні зробити резервну копію з машини, на якій працює zerod</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.cpp" line="1191"/>
@@ -611,8 +611,8 @@
     </message>
     <message>
         <location filename="../src/mainwindow.cpp" line="303"/>
-        <source>safecoind is not yet ready. Please wait for the UI to load</source>
-        <translation>safecoind ще не готовий. Будь ласка, зачекайте, поки завантажиться інтерфейс</translation>
+        <source>zerod is not yet ready. Please wait for the UI to load</source>
+        <translation>zerod ще не готовий. Будь ласка, зачекайте, поки завантажиться інтерфейс</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.cpp" line="459"/>
@@ -626,18 +626,18 @@
     </message>
     <message>
         <location filename="../src/mainwindow.cpp" line="526"/>
-        <source>Tor configuration is available only when running an embedded safecoind.</source>
-        <translation>Конфігурація Tor доступна тільки при роботі з вбудованим safecoind.</translation>
+        <source>Tor configuration is available only when running an embedded zerod.</source>
+        <translation>Конфігурація Tor доступна тільки при роботі з вбудованим zerod.</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.cpp" line="618"/>
-        <source>You&apos;re using an external safecoind. Please restart safecoind with -rescan</source>
-        <translation>Ви використовуєте зовнішній safecoind. Будь ласка, перезапустіть safecoind з -rescan</translation>
+        <source>You&apos;re using an external zerod. Please restart zerod with -rescan</source>
+        <translation>Ви використовуєте зовнішній zerod. Будь ласка, перезапустіть zerod з -rescan</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.cpp" line="621"/>
-        <source>You&apos;re using an external safecoind. Please restart safecoind with -reindex</source>
-        <translation>Ви використовуєте зовнішній safecoind. Будь ласка, перезапустіть safecoind з -reindex</translation>
+        <source>You&apos;re using an external zerod. Please restart zerod with -reindex</source>
+        <translation>Ви використовуєте зовнішній zerod. Будь ласка, перезапустіть zerod з -reindex</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.cpp" line="701"/>
@@ -646,8 +646,8 @@
     </message>
     <message>
         <location filename="../src/mainwindow.cpp" line="702"/>
-        <source>Addressindex enabled. To use this feature, you need to restart SafecoinWallet.</source>
-        <translation>Addressindex включено. Щоб скористатися цією функцією, вам потрібно перезапустити SafecoinWallet.</translation>
+        <source>Addressindex enabled. To use this feature, you need to restart ZeroWallet.</source>
+        <translation>Addressindex включено. Щоб скористатися цією функцією, вам потрібно перезапустити ZeroWallet.</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.cpp" line="712"/>
@@ -656,8 +656,8 @@
     </message>
     <message>
         <location filename="../src/mainwindow.cpp" line="713"/>
-        <source>Addressindex disabled. To fully disabled Addressindex, you need to restart SafecoinWallet.</source>
-        <translation>Addressindex вимкнуто. Щоб повністю відключити Addressindex, вам потрібно перезапустити Safecoin Wallet.</translation>
+        <source>Addressindex disabled. To fully disabled Addressindex, you need to restart ZeroWallet.</source>
+        <translation>Addressindex вимкнуто. Щоб повністю відключити Addressindex, вам потрібно перезапустити Zero Wallet.</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.cpp" line="725"/>
@@ -666,8 +666,8 @@
     </message>
     <message>
         <location filename="../src/mainwindow.cpp" line="726"/>
-        <source>Timestampindex enabled. To use this feature, you need to restart SafecoinWallet.</source>
-        <translation>Timestampindex включено. Щоб скористатися цією функцією, вам потрібно перезапустити SafecoinWallet.</translation>
+        <source>Timestampindex enabled. To use this feature, you need to restart ZeroWallet.</source>
+        <translation>Timestampindex включено. Щоб скористатися цією функцією, вам потрібно перезапустити ZeroWallet.</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.cpp" line="735"/>
@@ -676,8 +676,8 @@
     </message>
     <message>
         <location filename="../src/mainwindow.cpp" line="736"/>
-        <source>Timestampindex disabled. To fully disabled Timestampindex, you need to restart SafecoinWallet.</source>
-        <translation>Timestampindex вимкнено. Щоб повністю відключити Timestampindex позначки часу, вам необхідно перезапустити Safecoin Wallet.</translation>
+        <source>Timestampindex disabled. To fully disabled Timestampindex, you need to restart ZeroWallet.</source>
+        <translation>Timestampindex вимкнено. Щоб повністю відключити Timestampindex позначки часу, вам необхідно перезапустити Zero Wallet.</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.cpp" line="747"/>
@@ -686,8 +686,8 @@
     </message>
     <message>
         <location filename="../src/mainwindow.cpp" line="748"/>
-        <source>Spentindex enabled. To use this feature, you need to restart SafecoinWallet.</source>
-        <translation>Spentindex включено. Щоб скористатися цією функцією, вам потрібно перезапустити SafecoinWallet.</translation>
+        <source>Spentindex enabled. To use this feature, you need to restart ZeroWallet.</source>
+        <translation>Spentindex включено. Щоб скористатися цією функцією, вам потрібно перезапустити ZeroWallet.</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.cpp" line="757"/>
@@ -696,8 +696,8 @@
     </message>
     <message>
         <location filename="../src/mainwindow.cpp" line="758"/>
-        <source>Spentindex disabled. To fully disabled Spentindex, you need to restart SafecoinWallet.</source>
-        <translation>Spentindex вимкнено. Щоб повністю відключити Spentindex, вам потрібно перезапустити Safecoin Wallet.</translation>
+        <source>Spentindex disabled. To fully disabled Spentindex, you need to restart ZeroWallet.</source>
+        <translation>Spentindex вимкнено. Щоб повністю відключити Spentindex, вам потрібно перезапустити Zero Wallet.</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.cpp" line="674"/>
@@ -706,8 +706,8 @@
     </message>
     <message>
         <location filename="../src/mainwindow.cpp" line="675"/>
-        <source>SafeNode Configured. To use this feature, you need to restart SafecoinWallet.</source>
-        <translation>SafeNode налаштовано. Щоб скористатися цією функцією, вам потрібно перезапустити SafecoinWallet.</translation>
+        <source>SafeNode Configured. To use this feature, you need to restart ZeroWallet.</source>
+        <translation>SafeNode налаштовано. Щоб скористатися цією функцією, вам потрібно перезапустити ZeroWallet.</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.cpp" line="688"/>
@@ -716,13 +716,13 @@
     </message>
     <message>
         <location filename="../src/mainwindow.cpp" line="689"/>
-        <source>Configuration SafeNode disabled. To fully disabled SafeNode Configuration, you need to restart SafecoinWallet.</source>
-        <translation>Конфігурація SafeNode відключена. Щоб повністю відключити налаштування SafeNod, вам необхідно перезапустити Safecoin Wallet.</translation>
+        <source>Configuration SafeNode disabled. To fully disabled SafeNode Configuration, you need to restart ZeroWallet.</source>
+        <translation>Конфігурація SafeNode відключена. Щоб повністю відключити налаштування SafeNod, вам необхідно перезапустити Zero Wallet.</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.cpp" line="834"/>
-        <source>Some feedback about SafecoinWallet or Safecoin...!</source>
-        <translation>Деяка подяка за SafecoinWallet або Safecoin ...!</translation>
+        <source>Some feedback about ZeroWallet or Zero...!</source>
+        <translation>Деяка подяка за ZeroWallet або Zero ...!</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.cpp" line="836"/>
@@ -731,8 +731,8 @@
     </message>
     <message>
         <location filename="../src/mainwindow.cpp" line="836"/>
-        <source> or SafecoinWallet</source>
-        <translation> або  SafecoinWallet</translation>
+        <source> or ZeroWallet</source>
+        <translation> або  ZeroWallet</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.cpp" line="852"/>
@@ -746,18 +746,18 @@
     </message>
     <message>
         <location filename="../src/mainwindow.cpp" line="1063"/>
-        <source>Paste Safecoin URI</source>
-        <translation>Вставити Safecoin URI</translation>
+        <source>Paste Zero URI</source>
+        <translation>Вставити Zero URI</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.cpp" line="1075"/>
-        <source>Error paying safecoin URI</source>
-        <translation>Помилка при оплаті safecoin URI</translation>
+        <source>Error paying zero URI</source>
+        <translation>Помилка при оплаті zero URI</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.cpp" line="1076"/>
-        <source>URI should be of the form &apos;safecoin:&lt;addr&gt;?amt=x&amp;memo=y</source>
-        <translation>URI повинен мати вигляд &apos;safecoin:&lt;addr&gt;?amt=x&amp;memo=y</translation>
+        <source>URI should be of the form &apos;zero:&lt;addr&gt;?amt=x&amp;memo=y</source>
+        <translation>URI повинен мати вигляд &apos;zero:&lt;addr&gt;?amt=x&amp;memo=y</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.cpp" line="1219"/>
@@ -1014,18 +1014,18 @@ doesn&apos;t look like a z-address</source>
     </message>
     <message>
         <location filename="../src/connection.cpp" line="52"/>
-        <source>Starting embedded safecoind</source>
-        <translation>Запуск сервісу safecoind</translation>
+        <source>Starting embedded zerod</source>
+        <translation>Запуск сервісу zerod</translation>
     </message>
     <message>
         <location filename="../src/connection.cpp" line="62"/>
-        <source>safecoind is set to run as daemon</source>
-        <translation>safecoind налаштований на запуск в якості демона</translation>
+        <source>zerod is set to run as daemon</source>
+        <translation>zerod налаштований на запуск в якості демона</translation>
     </message>
     <message>
         <location filename="../src/connection.cpp" line="62"/>
-        <source>Waiting for safecoind</source>
-        <translation>Очікуємо safecoind</translation>
+        <source>Waiting for zerod</source>
+        <translation>Очікуємо zerod</translation>
     </message>
     <message>
         <location filename="../src/connection.cpp" line="146"/>
@@ -1059,40 +1059,40 @@ doesn&apos;t look like a z-address</source>
     </message>
     <message>
         <location filename="../src/connection.cpp" line="77"/>
-        <source>You have safecoind set to start as a daemon, which can cause problems with SafecoinWallet
+        <source>You have zerod set to start as a daemon, which can cause problems with ZeroWallet
 
-.Please remove the following line from your safecoin.conf and restart SafecoinWallet
+.Please remove the following line from your zero.conf and restart ZeroWallet
 daemon=1</source>
-        <translation>Ви налаштували safecoind для запуску в якості демона, що може викликати проблеми з SafecoinWallet
+        <translation>Ви налаштували zerod для запуску в якості демона, що може викликати проблеми з ZeroWallet
 
-. Видаліть наступний рядок з файлу safecoin.conf і перезапустіть SafecoinWallet.
+. Видаліть наступний рядок з файлу zero.conf і перезапустіть ZeroWallet.
 daemon=1</translation>
     </message>
     <message>
         <location filename="../src/connection.cpp" line="82"/>
-        <source>Couldn&apos;t start the embedded safecoind.
+        <source>Couldn&apos;t start the embedded zerod.
 
 Please try restarting.
 
-If you previously started safecoind with custom arguments, you might need to reset safecoin.conf.
+If you previously started zerod with custom arguments, you might need to reset zero.conf.
 
-If all else fails, please run safecoind manually.</source>
-        <translation>Не вдалося запустити вбудований safecoind.
+If all else fails, please run zerod manually.</source>
+        <translation>Не вдалося запустити вбудований zerod.
 
 Будь ласка, спробуйте перезапустити.
 
-Якщо ви раніше запустили safecoind до призначених для користувача аргументами, вам може знадобитися скинути safecoin.conf.
+Якщо ви раніше запустили zerod до призначених для користувача аргументами, вам може знадобитися скинути zero.conf.
 
-Якщо нічого не допомагає, запустіть safecoind вручну.</translation>
+Якщо нічого не допомагає, запустіть zerod вручну.</translation>
     </message>
     <message>
         <location filename="../src/connection.cpp" line="93"/>
-        <source>Couldn&apos;t connect to safecoind configured in safecoin.conf.
+        <source>Couldn&apos;t connect to zerod configured in zero.conf.
 
-Not starting embedded safecoind because --no-embedded was passed</source>
-        <translation>Помилка з&apos;єднання із safecoind, налаштованому в safecoin.conf.
+Not starting embedded zerod because --no-embedded was passed</source>
+        <translation>Помилка з&apos;єднання із zerod, налаштованому в zero.conf.
 
-Чи не запускається вбудований safecoind, тому що --no-embedded був пропущений</translation>
+Чи не запускається вбудований zerod, тому що --no-embedded був пропущений</translation>
     </message>
     <message>
         <location filename="../src/connection.cpp" line="297"/>
@@ -1118,27 +1118,27 @@ Not starting embedded safecoind because --no-embedded was passed</source>
     </message>
     <message>
         <location filename="../src/connection.cpp" line="335"/>
-        <source>safecoind error</source>
-        <translation>помилка safecoind</translation>
+        <source>zerod error</source>
+        <translation>помилка zerod</translation>
     </message>
     <message>
         <location filename="../src/connection.cpp" line="414"/>
-        <source>Could not connect to safecoind configured in settings.
+        <source>Could not connect to zerod configured in settings.
 
 Please set the host/port and user/password in the Edit-&gt;Settings menu.</source>
-        <translation>Помилка з&apos;єднання із safecoind конфігуроване в налаштуваннях.
+        <translation>Помилка з&apos;єднання із zerod конфігуроване в налаштуваннях.
 
 Будь ласка, встановіть host / port і user / password в меню змінити-&gt; Налаштування.</translation>
     </message>
     <message>
         <location filename="../src/connection.cpp" line="475"/>
-        <source>Authentication failed. The username / password you specified was not accepted by safecoind. Try changing it in the Edit-&gt;Settings menu</source>
-        <translation>Аутентифікація не вдалася. username / password, які ви вказали, не були прийняті safecoind. Спробуйте змінити його в меню Редагувати-&gt; Налаштування</translation>
+        <source>Authentication failed. The username / password you specified was not accepted by zerod. Try changing it in the Edit-&gt;Settings menu</source>
+        <translation>Аутентифікація не вдалася. username / password, які ви вказали, не були прийняті zerod. Спробуйте змінити його в меню Редагувати-&gt; Налаштування</translation>
     </message>
     <message>
         <location filename="../src/connection.cpp" line="490"/>
-        <source>Your safecoind is starting up. Please wait.</source>
-        <translation>Ваш safecoind запускається. Будь ласка зачекайте.</translation>
+        <source>Your zerod is starting up. Please wait.</source>
+        <translation>Ваш zerod запускається. Будь ласка зачекайте.</translation>
     </message>
     <message>
         <location filename="../src/rpc.cpp" line="652"/>
@@ -1147,8 +1147,8 @@ Please set the host/port and user/password in the Edit-&gt;Settings menu.</sourc
     </message>
     <message>
         <location filename="../src/rpc.cpp" line="92"/>
-        <source>Ready! Thank you for helping secure the Safecoin network by running a full node.</source>
-        <translation>Готово! Дякуємо Вам за допомогу в захисті мережі Safecoin, запустивши повний вузол.</translation>
+        <source>Ready! Thank you for helping secure the Zero network by running a full node.</source>
+        <translation>Готово! Дякуємо Вам за допомогу в захисті мережі Zero, запустивши повний вузол.</translation>
     </message>
     <message>
         <location filename="../src/rpc.cpp" line="663"/>
@@ -1172,13 +1172,13 @@ Please set the host/port and user/password in the Edit-&gt;Settings menu.</sourc
     </message>
     <message>
         <location filename="../src/rpc.cpp" line="684"/>
-        <source>Connected to safecoind</source>
-        <translation>Під&apos;єднано до safecoind</translation>
+        <source>Connected to zerod</source>
+        <translation>Під&apos;єднано до zerod</translation>
     </message>
     <message>
         <location filename="../src/rpc.cpp" line="706"/>
-        <source>There was an error connecting to safecoind. The error was</source>
-        <translation>При підключенні до Safecoind сталася помилка. Помилка</translation>
+        <source>There was an error connecting to zerod. The error was</source>
+        <translation>При підключенні до Zerod сталася помилка. Помилка</translation>
     </message>
     <message>
         <location filename="../src/rpc.cpp" line="662"/>
@@ -1250,8 +1250,8 @@ Please set the host/port and user/password in the Edit-&gt;Settings menu.</sourc
     </message>
     <message>
         <location filename="../src/rpc.cpp" line="687"/>
-        <source>safecoind has no peer connections</source>
-        <translation>Safecoind не має з&apos;єднань з пірами</translation>
+        <source>zerod has no peer connections</source>
+        <translation>Zerod не має з&apos;єднань з пірами</translation>
     </message>
     <message>
         <location filename="../src/rpc.cpp" line="1043"/>
@@ -1284,13 +1284,13 @@ Would you like to visit the releases page?</source>
     </message>
     <message>
         <location filename="../src/rpc.cpp" line="1193"/>
-        <source>Please wait for SafecoinWallet to exit</source>
-        <translation>Будь ласка, дочекайтеся закриття SafecoinWallet</translation>
+        <source>Please wait for ZeroWallet to exit</source>
+        <translation>Будь ласка, дочекайтеся закриття ZeroWallet</translation>
     </message>
     <message>
         <location filename="../src/rpc.cpp" line="1194"/>
-        <source>Waiting for safecoind to exit</source>
-        <translation>Очікування зупинки safecoind</translation>
+        <source>Waiting for zerod to exit</source>
+        <translation>Очікування зупинки zerod</translation>
     </message>
     <message>
         <location filename="../src/connection.cpp" line="311"/>
@@ -1358,8 +1358,8 @@ Please set the host/port and user/password in the Edit-&gt;Settings menu.</sourc
     </message>
     <message>
         <location filename="../src/addressbook.cpp" line="135"/>
-        <source>%1 doesn&apos;t seem to be a valid Safecoin address.</source>
-        <translation>%1 не схоже на справжню адресу Safecoin.</translation>
+        <source>%1 doesn&apos;t seem to be a valid Zero address.</source>
+        <translation>%1 не схоже на справжню адресу Zero.</translation>
     </message>
     <message>
         <location filename="../src/addressbook.cpp" line="143"/>
@@ -1460,8 +1460,8 @@ You either have unconfirmed funds or the balance is too low for an automatic mig
     </message>
     <message>
         <location filename="../src/websockets.cpp" line="359"/>
-        <source>Connected over the internet via SafecoinWallet wormhole service</source>
-        <translation>Підключення через Інтернет за допомогою сервісу wormhol SafecoinWallet</translation>
+        <source>Connected over the internet via ZeroWallet wormhole service</source>
+        <translation>Підключення через Інтернет за допомогою сервісу wormhol ZeroWallet</translation>
     </message>
     <message>
         <location filename="../src/websockets.cpp" line="652"/>
@@ -1474,13 +1474,13 @@ You either have unconfirmed funds or the balance is too low for an automatic mig
         <translation>Немає sapling або прозорих адрес з достатнім балансом, щоб витрачати.</translation>
     </message>
     <message>
-        <source>No SAFE price was available to convert from USD</source>
-        <translation type="obsolete">Цена SAFE для конвертации в USD недоступна</translation>
+        <source>No ZER price was available to convert from USD</source>
+        <translation type="obsolete">Цена ZER для конвертации в USD недоступна</translation>
     </message>
     <message>
         <location filename="../src/recurring.cpp" line="469"/>
         <source>No ZEC price was available to convert from USD</source>
-        <translation>Ціна SAFE недоступна для конвертації в USD</translation>
+        <translation>Ціна ZER недоступна для конвертації в USD</translation>
     </message>
     <message>
         <location filename="../src/recurring.cpp" line="518"/>
@@ -1648,7 +1648,7 @@ You either have unconfirmed funds or the balance is too low for an automatic mig
     <message>
         <location filename="../src/recurringmultiple.ui" line="44"/>
         <source>How should ZecWallet proceed?</source>
-        <translation>Як повинен діяти SafecoinWallet?</translation>
+        <translation>Як повинен діяти ZeroWallet?</translation>
     </message>
     <message>
         <location filename="../src/recurringmultiple.ui" line="51"/>
@@ -1750,18 +1750,18 @@ You either have unconfirmed funds or the balance is too low for an automatic mig
     </message>
     <message>
         <location filename="../src/requestdialog.ui" line="219"/>
-        <source>Request payment from a Sapling address. You&apos;ll send a SAFE 0.0001 transaction to the address with a SAFE payment URI. The memo will be included in the transaction when the address pays you.</source>
-        <translation>Запитайте оплату з адреси Sapling. Ви відправите 0,0001 SAFE транзакцію на адресу з платежу SAFE URI. Мітка буде включена в транзакцію, коли адреса оплатить вам.</translation>
+        <source>Request payment from a Sapling address. You&apos;ll send a ZER 0.0001 transaction to the address with a ZER payment URI. The memo will be included in the transaction when the address pays you.</source>
+        <translation>Запитайте оплату з адреси Sapling. Ви відправите 0,0001 ZER транзакцію на адресу з платежу ZER URI. Мітка буде включена в транзакцію, коли адреса оплатить вам.</translation>
     </message>
     <message>
         <location filename="../src/requestdialog.cpp" line="50"/>
-        <source>Error paying safecoin URI</source>
-        <translation>Помилка при оплаті safecoin URI</translation>
+        <source>Error paying zero URI</source>
+        <translation>Помилка при оплаті zero URI</translation>
     </message>
     <message>
         <location filename="../src/requestdialog.cpp" line="51"/>
-        <source>URI should be of the form &apos;safecoin:&lt;addr&gt;?amt=x&amp;memo=y</source>
-        <translation>URI повинен мати вигляд &apos;safecoin:&lt;addr&gt;?amt=x&amp;memo=y</translation>
+        <source>URI should be of the form &apos;zero:&lt;addr&gt;?amt=x&amp;memo=y</source>
+        <translation>URI повинен мати вигляд &apos;zero:&lt;addr&gt;?amt=x&amp;memo=y</translation>
     </message>
     <message>
         <location filename="../src/requestdialog.cpp" line="65"/>
@@ -1793,8 +1793,8 @@ You either have unconfirmed funds or the balance is too low for an automatic mig
     </message>
     <message>
         <location filename="../src/settings.ui" line="33"/>
-        <source>safecoind connection</source>
-        <translation>З&apos;єднання safecoind</translation>
+        <source>zerod connection</source>
+        <translation>З&apos;єднання zerod</translation>
     </message>
     <message>
         <location filename="../src/settings.ui" line="62"/>
@@ -1833,13 +1833,13 @@ You either have unconfirmed funds or the balance is too low for an automatic mig
     </message>
     <message>
         <location filename="../src/settings.ui" line="273"/>
-        <source>Connect to the internet to fetch SAFE prices</source>
-        <translation>Підключатися до Інтернету, щоб отримати поточну ціну SAFE</translation>
+        <source>Connect to the internet to fetch ZER prices</source>
+        <translation>Підключатися до Інтернету, щоб отримати поточну ціну ZER</translation>
     </message>
     <message>
         <location filename="../src/settings.ui" line="280"/>
-        <source>Fetch SAFE / USD prices</source>
-        <translation>Отріматі ціни SAFE / USD</translation>
+        <source>Fetch ZER / USD prices</source>
+        <translation>Отріматі ціни ZER / USD</translation>
     </message>
     <message>
         <location filename="../src/settings.ui" line="373"/>
@@ -1898,8 +1898,8 @@ You either have unconfirmed funds or the balance is too low for an automatic mig
     </message>
     <message>
         <location filename="../src/settings.ui" line="537"/>
-        <source>Block height at which all steps are completed and chain is synced with balance of roughly 1 SAFE</source>
-        <translation>Висота блоку, на якій всі етапи виконані, і ланцюг синхронізований з балансом приблизно 1 SAFE.</translation>
+        <source>Block height at which all steps are completed and chain is synced with balance of roughly 1 ZER</source>
+        <translation>Висота блоку, на якій всі етапи виконані, і ланцюг синхронізований з балансом приблизно 1 ZER.</translation>
     </message>
     <message>
         <location filename="../src/settings.ui" line="590"/>
@@ -1948,8 +1948,8 @@ You either have unconfirmed funds or the balance is too low for an automatic mig
     </message>
     <message>
         <location filename="../src/settings.ui" line="301"/>
-        <source>Rescan the blockchain for any missing wallet transactions and to correct your wallet balance. This may take several hours. You need to restart SafecoinWallet for this to take effect</source>
-        <translation>Повторно сканує блокчейн для будь-яких пропущених транзакцій гаманця і виправляє баланс вашого гаманця. Це може зайняти кілька годин. Вам потрібно перезапустити SafecoinWallet, щоб це набуло чинності</translation>
+        <source>Rescan the blockchain for any missing wallet transactions and to correct your wallet balance. This may take several hours. You need to restart ZeroWallet for this to take effect</source>
+        <translation>Повторно сканує блокчейн для будь-яких пропущених транзакцій гаманця і виправляє баланс вашого гаманця. Це може зайняти кілька годин. Вам потрібно перезапустити ZeroWallet, щоб це набуло чинності</translation>
     </message>
     <message>
         <location filename="../src/settings.ui" line="311"/>
@@ -1958,8 +1958,8 @@ You either have unconfirmed funds or the balance is too low for an automatic mig
     </message>
     <message>
         <location filename="../src/settings.ui" line="345"/>
-        <source>Rebuild the entire blockchain from the genesis block, by rescanning all the block files. This may take several hours to days, depending on your hardware. You need to restart SafecoinWallet for this to take effect</source>
-        <translation>Перебудовує весь блокчейн з блоку генезису шляхом повторного сканування всіх файлів блоків. Це може зайняти кілька годин або днів, в залежності від вашого обладнання. Вам потрібно перезапустити SafecoinWallet, щоб це набуло чинності</translation>
+        <source>Rebuild the entire blockchain from the genesis block, by rescanning all the block files. This may take several hours to days, depending on your hardware. You need to restart ZeroWallet for this to take effect</source>
+        <translation>Перебудовує весь блокчейн з блоку генезису шляхом повторного сканування всіх файлів блоків. Це може зайняти кілька годин або днів, в залежності від вашого обладнання. Вам потрібно перезапустити ZeroWallet, щоб це набуло чинності</translation>
     </message>
     <message>
         <location filename="../src/settings.ui" line="225"/>
@@ -2196,8 +2196,8 @@ You either have unconfirmed funds or the balance is too low for an automatic mig
     </message>
     <message>
         <location filename="../src/confirm.ui" line="183"/>
-        <source>safecoind doesn&apos;t seem to have any peers. You might not be connected to the internet, so this transaction might not work.</source>
-        <translation>safecoind, здається, не має будь-яких з&apos;єднань. Можливо, ви не підключені до Інтернету, тому транзакції можуть не працювати.</translation>
+        <source>zerod doesn&apos;t seem to have any peers. You might not be connected to the internet, so this transaction might not work.</source>
+        <translation>zerod, здається, не має будь-яких з&apos;єднань. Можливо, ви не підключені до Інтернету, тому транзакції можуть не працювати.</translation>
     </message>
     <message>
         <location filename="../src/confirm.ui" line="196"/>
@@ -2224,18 +2224,18 @@ You either have unconfirmed funds or the balance is too low for an automatic mig
     </message>
     <message>
         <location filename="../src/createzcashconfdialog.ui" line="14"/>
-        <source>Configure safecoin.conf</source>
-        <translation>Конфігурація safecoin.conf</translation>
+        <source>Configure zero.conf</source>
+        <translation>Конфігурація zero.conf</translation>
     </message>
     <message>
         <location filename="../src/createzcashconfdialog.ui" line="20"/>
-        <source>Your safecoin node will be configured for you automatically</source>
-        <translation>Ваш вузол safecoin буде налаштований для вас автоматично</translation>
+        <source>Your zero node will be configured for you automatically</source>
+        <translation>Ваш вузол zero буде налаштований для вас автоматично</translation>
     </message>
     <message>
         <location filename="../src/createzcashconfdialog.ui" line="112"/>
-        <source>Allow connections to the internet to check for updates, get SAFE/USD prices etc...</source>
-        <translation>Дозволити підключення до Інтернету, для перевірки оновлень і отримання ринкових котирувань SAFE і т.д...</translation>
+        <source>Allow connections to the internet to check for updates, get ZER/USD prices etc...</source>
+        <translation>Дозволити підключення до Інтернету, для перевірки оновлень і отримання ринкових котирувань ZER і т.д...</translation>
     </message>
     <message>
         <location filename="../src/createzcashconfdialog.ui" line="119"/>

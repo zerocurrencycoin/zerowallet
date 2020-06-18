@@ -18,8 +18,8 @@
     <name>ConnectionDialog</name>
     <message>
         <location filename="../src/connection.ui" line="17"/>
-        <source>safe-qt-wallet</source>
-        <translation>SafecoinWallet</translation>
+        <source>zero-qt-wallet</source>
+        <translation>ZeroWallet</translation>
     </message>
     <message>
         <location filename="../src/connection.ui" line="58"/>
@@ -31,8 +31,8 @@
     <name>MainWindow</name>
     <message>
         <location filename="../src/mainwindow.ui" line="14"/>
-        <source>safe-qt-wallet</source>
-        <translation>SafecoinWallet</translation>
+        <source>zero-qt-wallet</source>
+        <translation>ZeroWallet</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.ui" line="29"/>
@@ -210,8 +210,8 @@
     </message>
     <message>
         <location filename="../src/mainwindow.ui" line="834"/>
-        <source>safecoind</source>
-        <translation>safecoind</translation>
+        <source>zerod</source>
+        <translation>zerod</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.ui" line="864"/>
@@ -345,8 +345,8 @@
     </message>
     <message>
         <location filename="../src/mainwindow.cpp" line="471"/>
-        <source>Thanks for supporting safe-qt-wallet!</source>
-        <translation>SafecoinWallet&apos;i desteklediğiniz için teşekkür ederiz!</translation>
+        <source>Thanks for supporting zero-qt-wallet!</source>
+        <translation>ZeroWallet&apos;i desteklediğiniz için teşekkür ederiz!</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.cpp" line="473"/>
@@ -355,9 +355,9 @@
     </message>
     <message>
         <location filename="../src/mainwindow.cpp" line="473"/>
-        <source> to support safe-qt-wallet</source>
+        <source> to support zero-qt-wallet</source>
         <translatorcomment>0.01 Bağış yap yazısının devamı</translatorcomment>
-        <translation>ve SafecoinWallet&apos;i destekle</translation>
+        <translation>ve ZeroWallet&apos;i destekle</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.cpp" line="509"/>
@@ -392,8 +392,8 @@
     </message>
     <message>
         <location filename="../src/mainwindow.cpp" line="631"/>
-        <source>The keys will be imported into your connected safecoind node</source>
-        <translatorcomment>Anahtarlar bağlı safecoind düğümünüze aktarılacak</translatorcomment>
+        <source>The keys will be imported into your connected zerod node</source>
+        <translatorcomment>Anahtarlar bağlı zerod düğümünüze aktarılacak</translatorcomment>
         <translation>YOUR_TRANSLATION_HERE</translation>
     </message>
     <message>
@@ -408,8 +408,8 @@
     </message>
     <message>
         <location filename="../src/mainwindow.cpp" line="671"/>
-        <source>You need to back it up from the machine safecoind is running on</source>
-        <translation>safecoind&apos;ın çalıştığı makineden yedeklemeniz gerekiyor</translation>
+        <source>You need to back it up from the machine zerod is running on</source>
+        <translation>zerod&apos;ın çalıştığı makineden yedeklemeniz gerekiyor</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.cpp" line="675"/>
@@ -581,55 +581,55 @@ z-adres&apos;i gibi görünmüyor</translation>
     </message>
     <message>
         <location filename="../src/connection.cpp" line="50"/>
-        <source>Starting embedded safecoind</source>
-        <translation>Gömülü safecoind başlatılıyor</translation>
+        <source>Starting embedded zerod</source>
+        <translation>Gömülü zerod başlatılıyor</translation>
     </message>
     <message>
         <location filename="../src/connection.cpp" line="60"/>
-        <source>safecoind is set to run as daemon</source>
-        <translation>safecoind daemon olarak çalışacak şekilde ayarlandı</translation>
+        <source>zerod is set to run as daemon</source>
+        <translation>zerod daemon olarak çalışacak şekilde ayarlandı</translation>
     </message>
     <message>
         <location filename="../src/connection.cpp" line="60"/>
-        <source>Waiting for safecoind</source>
-        <translation>safecoind bekleniyor</translation>
+        <source>Waiting for zerod</source>
+        <translation>zerod bekleniyor</translation>
     </message>
     <message>
         <location filename="../src/connection.cpp" line="75"/>
-        <source>You have safecoind set to start as a daemon, which can cause problems with safe-qt-wallet
+        <source>You have zerod set to start as a daemon, which can cause problems with zero-qt-wallet
 
-.Please remove the following line from your safecoin.conf and restart safe-qt-wallet
+.Please remove the following line from your zero.conf and restart zero-qt-wallet
 daemon=1</source>
-        <translation>safecoind, safe-qt-wallet ile sorunlara neden olan bir daemon olarak başlayacak şekilde ayarladınız.
+        <translation>zerod, zero-qt-wallet ile sorunlara neden olan bir daemon olarak başlayacak şekilde ayarladınız.
 
-.Lütfen aşağıdaki satırı safecoin.conf dosyanızdan kaldırın ve SafecoinWallet&apos;ı yeniden başlatın
+.Lütfen aşağıdaki satırı zero.conf dosyanızdan kaldırın ve ZeroWallet&apos;ı yeniden başlatın
 daemon=1</translation>
     </message>
     <message>
         <location filename="../src/connection.cpp" line="80"/>
-        <source>Couldn&apos;t start the embedded safecoind.
+        <source>Couldn&apos;t start the embedded zerod.
 
 Please try restarting.
 
-If you previously started safecoind with custom arguments, you might need to reset safecoin.conf.
+If you previously started zerod with custom arguments, you might need to reset zero.conf.
 
-If all else fails, please run safecoind manually.</source>
-        <translation>Gömülü safecoind başlatılamadı.
+If all else fails, please run zerod manually.</source>
+        <translation>Gömülü zerod başlatılamadı.
 
 Lütfen yeniden başlatmayı deneyin.
 
-Daha önce safecoind&apos;yi özel argümanlarla başlattıysanız, safecoin.conf dosyasını sıfırlamanız gerekebilir.
+Daha önce zerod&apos;yi özel argümanlarla başlattıysanız, zero.conf dosyasını sıfırlamanız gerekebilir.
 
-Hepsi başarısız olursa, lütfen safecoind&apos;yi manuel olarak çalıştırın.</translation>
+Hepsi başarısız olursa, lütfen zerod&apos;yi manuel olarak çalıştırın.</translation>
     </message>
     <message>
         <location filename="../src/connection.cpp" line="91"/>
-        <source>Couldn&apos;t connect to safecoind configured in safecoin.conf.
+        <source>Couldn&apos;t connect to zerod configured in zero.conf.
 
-Not starting embedded safecoind because --no-embedded was passed</source>
-        <translation>safecoin.conf ile yapılandırılmış safecoind&apos;ye bağlanılamadı.
+Not starting embedded zerod because --no-embedded was passed</source>
+        <translation>zero.conf ile yapılandırılmış zerod&apos;ye bağlanılamadı.
 
---no-embedded iletildiğinden gömülü safecoind başlatılmıyor</translation>
+--no-embedded iletildiğinden gömülü zerod başlatılmıyor</translation>
     </message>
     <message>
         <location filename="../src/connection.cpp" line="183"/>
@@ -694,13 +694,13 @@ Not starting embedded safecoind because --no-embedded was passed</source>
     </message>
     <message>
         <location filename="../src/rpc.cpp" line="593"/>
-        <source>Connected to safecoind</source>
-        <translation>safecoind&apos;ye bağlanıldı</translation>
+        <source>Connected to zerod</source>
+        <translation>zerod&apos;ye bağlanıldı</translation>
     </message>
     <message>
         <location filename="../src/rpc.cpp" line="609"/>
-        <source>There was an error connecting to safecoind. The error was</source>
-        <translation>safecoind ile bağlantı kurulurken bir hata oluştu. Hata</translation>
+        <source>There was an error connecting to zerod. The error was</source>
+        <translation>zerod ile bağlantı kurulurken bir hata oluştu. Hata</translation>
     </message>
     <message>
         <location filename="../src/rpc.cpp" line="848"/>
@@ -729,13 +729,13 @@ Not starting embedded safecoind because --no-embedded was passed</source>
     </message>
     <message>
         <location filename="../src/rpc.cpp" line="953"/>
-        <source>Please wait for safe-qt-wallet to exit</source>
-        <translation>Lütfen çıkmak için SafecoinWallet&apos;ı bekleyin</translation>
+        <source>Please wait for zero-qt-wallet to exit</source>
+        <translation>Lütfen çıkmak için ZeroWallet&apos;ı bekleyin</translation>
     </message>
     <message>
         <location filename="../src/rpc.cpp" line="954"/>
-        <source>Waiting for safecoind to exit</source>
-        <translation>Çıkmak için safecoind bekleniyor</translation>
+        <source>Waiting for zerod to exit</source>
+        <translation>Çıkmak için zerod bekleniyor</translation>
     </message>
     <message>
         <location filename="../src/connection.cpp" line="248"/>
@@ -744,8 +744,8 @@ Not starting embedded safecoind because --no-embedded was passed</source>
     </message>
     <message>
         <location filename="../src/connection.cpp" line="272"/>
-        <source>safecoind error</source>
-        <translation>safecoind hatası</translation>
+        <source>zerod error</source>
+        <translation>zerod hatası</translation>
     </message>
     <message>
         <location filename="../src/connection.cpp" line="339"/>
@@ -758,22 +758,22 @@ Lütfen Düzenle-&gt;Ayarlar menüsünde sunucu/bağlantı noktasını ve kullan
     </message>
     <message>
         <location filename="../src/connection.cpp" line="351"/>
-        <source>Could not connect to safecoind configured in settings.
+        <source>Could not connect to zerod configured in settings.
 
 Please set the host/port and user/password in the Edit-&gt;Settings menu.</source>
-        <translation>Ayarlarda yapılandırılmış safecoind&apos;ye bağlanılamadı.
+        <translation>Ayarlarda yapılandırılmış zerod&apos;ye bağlanılamadı.
 
 Lütfen Düzenle-&gt;Ayarlar menüsünde sunucu/bağlantı noktası ve kullanıcı adı/şifreyi ayarlayın.</translation>
     </message>
     <message>
         <location filename="../src/connection.cpp" line="411"/>
-        <source>Authentication failed. The username / password you specified was not accepted by safecoind. Try changing it in the Edit-&gt;Settings menu</source>
-        <translation>Kimlik doğrulama başarısız oldu. Belirttiğiniz kullanıcı adı/şifre safecoind tarafından kabul edilmedi. Düzenle-&gt; Ayarlar menüsünde değiştirmeyi deneyin</translation>
+        <source>Authentication failed. The username / password you specified was not accepted by zerod. Try changing it in the Edit-&gt;Settings menu</source>
+        <translation>Kimlik doğrulama başarısız oldu. Belirttiğiniz kullanıcı adı/şifre zerod tarafından kabul edilmedi. Düzenle-&gt; Ayarlar menüsünde değiştirmeyi deneyin</translation>
     </message>
     <message>
         <location filename="../src/connection.cpp" line="426"/>
-        <source>Your safecoind is starting up. Please wait.</source>
-        <translation>safecoind&apos;niz başlıyor. Lütfen bekle.</translation>
+        <source>Your zerod is starting up. Please wait.</source>
+        <translation>zerod&apos;niz başlıyor. Lütfen bekle.</translation>
     </message>
     <message>
         <location filename="../src/connection.cpp" line="447"/>
@@ -805,8 +805,8 @@ Lütfen Düzenle-&gt;Ayarlar menüsünde sunucu/bağlantı noktası ve kullanıc
     </message>
     <message>
         <location filename="../src/addressbook.cpp" line="127"/>
-        <source> doesn&apos;t seem to be a valid Safecoin address.</source>
-        <translation> geçerli bir Safecoin adresi gibi görünmüyor.</translation>
+        <source> doesn&apos;t seem to be a valid Zero address.</source>
+        <translation> geçerli bir Zero adresi gibi görünmüyor.</translation>
     </message>
     <message>
         <location filename="../src/addressbook.cpp" line="171"/>
@@ -875,8 +875,8 @@ Onaylanmamış fonunuz var veya otomatik geçiş için bakiye çok düşük.</tr
     </message>
     <message>
         <location filename="../src/settings.ui" line="33"/>
-        <source>safecoind connection</source>
-        <translation>safecoind bağlantısı</translation>
+        <source>zerod connection</source>
+        <translation>zerod bağlantısı</translation>
     </message>
     <message>
         <location filename="../src/settings.ui" line="62"/>

@@ -132,7 +132,7 @@ void AddressBook::open(MainWindow* parent, QLineEdit* target) {
         // Test if address is valid.
         if (!Settings::isValidAddress(addr)) {
             QMessageBox::critical(parent, QObject::tr("Address Format Error"), 
-                QObject::tr("%1 doesn't seem to be a valid Safecoin address.")
+                QObject::tr("%1 doesn't seem to be a valid Zero address.")
                     .arg(addr), 
                 QMessageBox::Ok);
             return;
@@ -273,12 +273,12 @@ void AddressBook::readFromStorage() {
     }
 
     // Special. 
-    // Add the default SafecoinWallet donation address if it isn't already present
+    // Add the default ZeroWallet donation address if it isn't already present
     // QList<QString> allAddresses;
     // std::transform(allLabels.begin(), allLabels.end(), 
     //     std::back_inserter(allAddresses), [=] (auto i) { return i.second; });
     // if (!allAddresses.contains(Settings::getDonationAddr(true))) {
-    //     allLabels.append(QPair<QString, QString>("SafecoinWallet donation", Settings::getDonationAddr(true)));
+    //     allLabels.append(QPair<QString, QString>("ZeroWallet donation", Settings::getDonationAddr(true)));
     // }
 }
 

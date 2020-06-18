@@ -5,13 +5,29 @@
 
 #include "balancestablemodel.h"
 #include "txtablemodel.h"
+#include "globalzntablemodel.h"
+#include "localzntablemodel.h"
 #include "ui_mainwindow.h"
+#include "ui_znsetup.h"
 #include "mainwindow.h"
 #include "connection.h"
 
 using json = nlohmann::json;
 
 class Turnstile;
+
+struct GlobalZeroNodes{
+    qint64          rank;
+    QString         address;
+    qint64          version;
+    QString         status;
+    qint64          active;
+    QString          lastSeen;
+    QString          lastPaid;
+    QString         txid;
+    QString         ipAddress;
+    bool            local;
+};
 
 struct TransactionItem {
     QString         type;
@@ -40,6 +56,8 @@ struct MigrationStatus {
     QList<QString>  txids;
 };
 
+QString convertSecondsToDays(qint64 n);
+
 class RPC
 {
 public:
@@ -52,15 +70,20 @@ public:
 
     void refresh(bool force = false);
 
-    void refreshAddresses();    
-    
+    void refreshGZeroNodes();
+    void startZNAlias(QString alias);
+    void startZNAll();
+    void getZNPrivateKey(Ui_znsetup* zn);
+    void getZNOutputs(Ui_znsetup* zn, QList<ZNOutputs>* outputs, QList<LocalZeroNodes>* znData);
+    void refreshAddresses();
+
     void checkForUpdate(bool silent = true);
     void refreshZECPrice();
     void getZboardTopics(std::function<void(QMap<QString, QString>)> cb);
-	
-    void executeStandardUITransaction(Tx tx); 
 
-    void executeTransaction(Tx tx, 
+    void executeStandardUITransaction(Tx tx);
+
+    void executeTransaction(Tx tx,
         const std::function<void(QString opid)> submitted,
         const std::function<void(QString opid, QString txid)> computed,
         const std::function<void(QString opid, QString errStr)> error);
@@ -70,16 +93,18 @@ public:
     void watchTxStatus();
 
     const QMap<QString, WatchedTx> getWatchingTxns() { return watchingOps; }
-    void addNewTxToWatch(const QString& newOpid, WatchedTx wtx); 
+    void addNewTxToWatch(const QString& newOpid, WatchedTx wtx);
 
-    const TxTableModel*               getTransactionsModel() { return transactionsTableModel; }
-    const QList<QString>*             getAllZAddresses()     { return zaddresses; }
-    const QList<QString>*             getAllTAddresses()     { return taddresses; }
-    const QList<UnspentOutput>*       getUTXOs()             { return utxos; }
-    const QMap<QString, double>*      getAllBalances()       { return allBalances; }
-    const QMap<QString, bool>*        getUsedAddresses()     { return usedAddresses; }
+    const LocalZNTableModel*          getLocalZeroNodesModel()  { return localZeroNodesTableModel; }
+    const GlobalZNTableModel*         getGlobalZeroNodesModel() { return globalZeroNodesTableModel; }
+    const TxTableModel*               getTransactionsModel()    { return transactionsTableModel; }
+    const QList<QString>*             getAllZAddresses()        { return zaddresses; }
+    const QList<QString>*             getAllTAddresses()        { return taddresses; }
+    const QList<UnspentOutput>*       getUTXOs()                { return utxos; }
+    const QMap<QString, double>*      getAllBalances()          { return allBalances; }
+    const QMap<QString, bool>*        getUsedAddresses()        { return usedAddresses; }
 
-    void newZaddr(bool sapling, const std::function<void(json)>& cb);
+    void newZaddr(const std::function<void(json)>& cb);
     void newTaddr(const std::function<void(json)>& cb);
 
     void getZPrivKey(QString addr, const std::function<void(json)>& cb);
@@ -106,7 +131,7 @@ public:
 private:
     void refreshBalances();
 
-    void refreshTransactions();    
+    void refreshTransactions();
     void refreshMigration();
     void refreshSentZTrans();
     void refreshReceivedZTrans(QList<QString> zaddresses);
@@ -123,6 +148,11 @@ private:
     void getTransactions        (const std::function<void(json)>& cb);
     void getZAddresses          (const std::function<void(json)>& cb);
     void getTAddresses          (const std::function<void(json)>& cb);
+    void startZeroNodeAll       (const std::function<void(json)>& cb);
+    void startZeroNodeAlias     (QString alias, const std::function<void(json)>& cb);
+    void getCreateZeroNodeKey   (const std::function<void(json)>& cb);
+    void getZeroNodeOutputs     (const std::function<void(json)>& cb);
+    void getGZeroNodeList       (const std::function<void(json)>& cb);
 
     Connection*                 conn                        = nullptr;
     QProcess*                   ezcashd                     = nullptr;
@@ -132,9 +162,11 @@ private:
     QMap<QString, bool>*        usedAddresses               = nullptr;
     QList<QString>*             zaddresses                  = nullptr;
     QList<QString>*             taddresses                  = nullptr;
-    
+
     QMap<QString, WatchedTx>    watchingOps;
 
+    GlobalZNTableModel*         globalZeroNodesTableModel   = nullptr;
+    LocalZNTableModel*          localZeroNodesTableModel    = nullptr;
     TxTableModel*               transactionsTableModel      = nullptr;
     BalancesTableModel*         balancesTableModel          = nullptr;
 
