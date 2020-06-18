@@ -66,8 +66,8 @@ int sodium_hex2bin(unsigned char * const bin, const size_t bin_maxlen,
 
 #define sodium_base64_VARIANT_ORIGINAL            1
 #define sodium_base64_VARIANT_ORIGINAL_NO_PADDING 3
-#define sodium_base64_VARIANT_URLSAFE             5
-#define sodium_base64_VARIANT_URLSAFE_NO_PADDING  7
+#define sodium_base64_VARIANT_URLZER             5
+#define sodium_base64_VARIANT_URLZER_NO_PADDING  7
 
 /*
  * Computes the required length to encode BIN_LEN bytes as a base64 string

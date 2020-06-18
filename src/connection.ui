@@ -14,7 +14,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>SafecoinWallet</string>
+   <string>ZeroWallet</string>
   </property>
   <property name="modal">
    <bool>true</bool>
@@ -61,7 +61,7 @@
    <item>
     <widget class="QLabel" name="status">
      <property name="text">
-      <string>The SafecoinWallet Awakens...</string>
+      <string>The ZeroWallet Awakens...</string>
      </property>
      <property name="alignment">
       <set>Qt::AlignCenter</set>
@@ -84,7 +84,6 @@
    <item>
     <widget class="QLabel" name="label">
      <property name="text">
-      <string>Design by Martin      </string>
      </property>
      <property name="alignment">
       <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
