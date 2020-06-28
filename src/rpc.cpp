@@ -143,7 +143,7 @@ void RPC::startZeroNodeAll (const std::function<void(json)>& cb) {
       {"jsonrpc", "1.0"},
       {"id", "someid"},
       {"method", "startzeronode"},
-      {"params", {"all"}}
+      {"params", { "all", "true" }}
   };
 
   conn->doRPCWithDefaultErrorHandling(payload, cb);
@@ -861,7 +861,15 @@ void RPC::startZNAll() {
         return noConnection();
 
     auto fnStartAlias = [=] (json reply) {
-        main->logger->write(QString::fromStdString(reply.get<json::string_t>()));
+        QMessageBox::information(main, QObject::tr("ZeroNode Status"), QString::fromStdString(reply["overall"]), QMessageBox::StandardButton::Ok);
+        main->logger->write(QString::fromStdString(reply["overall"]));
+
+        for (auto& it : reply["detail"].get<json::array_t>()) {
+                main->logger->write("alias: " + QString::fromStdString(it["alias"]));
+                main->logger->write("result: " + QString::fromStdString(it["result"]));
+                main->logger->write("error: " + QString::fromStdString(it["error"]));
+        }
+
     };
 
     startZeroNodeAll(fnStartAlias);
@@ -873,7 +881,14 @@ void RPC::startZNAlias(QString alias) {
         return noConnection();
 
     auto fnStartAlias = [=] (json reply) {
-        main->logger->write(QString::fromStdString(reply.get<json::string_t>()));
+        try {
+            main->logger->write(QString::fromStdString(reply["result"]));
+            QMessageBox::information(main, QObject::tr("ZeroNode Status"), QString::fromStdString(reply["result"]), QMessageBox::StandardButton::Ok);
+        } catch (...) {
+            main->logger->write("Zeronode failed to start");
+            QMessageBox::information(main, QObject::tr("ZeroNode Status"), QObject::tr("ZeroNode failed to start"), QMessageBox::StandardButton::Ok);
+        }
+
     };
 
     startZeroNodeAlias(alias, fnStartAlias);

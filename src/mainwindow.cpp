@@ -1381,8 +1381,9 @@ void MainWindow::setupZNodesTab() {
 
         QMenu menu(this);
         menu.addAction(tr("Start"), [=]() {
-
+          rpc->startZNAlias(lineNode.alias);
         });
+
         if (lineNode.alias.startsWith("#")) {
             menu.addAction(tr("Enable"), [=] () {
                 LocalZeroNodes updatedNode {
@@ -1452,7 +1453,7 @@ void MainWindow::setupZNodesTab() {
         QModelIndex index = ui->tableZeroNodeLocal->indexAt(pos);
         if (index.row() < 0) return;
 
-        rpc->startZNAlias(ui->tableZeroNodeLocal->model()->data(index.sibling(index.row(), 0)).toString());
+        rpc->startZNAlias(ui->tableZeroNodeLocal->model()->data(index.sibling(index.row(), 1)).toString());
 
     });
 
@@ -1460,8 +1461,8 @@ void MainWindow::setupZNodesTab() {
         rpc->startZNAll();
     });
 
-    QObject::connect(ui->btnZNClearCache, &QPushButton::clicked, [=] () {
-    });
+//    QObject::connect(ui->btnZNClearCache, &QPushButton::clicked, [=] () {
+//    });
 }
 
 void MainWindow::addNewZaddr() {
