@@ -76,4 +76,4 @@ The above assumes zerowallet and zero git repos are in the same directory. File 
 
 ### Support
 
-For support or other questions, Join [Discord](https://discordapp.com/invite/Jq5knn5), or tweet at [@zeros](https://twitter.com/zerocurrencies) or [file an issue](https://github.com/zerocurrencycoin/zerowallet/issues).
+For support or other questions, Join [Discord](https://discordapp.com/invite/Jq5knn5), or tweet at [@zerocurrencies](https://twitter.com/zerocurrencies) or [file an issue](https://github.com/zerocurrencycoin/zerowallet/issues).
