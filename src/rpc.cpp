@@ -1327,7 +1327,7 @@ void RPC::checkForUpdate(bool silent) {
     if  (conn == nullptr)
         return noConnection();
 
-    QUrl cmcURL("https://api.github.com/repos/Fair-Exchange/zerowallet/releases");
+    QUrl cmcURL("https://api.github.com/repos/zerocurrencycoin/zerowallet/releases");
 
     QNetworkRequest req;
     req.setUrl(cmcURL);
