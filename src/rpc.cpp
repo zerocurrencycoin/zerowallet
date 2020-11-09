@@ -2,7 +2,6 @@
 
 #include "addressbook.h"
 #include "settings.h"
-#include "senttxstore.h"
 #include "turnstile.h"
 #include "version.h"
 #include "websockets.h"
@@ -517,118 +516,6 @@ void RPC::noConnection() {
 
     // Clear send tab from address
     ui->inputsCombo->clear();
-}
-
-// Refresh received z txs by calling z_listreceivedbyaddress/gettransaction
-void RPC::refreshReceivedZTrans(QList<QString> zaddrs) {
-    if  (conn == nullptr)
-        return noConnection();
-
-    // We'll only refresh the received Z txs if settings allows us.
-    if (!Settings::getInstance()->getSaveZtxs()) {
-        QList<TransactionItem> emptylist;
-        transactionsTableModel->addZRecvData(emptylist);
-        return;
-    }
-
-    // This method is complicated because z_listreceivedbyaddress only returns the txid, and
-    // we have to make a follow up call to gettransaction to get details of that transaction.
-    // Additionally, it has to be done in batches, because there are multiple z-Addresses,
-    // and each z-Addr can have multiple received txs.
-
-    // 1. For each z-Addr, get list of received txs
-    conn->doBatchRPC<QString>(zaddrs,
-        [=] (QString zaddr) {
-            json payload = {
-                {"jsonrpc", "1.0"},
-                {"id", "z_lrba"},
-                {"method", "z_listreceivedbyaddress"},
-                {"params", {zaddr.toStdString(), 0}}      // Accept 0 conf as well.
-            };
-
-            return payload;
-        },
-        [=] (QMap<QString, json>* zaddrTxids) {
-            // Process all txids, removing duplicates. This can happen if the same address
-            // appears multiple times in a single tx's outputs.
-            QSet<QString> txids;
-            QMap<QString, QString> memos;
-            for (auto it = zaddrTxids->constBegin(); it != zaddrTxids->constEnd(); it++) {
-                auto zaddr = it.key();
-                for (auto& i : it.value().get<json::array_t>()) {
-                    // Mark the address as used
-                    usedAddresses->insert(zaddr, true);
-
-                    // Filter out change txs
-                    if (! i["change"].get<json::boolean_t>()) {
-                        auto txid = QString::fromStdString(i["txid"].get<json::string_t>());
-                        txids.insert(txid);
-
-                        // Check for Memos
-                        QString memoBytes = QString::fromStdString(i["memo"].get<json::string_t>());
-                        if (!memoBytes.startsWith("f600"))  {
-                            QString memo(QByteArray::fromHex(
-                                            QByteArray::fromStdString(i["memo"].get<json::string_t>())));
-                            if (!memo.trimmed().isEmpty())
-                                memos[zaddr + txid] = memo;
-                        }
-                    }
-                }
-            }
-
-            // 2. For all txids, go and get the details of that txid.
-            conn->doBatchRPC<QString>(txids.values(),
-                [=] (QString txid) {
-                    json payload = {
-                        {"jsonrpc", "1.0"},
-                        {"id",  "gettx"},
-                        {"method", "gettransaction"},
-                        {"params", {txid.toStdString()}}
-                    };
-
-                    return payload;
-                },
-                [=] (QMap<QString, json>* txidDetails) {
-                    QList<TransactionItem> txdata;
-
-                    // Combine them both together. For every zAddr's txid, get the amount, fee, confirmations and time
-                    for (auto it = zaddrTxids->constBegin(); it != zaddrTxids->constEnd(); it++) {
-                        for (auto& i : it.value().get<json::array_t>()) {
-                            // Filter out change txs
-                            if (i["change"].get<json::boolean_t>())
-                                continue;
-
-                            auto zaddr = it.key();
-                            auto txid  = QString::fromStdString(i["txid"].get<json::string_t>());
-
-                            // Lookup txid in the map
-                            auto txidInfo = txidDetails->value(txid);
-
-                            qint64 timestamp;
-                            if (txidInfo.find("time") != txidInfo.end()) {
-                                timestamp = txidInfo["time"].get<json::number_unsigned_t>();
-                            } else {
-                                timestamp = txidInfo["blocktime"].get<json::number_unsigned_t>();
-                            }
-
-                            auto amount        = i["amount"].get<json::number_float_t>();
-                            auto confirmations = static_cast<long>(txidInfo["confirmations"].get<json::number_integer_t>());
-
-                            TransactionItem tx{ QString("receive"), timestamp, zaddr, txid, amount,
-                                                confirmations, "", memos.value(zaddr + txid, "") };
-                            txdata.push_front(tx);
-                        }
-                    }
-
-                    transactionsTableModel->addZRecvData(txdata);
-
-                    // Cleanup both responses;
-                    delete zaddrTxids;
-                    delete txidDetails;
-                }
-            );
-        }
-    );
 }
 
 /// This will refresh all the balance data from zerod
@@ -1213,60 +1100,6 @@ void RPC::refreshGetAllData() {
     });
 }
 
-
-// Read sent Z transactions from the file.
-void RPC::refreshSentZTrans() {
-    if  (conn == nullptr)
-        return noConnection();
-
-    auto sentZTxs = SentTxStore::readSentTxFile();
-
-    // If there are no sent z txs, then empty the table.
-    // This happens when you clear history.
-    if (sentZTxs.isEmpty()) {
-        transactionsTableModel->addZSentData(sentZTxs);
-        return;
-    }
-
-    QList<QString> txids;
-
-    for (auto sentTx: sentZTxs) {
-        txids.push_back(sentTx.txid);
-    }
-
-    // Look up all the txids to get the confirmation count for them.
-    conn->doBatchRPC<QString>(txids,
-        [=] (QString txid) {
-            json payload = {
-                {"jsonrpc", "1.0"},
-                {"id", "senttxid"},
-                {"method", "gettransaction"},
-                {"params", {txid.toStdString()}}
-            };
-
-            return payload;
-        },
-        [=] (QMap<QString, json>* txidList) {
-            auto newSentZTxs = sentZTxs;
-            // Update the original sent list with the confirmation count
-            // TODO: This whole thing is kinda inefficient. We should probably just update the file
-            // with the confirmed block number, so we don't have to keep calling gettransaction for the
-            // sent items.
-            for (TransactionItem& sentTx: newSentZTxs) {
-                auto j = txidList->value(sentTx.txid);
-                if (j.is_null())
-                    continue;
-                auto error = j["confirmations"].is_null();
-                if (!error)
-                    sentTx.confirmations = j["confirmations"].get<json::number_integer_t>();
-            }
-
-            transactionsTableModel->addZSentData(newSentZTxs);
-            delete txidList;
-        }
-     );
-}
-
 void RPC::addNewTxToWatch(const QString& newOpid, WatchedTx wtx) {
     watchingOps.insert(newOpid, wtx);
 
@@ -1342,8 +1175,6 @@ void RPC::watchTxStatus() {
 
                 if (status == "success") {
                     auto txid = QString::fromStdString(it["result"]["txid"]);
-
-                    SentTxStore::addToSentTx(watchingOps[id].tx, txid);
 
                     auto wtx = watchingOps[id];
                     watchingOps.remove(id);
