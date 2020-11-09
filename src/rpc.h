@@ -129,9 +129,7 @@ public:
     void                        setMigrationStatus(bool enabled);
 
 private:
-    void refreshBalances();
-
-    void refreshTransactions();
+    void refreshGetAllData();
     void refreshMigration();
     void refreshSentZTrans();
     void refreshReceivedZTrans(QList<QString> zaddresses);
@@ -153,6 +151,7 @@ private:
     void getCreateZeroNodeKey   (const std::function<void(json)>& cb);
     void getZeroNodeOutputs     (const std::function<void(json)>& cb);
     void getGZeroNodeList       (const std::function<void(json)>& cb);
+    void getAllData             (const std::function<void(json)>& cb);
 
     Connection*                 conn                        = nullptr;
     QProcess*                   ezcashd                     = nullptr;

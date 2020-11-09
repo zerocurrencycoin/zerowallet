@@ -352,6 +352,17 @@ void RPC::sendZTransaction(json params, const std::function<void(json)>& cb,
     });
 }
 
+void RPC::getAllData(const std::function<void(json)>& cb) {
+    json payload = {
+        {"jsonrpc", "1.0"},
+        {"id", "someid"},
+        {"method", "getalldata"},
+        {"params", {0,0,0,true}}
+    };
+
+    conn->doRPCWithDefaultErrorHandling(payload, cb);
+}
+
 /**
  * Method to get all the private keys for both z and t addresses. It will make 2 batch calls,
  * combine the result, and call the callback with a single list containing both the t-addr and z-addr
@@ -671,9 +682,8 @@ void RPC::getInfoThenRefresh(bool force) {
             // See if the turnstile migration has any steps that need to be done.
             turnstile->executeMigrationStep();
 
-            refreshBalances();
-            refreshAddresses();     // This calls refreshZSentTransactions() and refreshReceivedZTrans()
-            refreshTransactions();
+            refreshAddresses();
+            refreshGetAllData();    // call getalldata for balances and transactions
             refreshMigration();     // Sapling turnstile migration status.
             refreshGZeroNodes();    //Refresh Global Zeronodes
         }
@@ -970,9 +980,6 @@ void RPC::refreshAddresses() {
         delete zaddresses;
         zaddresses = newzaddresses;
 
-        // Refresh the sent and received txs from all these z-addresses
-        refreshSentZTrans();
-        refreshReceivedZTrans(*zaddresses);
     });
 
 
@@ -1071,35 +1078,116 @@ void RPC::setMigrationStatus(bool enabled) {
     });
 }
 
-
-
-void RPC::refreshBalances() {
+void RPC::refreshGetAllData() {
     if  (conn == nullptr)
         return noConnection();
 
-    // 1. Get the Balances
-    getBalance([=] (json reply) {
-        auto balT      = QString::fromStdString(reply["transparent"]).toDouble();
-        auto balZ      = QString::fromStdString(reply["private"]).toDouble();
-        auto balTotal  = QString::fromStdString(reply["total"]).toDouble();
+    getAllData([=] (json reply) {
+
+        // 1. Update Balance Data
+
+        auto balT                 = QString::fromStdString(reply["transparentbalance"]).toDouble();
+        auto balTUnconfirmed      = QString::fromStdString(reply["transparentbalanceunconfirmed"]).toDouble();
+        auto balZ                 = QString::fromStdString(reply["privatebalance"]).toDouble();
+        auto balZUnconfirmed      = QString::fromStdString(reply["privatebalanceunconfirmed"]).toDouble();
+        auto balTotal             = QString::fromStdString(reply["totalbalance"]).toDouble();
+        auto balTotalUnconfirmed  = QString::fromStdString(reply["totalunconfirmed"]).toDouble();
 
 
-        AppDataModel::getInstance()->setBalances(balT, balZ);
+        AppDataModel::getInstance()->setBalances(balT + balTUnconfirmed, balZ + balZUnconfirmed);
 
-        ui->balSheilded   ->setText(Settings::getZECDisplayFormat(balZ));
-        ui->balTransparent->setText(Settings::getZECDisplayFormat(balT));
-        ui->balTotal      ->setText(Settings::getZECDisplayFormat(balTotal));
+        ui->balSheilded   ->setText(Settings::getZECDisplayFormat(balZ + balZUnconfirmed));
+        ui->balTransparent->setText(Settings::getZECDisplayFormat(balT + balTUnconfirmed));
+        ui->balTotal      ->setText(Settings::getZECDisplayFormat(balTotal + balTotalUnconfirmed));
 
 
-        ui->balSheilded   ->setToolTip(Settings::getZECDisplayFormat(balZ));
-        ui->balTransparent->setToolTip(Settings::getZECDisplayFormat(balT));
-        ui->balTotal      ->setToolTip(Settings::getZECDisplayFormat(balTotal));
+        ui->balSheilded   ->setToolTip(Settings::getZECDisplayFormat(balZ + balZUnconfirmed));
+        ui->balTransparent->setToolTip(Settings::getZECDisplayFormat(balT + balTUnconfirmed));
+        ui->balTotal      ->setToolTip(Settings::getZECDisplayFormat(balTotal + balTotalUnconfirmed));
 
-        ui->balUSDTotal      ->setText(Settings::getUSDFromZecAmount(balTotal));
-        ui->balUSDTotal      ->setToolTip(Settings::getUSDFromZecAmount(balTotal));
+        ui->balUSDTotal      ->setText(Settings::getUSDFromZecAmount(balTotal + balTotalUnconfirmed));
+        ui->balUSDTotal      ->setToolTip(Settings::getUSDFromZecAmount(balTotal + balTotalUnconfirmed));
+
+
+        // 2. Update Transaction Data
+        QList<TransactionItem> txdata;
+
+        for (auto& it : reply["listtransactions"].get<json::array_t>()) {
+            double fee = 0;
+            if (!it["fee"].is_null()) {
+                fee = it["fee"].get<json::number_float_t>()/10e8;
+            }
+
+            QString category = QString::fromStdString(it["category"]);
+            qint64 time = (qint64)it["time"].get<json::number_unsigned_t>();
+            QString txid = QString::fromStdString(it["txid"]);
+            long confirms = static_cast<long>(it["confirmations"].get<json::number_unsigned_t>());
+
+            //only include the tx fee if the transaction was sent from our wallet.
+            if (fee != 0 && !it["sent"].is_null()) {
+                //Tx Fee
+                TransactionItem feetx{
+                    QString::fromStdString("fee"),
+                    time,
+                    QString::fromStdString("transaction fee"),
+                    txid,
+                    fee,
+                    confirms,
+                    "", "" };
+
+                txdata.push_back(feetx);
+            }
+
+            if (!it["sent"].is_null()) {
+                for (auto& sent : it["sent"].get<json::array_t>()) {
+                    QString address = (sent["address"].is_null() ? "" : QString::fromStdString(sent["address"]));
+
+                    if (category == QString::fromStdString("standard")) {
+                        category = QString::fromStdString("send");
+                    }
+
+                    TransactionItem tx{
+                        category,
+                        time,
+                        address,
+                        txid,
+                        sent["value"].get<json::number_float_t>(),
+                        confirms,
+                        "", "" };
+
+                    txdata.push_back(tx);
+
+                }
+            }
+
+            if (!it["received"].is_null( )) {
+                for (auto& received : it["received"].get<json::array_t>()) {
+                    QString address = (received["address"].is_null() ? "" : QString::fromStdString(received["address"]));
+
+                    if (category == QString::fromStdString("standard")) {
+                        category = QString::fromStdString("receive");
+                    }
+
+                    TransactionItem tx{
+                        category,
+                        time,
+                        address,
+                        txid,
+                        received["value"].get<json::number_float_t>(),
+                        confirms,
+                        "", "" };
+
+                    txdata.push_back(tx);
+
+                }
+            }
+        }
+        // Update model data, which updates the table view
+        transactionsTableModel->addTData(txdata);
     });
 
-    // 2. Get the UTXOs
+
+    // 3. Get the UTXOs
     // First, create a new UTXO list. It will be replacing the existing list when everything is processed.
     auto newUtxos = new QList<UnspentOutput>();
     auto newBalances = new QMap<QString, double>();
@@ -1125,39 +1213,6 @@ void RPC::refreshBalances() {
     });
 }
 
-void RPC::refreshTransactions() {
-    if  (conn == nullptr)
-        return noConnection();
-
-    getTransactions([=] (json reply) {
-        QList<TransactionItem> txdata;
-
-        for (auto& it : reply.get<json::array_t>()) {
-            double fee = 0;
-            if (!it["fee"].is_null()) {
-                fee = it["fee"].get<json::number_float_t>();
-            }
-
-            QString address = (it["address"].is_null() ? "" : QString::fromStdString(it["address"]));
-
-            TransactionItem tx{
-                QString::fromStdString(it["category"]),
-                (qint64)it["time"].get<json::number_unsigned_t>(),
-                address,
-                QString::fromStdString(it["txid"]),
-                it["amount"].get<json::number_float_t>() + fee,
-                static_cast<long>(it["confirmations"].get<json::number_unsigned_t>()),
-                "", "" };
-
-            txdata.push_back(tx);
-            if (!address.isEmpty())
-                usedAddresses->insert(address, true);
-        }
-
-        // Update model data, which updates the table view
-        transactionsTableModel->addTData(txdata);
-    });
-}
 
 // Read sent Z transactions from the file.
 void RPC::refreshSentZTrans() {
