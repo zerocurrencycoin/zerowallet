@@ -131,8 +131,6 @@ public:
 private:
     void refreshGetAllData();
     void refreshMigration();
-    void refreshSentZTrans();
-    void refreshReceivedZTrans(QList<QString> zaddresses);
 
     bool processUnspent     (const json& reply, QMap<QString, double>* newBalances, QList<UnspentOutput>* newUtxos);
     void updateUI           (bool anyUnconfirmed);

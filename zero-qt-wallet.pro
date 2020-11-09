@@ -45,7 +45,6 @@ SOURCES += \
     src/3rdparty/qrcode/QrSegment.cpp \
     src/settings.cpp \
     src/sendtab.cpp \
-    src/senttxstore.cpp \
     src/txtablemodel.cpp \
     src/globalzntablemodel.cpp \
     src/localzntablemodel.cpp \
@@ -77,7 +76,6 @@ HEADERS += \
     src/txtablemodel.h \
     src/globalzntablemodel.h \
     src/localzntablemodel.h \
-    src/senttxstore.h \
     src/turnstile.h \
     src/qrcodelabel.h \
     src/connection.h \
