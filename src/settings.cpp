@@ -1,6 +1,125 @@
 #include "mainwindow.h"
 #include "settings.h"
 
+
+ConsolodationAddressModel::ConsolodationAddressModel(QObject *parent)
+     : QAbstractTableModel(parent) {
+    headers << QObject::tr("Sapling Address");
+}
+
+ConsolodationAddressModel::~ConsolodationAddressModel() {
+    delete addresses;
+}
+
+void ConsolodationAddressModel::addConsolidationData(const QList<QString>& data) {
+    delete addresses;
+    addresses = new QList<QString>();
+
+    //Make sure there are no dupes
+    for (int i = 0; i < data.size(); i++) {
+        if(!addresses->contains(data[i])) {
+            addresses->append(data[i]);
+        }
+    }
+
+
+    updateData();
+}
+
+void ConsolodationAddressModel::addAddress(const QString& addr) {
+    auto newAddresses = new QList<QString>();
+    std::copy(addresses->begin(), addresses->end(), std::back_inserter(*newAddresses));
+    newAddresses->append(addr);
+
+    addConsolidationData(*newAddresses);
+}
+
+void ConsolodationAddressModel::deleteAddress(const QString& addr) {
+
+    QList<QString> existingAddress = *addresses;
+    QList<QString> newAddresses;
+    QList<QString>::iterator i;
+    for (int i = 0; i < existingAddress.size(); i++) {
+        if (addr != existingAddress[i]) {
+            newAddresses.append(existingAddress[i]);
+         }
+    }
+    addConsolidationData(newAddresses);
+}
+
+
+void ConsolodationAddressModel::updateData() {
+    auto newAddresses = new QList<QString>();
+
+    if (addresses  != nullptr) std::copy( addresses->begin(),  addresses->end(), std::back_inserter(*newAddresses));
+
+    // Sort by reverse time
+    std::sort(newAddresses->begin(), newAddresses->end(), [=] (auto a, auto b) {
+        return a < b; // reverse sort
+    });
+
+    // And then swap out the modeldata with the new one.
+    delete addresses;
+    addresses = newAddresses;
+
+    dataChanged(index(0, 0), index(addresses->size()-1, columnCount(index(0,0))-1));
+    layoutChanged();
+}
+
+
+int ConsolodationAddressModel::rowCount(const QModelIndex&) const
+{
+   if (addresses == nullptr) return 0;
+   return addresses->size();
+}
+
+int ConsolodationAddressModel::columnCount(const QModelIndex&) const
+{
+   return headers.size();
+}
+
+
+QVariant ConsolodationAddressModel::data(const QModelIndex &index, int role) const
+{
+    if (role == Qt::TextAlignmentRole)
+       return QVariant(Qt::AlignLeft | Qt::AlignVCenter);
+
+    if (role == Qt::FontRole) {
+        QFont f;
+        f.setBold(false);
+        return f;
+    }
+
+    auto dat = addresses->at(index.row());
+    if (role == Qt::DisplayRole) {
+            return dat;
+    }
+
+   return QVariant();
+}
+
+QVariant ConsolodationAddressModel::headerData(int section, Qt::Orientation orientation, int role) const
+{
+    if (role == Qt::TextAlignmentRole)
+       return QVariant(Qt::AlignLeft | Qt::AlignVCenter);
+
+    if (role == Qt::FontRole) {
+        QFont f;
+        f.setBold(true);
+        return f;
+    }
+
+    if (role == Qt::DisplayRole && orientation == Qt::Horizontal) {
+        return headers.at(section);
+    }
+
+    return QVariant();
+}
+
+QString ConsolodationAddressModel::getAddress(int row) const {
+    return addresses->at(row).trimmed();
+}
+
 Settings* Settings::instance = nullptr;
 
 Settings* Settings::init() {
@@ -18,12 +137,22 @@ Config Settings::getSettings() {
     // Load from the QT Settings.
     QSettings s;
 
-    auto host        = s.value("connection/host").toString();
-    auto port        = s.value("connection/port").toString();
-    auto username    = s.value("connection/rpcuser").toString();
-    auto password    = s.value("connection/rpcpassword").toString();
+    auto host                         = s.value("connection/host").toString();
+    auto port                         = s.value("connection/port").toString();
+    auto username                     = s.value("connection/rpcuser").toString();
+    auto password                     = s.value("connection/rpcpassword").toString();
+    auto deletetx                     = s.value("connection/deletetx").toString();
+    auto consolidation                = s.value("connection/consolidation").toString();
+    auto consolidationtxfee           = s.value("connection/consolidationtxfee").toString();
+    auto consolidationAddressesTemp   = s.value("connection/consolidationAddresses").toString();
 
-    return Config{host, port, username, password};
+    QStringList list = consolidationAddressesTemp.split(",");
+    QList<QString> consolidationAddresses;
+    for (int i = 0; i < list.size(); ++i) {
+        consolidationAddresses.push_back(list[i]);
+    }
+
+    return Config{host, port, username, password, deletetx, consolidation, consolidationtxfee, consolidationAddresses};
 }
 
 QString Settings::locateZeroNodeConfFile() {
@@ -103,13 +232,25 @@ void Settings::autoDetectZeroNodeConf(LocalZNTableModel* localZeroNodesTableMode
     localZeroNodesTableModel->addLocalZNData();
 }
 
-void Settings::saveSettings(const QString& host, const QString& port, const QString& username, const QString& password) {
+void Settings::saveSettings(const QString& host, const QString& port, const QString& username, const QString& password,
+                            const QString& deletetx, const QString& consolidation, const QString& consolidationtxfee, const QList<QString>& consolidationAddresses) {
     QSettings s;
 
     s.setValue("connection/host", host);
     s.setValue("connection/port", port);
     s.setValue("connection/rpcuser", username);
     s.setValue("connection/rpcpassword", password);
+    s.setValue("connection/deletetx", deletetx);
+    s.setValue("connection/consolidation", consolidation);
+    s.setValue("connection/consolidationtxfee", consolidationtxfee);
+
+    QStringList list;
+    for (int i=0; i < consolidationAddresses.size(); i++) {
+        list.append(consolidationAddresses[i]);
+    }
+
+    QString consolidationAddressesList = list.join(",");
+    s.setValue("connection/consolidationAddresses", list);
 
     s.sync();
 

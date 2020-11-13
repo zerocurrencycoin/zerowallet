@@ -529,59 +529,158 @@ void MainWindow::setupSettingsModal() {
         // Fetch prices
         settings.chkFetchPrices->setChecked(Settings::getInstance()->getAllowFetchPrices());
 
-        // Use Tor
-        bool isUsingTor = false;
-        if (rpc->getConnection() != nullptr) {
-            isUsingTor = !rpc->getConnection()->config->proxy.isEmpty();
-        }
-        settings.chkTor->setChecked(isUsingTor);
-        if (rpc->getEZcashD() == nullptr) {
-            settings.chkTor->setEnabled(false);
-            settings.lblTor->setEnabled(false);
-            QString tooltip = tr("Tor configuration is available only when running an embedded zerod.");
-            settings.chkTor->setToolTip(tooltip);
-            settings.lblTor->setToolTip(tooltip);
-        }
-
         // Connection Settings
         QIntValidator validator(0, 65535);
         settings.port->setValidator(&validator);
 
-        // If values are coming from zero.conf, then disable all the fields
+        //Show where setting are coming from
         auto zcashConfLocation = Settings::getInstance()->getZcashdConfLocation();
         if (!zcashConfLocation.isEmpty()) {
             settings.confMsg->setText("Settings are being read from \n" + zcashConfLocation);
-            settings.hostname->setEnabled(false);
-            settings.port->setEnabled(false);
-            settings.rpcuser->setEnabled(false);
-            settings.rpcpassword->setEnabled(false);
-        }
-        else {
+        } else {
             settings.confMsg->setText("No local zero.conf found. Please configure connection manually.");
-            settings.hostname->setEnabled(true);
-            settings.port->setEnabled(true);
-            settings.rpcuser->setEnabled(true);
-            settings.rpcpassword->setEnabled(true);
         }
 
-        // Load current values into the dialog
-        auto conf = Settings::getInstance()->getSettings();
-        settings.hostname->setText(conf.host);
-        settings.port->setText(conf.port);
-        settings.rpcuser->setText(conf.rpcuser);
-        settings.rpcpassword->setText(conf.rpcpassword);
+        // Load current values into the dialog from the connection
+        bool isUsingTor = false;
+        bool isUsingConsolidation = false;
+        bool isUsingDeleteTx = false;
+        QString consolidationtxfee = "0.0001";
+        QList<QString> cAddresses;
+        QString port;
+        QString rpcuser;
+        QString rpcpassword;
+
+        if (rpc->getConnection() != nullptr) {
+            auto conf = rpc->getConnection()->config;
+            settings.hostname->setText(conf->host);
+            settings.port->setText(conf->port);
+            port = conf->port;
+            settings.rpcuser->setText(conf->rpcuser);
+            rpcuser = conf->rpcuser;
+            settings.rpcpassword->setText(conf->rpcpassword);
+            rpcpassword = conf->rpcpassword;
+
+
+            //Use DeleteTx
+            isUsingDeleteTx = (conf->deletetx == "1") ? true : false;
+            settings.chkDeleteTx->setChecked(isUsingDeleteTx);
+            consolidationtxfee = conf->consolidationtxfee;
+
+            // Use Consolidation
+            isUsingConsolidation = (conf->consolidation == "1") ? true : false;
+            settings.chkConsolidation->setChecked(isUsingConsolidation);
+            cAddresses = conf->consolidationAddresses;
+
+
+            // Use Tor
+            isUsingTor = conf->proxy.isEmpty() ? false : true;
+            settings.chkTor->setChecked(isUsingTor);
+        }
+
+        //Set Tx Fee in Settings UI
+        settings.consolidationFeeAmt->setValidator( new QDoubleValidator(0.0000, 0.0005, 8, this));
+        QRegExp re("\\d*");  // a digit (\d), zero or more times (*)
+        if (re.exactMatch(consolidationtxfee)){
+            double ctxFee = consolidationtxfee.toDouble();
+            settings.consolidationFeeAmt->setText(QString::number((ctxFee/1e8)));
+        } else {
+            settings.consolidationFeeAmt->setText(QString::number(0.0001));
+        }
+
+        //Setup Consolidation table for addresses
+        ConsolodationAddressModel* consolodationAddressModel = new ConsolodationAddressModel(settings.consolidationAddressTable);
+        settings.consolidationAddressTable->setModel(consolodationAddressModel);
+        consolodationAddressModel->addConsolidationData(cAddresses);
+        settings.consolidationAddressTable->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+
+        //Setup Consolidation table CustomContextMenu - Delete button
+        settings.consolidationAddressTable->setContextMenuPolicy(Qt::CustomContextMenu);
+        QObject::connect(settings.consolidationAddressTable, &QTableView::customContextMenuRequested, [=] (QPoint pos) {
+            QModelIndex index = settings.consolidationAddressTable->indexAt(pos);
+            if (index.row() < 0) return;
+
+            QMenu menu(this);
+
+            auto addrModel = dynamic_cast<ConsolodationAddressModel *>(settings.consolidationAddressTable->model());
+            QString addr = addrModel->getAddress(index.row());
+
+            menu.addAction(tr("Delete Address"), [=] () {
+                addrModel->deleteAddress(addr);
+                ui->statusBar->showMessage(tr("Consolidation Address Removed."), 3 * 1000);
+            });
+
+            menu.exec(settings.consolidationAddressTable->viewport()->mapToGlobal(pos));
+        });
+
+        // Add Consolidation Address add button
+        QObject::connect(settings.btnAddConsolidationAddress, &QPushButton::clicked, this, [=] () {
+            auto addrModel = dynamic_cast<ConsolodationAddressModel *>(settings.consolidationAddressTable->model());
+            auto addr = settings.newConsolidationAddress->text();
+            addrModel->addAddress(addr);
+        });
+
+
+        if (!rpc->isEmbedded()) {
+          QString tooltip = tr("You're using an external zerod. Please configure manually.");
+          //Enable DeleteTx and Consolidation only if using embedded zerod
+          settings.chkDeleteTx->setEnabled(false);
+          settings.chkConsolidation->setEnabled(false);
+          settings.consolidationFeeAmt->setEnabled(false);
+          settings.consolidationAddressTable->setEnabled(false);
+          settings.btnAddConsolidationAddress->setEnabled(false);
+          settings.newConsolidationAddress->setEnabled(false);
+          settings.chkDeleteTx->setToolTip(tooltip);
+          settings.chkConsolidation->setToolTip(tooltip);
+          settings.consolidationFeeAmt->setToolTip(tooltip);
+          settings.consolidationAddressTable->setToolTip(tooltip);
+          settings.btnAddConsolidationAddress->setToolTip(tooltip);
+          settings.newConsolidationAddress->setToolTip(tooltip);
+
+          //Enable Connection settings option only if using embedded zerod
+          settings.hostname->setEnabled(false);
+          settings.port->setEnabled(false);
+          settings.rpcuser->setEnabled(false);
+          settings.rpcpassword->setEnabled(false);
+          settings.hostname->setToolTip(tooltip);
+          settings.port->setToolTip(tooltip);
+          settings.rpcuser->setToolTip(tooltip);
+          settings.rpcpassword->setToolTip(tooltip);
+
+          // Enable the troubleshooting options only if using embedded zerod
+          settings.chkRescan->setEnabled(false);
+          settings.chkReindex->setEnabled(false);
+          settings.chkRescan->setToolTip(tooltip);
+          settings.chkReindex->setToolTip(tooltip);
+
+          //Enable Tor option only if using embedded zerod
+          settings.chkTor->setEnabled(false);
+          settings.lblTor->setEnabled(false);
+          settings.chkTor->setToolTip(tooltip);
+          settings.lblTor->setToolTip(tooltip);
+
+        } else {
+          settings.chkDeleteTx->setEnabled(true);
+          settings.chkConsolidation->setEnabled(true);
+          settings.consolidationFeeAmt->setEnabled(true);
+          settings.consolidationAddressTable->setEnabled(true);
+          settings.btnAddConsolidationAddress->setEnabled(true);
+          settings.newConsolidationAddress->setEnabled(true);
+
+          settings.hostname->setEnabled(false);
+          settings.port->setEnabled(true);
+          settings.rpcuser->setEnabled(true);
+          settings.rpcpassword->setEnabled(true);
+
+          settings.chkRescan->setEnabled(true);
+          settings.chkReindex->setEnabled(true);
+
+          settings.chkTor->setEnabled(true);
+          settings.lblTor->setEnabled(true);
+        }
 
         // Connection tab by default
         settings.tabWidget->setCurrentIndex(0);
-
-        // Enable the troubleshooting options only if using embedded zerod
-        if (!rpc->isEmbedded()) {
-            settings.chkRescan->setEnabled(false);
-            settings.chkRescan->setToolTip(tr("You're using an external zerod. Please restart zerod with -rescan"));
-
-            settings.chkReindex->setEnabled(false);
-            settings.chkReindex->setToolTip(tr("You're using an external zerod. Please restart zerod with -reindex"));
-        }
 
         if (settingsDialog.exec() == QDialog::Accepted) {
             // Custom fees
@@ -600,40 +699,74 @@ void MainWindow::setupSettingsModal() {
             // Allow fetching prices
             Settings::getInstance()->setAllowFetchPrices(settings.chkFetchPrices->isChecked());
 
+            // Check to see if state changed and wallet needs to restart
+            bool showRestartInfo = false;
+            bool forceRestart = false;
+
+            //Update Connection Settings
+            if (port != settings.port->text() || rpcuser != settings.rpcuser->text() || rpcpassword != settings.rpcpassword->text()) {
+                Settings::removeFromZcashConf(zcashConfLocation, "rpcport");
+                Settings::addToZcashConf(zcashConfLocation, "rpcport=" + settings.port->text());
+                Settings::removeFromZcashConf(zcashConfLocation, "rpcuser");
+                Settings::addToZcashConf(zcashConfLocation, "rpcuser=" + settings.rpcuser->text());
+                Settings::removeFromZcashConf(zcashConfLocation, "rpcpassword");
+                Settings::addToZcashConf(zcashConfLocation, "rpcpassword=" + settings.rpcpassword->text());
+
+                showRestartInfo = true;
+                forceRestart = true;
+            }
+
+
+            //Update Tor Settings
             if (!isUsingTor && settings.chkTor->isChecked()) {
-                // If "use tor" was previously unchecked and now checked
+                Settings::removeFromZcashConf(zcashConfLocation, "proxy");
                 Settings::addToZcashConf(zcashConfLocation, "proxy=127.0.0.1:9050");
                 rpc->getConnection()->config->proxy = "proxy=127.0.0.1:9050";
-
-                QMessageBox::information(this, tr("Enable Tor"),
-                    tr("Connection over Tor has been enabled. To use this feature, you need to restart ZeroWallet."),
-                    QMessageBox::Ok);
+                showRestartInfo = true;
             }
-
             if (isUsingTor && !settings.chkTor->isChecked()) {
-                // If "use tor" was previously checked and now is unchecked
                 Settings::removeFromZcashConf(zcashConfLocation, "proxy");
                 rpc->getConnection()->config->proxy.clear();
-
-                QMessageBox::information(this, tr("Disable Tor"),
-                    tr("Connection over Tor has been disabled. To fully disconnect from Tor, you need to restart ZeroWallet."),
-                    QMessageBox::Ok);
+                showRestartInfo = true;
             }
 
-            if (zcashConfLocation.isEmpty()) {
-                // Save settings
-                Settings::getInstance()->saveSettings(
-                    settings.hostname->text(),
-                    settings.port->text(),
-                    settings.rpcuser->text(),
-                    settings.rpcpassword->text());
-
-                auto cl = new ConnectionLoader(this, rpc);
-                cl->loadConnection();
+            //Update DeleteTx Settings
+            if (!isUsingDeleteTx && settings.chkDeleteTx->isChecked()) {
+                Settings::removeFromZcashConf(zcashConfLocation, "deletetx");
+                Settings::removeFromZcashConf(zcashConfLocation, "keeptxfornblocks");
+                Settings::removeFromZcashConf(zcashConfLocation, "keeptxnum");
+                Settings::addToZcashConf(zcashConfLocation, "deletetx=1");
+                Settings::addToZcashConf(zcashConfLocation, "keeptxfornblocks=1");
+                Settings::addToZcashConf(zcashConfLocation, "keeptxnum=1");
+                rpc->getConnection()->config->deletetx= "1";
+                showRestartInfo = true;
+            }
+            if (isUsingDeleteTx && !settings.chkDeleteTx->isChecked()) {
+                Settings::removeFromZcashConf(zcashConfLocation, "deletetx");
+                Settings::removeFromZcashConf(zcashConfLocation, "keeptxfornblocks");
+                Settings::removeFromZcashConf(zcashConfLocation, "keeptxnum");
+                rpc->getConnection()->config->deletetx.clear();
+                showRestartInfo = true;
             }
 
-            // Check to see if rescan or reindex have been enabled
-            bool showRestartInfo = false;
+            //Update Consolidation Settings
+            if (!isUsingConsolidation && settings.chkConsolidation->isChecked()) {
+                QString cFee = QString::number(settings.consolidationFeeAmt->text().toDouble() * 1e8);
+                Settings::removeFromZcashConf(zcashConfLocation, "consolidation");
+                Settings::removeFromZcashConf(zcashConfLocation, "consolidationtxfee");
+                Settings::addToZcashConf(zcashConfLocation, "consolidation=1");
+                Settings::addToZcashConf(zcashConfLocation, "consolidationtxfee=" + cFee);
+                rpc->getConnection()->config->consolidation = "1";
+                showRestartInfo = true;
+            }
+            if (isUsingConsolidation && !settings.chkConsolidation->isChecked()) {
+                Settings::removeFromZcashConf(zcashConfLocation, "consolidation");
+                Settings::removeFromZcashConf(zcashConfLocation, "consolidationtxfee");
+                rpc->getConnection()->config->consolidation .clear();
+                showRestartInfo = true;
+            }
+
+            //Update troubleshooting options
             if (settings.chkRescan->isChecked()) {
                 Settings::addToZcashConf(zcashConfLocation, "rescan=1");
                 showRestartInfo = true;
@@ -645,10 +778,25 @@ void MainWindow::setupSettingsModal() {
             }
 
             if (showRestartInfo) {
-                auto desc = tr("ZeroWallet needs to restart to rescan/reindex. ZeroWallet will now close, please restart ZeroWallet to continue");
+                QMessageBox restartMsg;
+                restartMsg.setText("ZeroWallet needs to restart to update the wallet config.");
+                restartMsg.setInformativeText("ZeroWallet will now close, please restart ZeroWallet to continue.");
+                if (!forceRestart) {
+                  restartMsg.setStandardButtons(QMessageBox::Ok | QMessageBox::Cancel);
+                } else {
+                  restartMsg.setStandardButtons(QMessageBox::Ok);
+                }
+                restartMsg.setDefaultButton(QMessageBox::Ok);
 
-                QMessageBox::information(this, tr("Restart ZeroWallet"), desc, QMessageBox::Ok);
-                QTimer::singleShot(1, [=]() { this->close(); });
+                QSpacerItem* horizontalSpacer = new QSpacerItem(500, 0, QSizePolicy::Minimum, QSizePolicy::Expanding);
+                QGridLayout* layout = (QGridLayout*)restartMsg.layout();
+                layout->addItem(horizontalSpacer, layout->rowCount(), 0, 1, layout->columnCount());
+
+                int ret = restartMsg.exec();
+
+                 if (ret == QMessageBox::Ok || forceRestart) {
+                    QTimer::singleShot(1, [=]() { this->close(); });
+                 }
             }
         }
     });

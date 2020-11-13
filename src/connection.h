@@ -29,6 +29,10 @@ struct ConnectionConfig {
     QString spentindex;
     QString timeindex;
     QString addrindex;
+    QString deletetx;
+    QString consolidation;
+    QString consolidationtxfee;
+    QList<QString> consolidationAddresses;
 
     ConnectionType connType;
 };

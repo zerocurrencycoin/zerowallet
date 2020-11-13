@@ -192,7 +192,15 @@ void ConnectionLoader::createZcashConf() {
     out << "rpcport=23811\n";
     out << "rpcworkqueue=256\n";
     out << "txindex=1\n";
-    out << "addressindex=1\n";
+
+    //DeleteTx
+    out << "deletetx=1\n";
+    out << "keeptxfornblocks=1\n";
+    out << "keeptxnum=1\n";
+
+    //consolidation
+    out << "consolidation=1\n";
+    out << "consolidationtxfee=10000\n";
 
     // Fast sync override
     if (ui.chkFastSync->isChecked()) {
@@ -653,9 +661,22 @@ std::shared_ptr<ConnectionConfig> ConnectionLoader::autoDetectZcashConf() {
             zcashconf->port.isEmpty()) {
                 zcashconf->port = "23812";
         }
-        if (name == "fastsync" && value == "1") {
-            zcashconf->fastsync = true;
+
+        if (name == "deletetx") {
+            zcashconf->deletetx = value;
         }
+        if (name == "consolidation") {
+            zcashconf->consolidation = value;
+        }
+
+        if (name == "consolidationtxfee") {
+            zcashconf->consolidationtxfee = value;
+        }
+
+        if (name == "consolidatesaplingaddress") {
+            zcashconf->consolidationAddresses.push_back(value);
+        }
+
     }
 
     // If rpcport is not in the file, and it was not set by the testnet=1 flag, then go to default
@@ -674,15 +695,25 @@ std::shared_ptr<ConnectionConfig> ConnectionLoader::loadFromSettings() {
     // Load from the QT Settings.
     QSettings s;
 
-    auto host        = s.value("connection/host").toString();
-    auto port        = s.value("connection/port").toString();
-    auto username    = s.value("connection/rpcuser").toString();
-    auto password    = s.value("connection/rpcpassword").toString();
+    auto host                         = s.value("connection/host").toString();
+    auto port                         = s.value("connection/port").toString();
+    auto username                     = s.value("connection/rpcuser").toString();
+    auto password                     = s.value("connection/rpcpassword").toString();
+    auto deletetx                     = s.value("connection/deletetx").toString();
+    auto consolidation                = s.value("connection/consolidation").toString();
+    auto consolidationtxfee           = s.value("connection/consolidationtxfee").toString();
+    auto consolidationAddressesTemp   = s.value("connection/consolidationAddresses").toString();
+
+    QStringList list = consolidationAddressesTemp.split(",");
+    QList<QString> consolidationAddresses;
+    for (int i = 0; i < list.size(); ++i) {
+        consolidationAddresses.push_back(list[i]);
+    }
 
     if (username.isEmpty() || password.isEmpty())
         return nullptr;
 
-    auto uiConfig = new ConnectionConfig{ host, port, username, password, false, false, false, "", "", "", "", "", "", ConnectionType::UISettingsZCashD};
+    auto uiConfig = new ConnectionConfig{ host, port, username, password, false, false, false, "", "", "", "", "", "", deletetx, consolidation, consolidationtxfee, consolidationAddresses, ConnectionType::UISettingsZCashD};
 
     return std::shared_ptr<ConnectionConfig>(uiConfig);
 }

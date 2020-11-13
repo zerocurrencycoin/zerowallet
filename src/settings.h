@@ -5,10 +5,14 @@
 #include "localzntablemodel.h"
 
 struct Config {
-    QString host;
-    QString port;
-    QString rpcuser;
-    QString rpcpassword;
+    QString         host;
+    QString         port;
+    QString         rpcuser;
+    QString         rpcpassword;
+    QString         deletetx;
+    QString         consolidation;
+    QString         consolidationtxfee;
+    QList<QString>  consolidationAddresses;
 };
 
 struct ToFields;
@@ -23,6 +27,31 @@ struct PaymentURI {
     QString error;
 };
 
+
+class ConsolodationAddressModel: public QAbstractTableModel
+{
+public:
+    ConsolodationAddressModel(QObject* parent);
+    ~ConsolodationAddressModel();
+
+    void      addConsolidationData    (const QList<QString>& data);
+    QString   getAddress(int row) const;
+    void      addAddress(const QString& addr);
+    void      deleteAddress(const QString& addr);
+
+    int      rowCount(const QModelIndex &parent) const;
+    int      columnCount(const QModelIndex &parent) const;
+    QVariant data(const QModelIndex &index, int role) const;
+    QVariant headerData(int section, Qt::Orientation orientation, int role) const;
+
+  private:
+      void updateData();
+
+      QList<QString>*          addresses    = nullptr;
+      QList<QString>           headers;
+};
+
+
 class Settings
 {
 public:
@@ -30,7 +59,8 @@ public:
     static  Settings* getInstance();
 
     Config  getSettings();
-    void    saveSettings(const QString& host, const QString& port, const QString& username, const QString& password);
+    void    saveSettings(const QString& host, const QString& port, const QString& username, const QString& password,
+                         const QString& deletetx, const QString& consolidation, const QString& consolidationtxfee, const QList<QString>& consolidationAddresses);
 
     bool    isTestnet();
     void    setTestnet(bool isTestnet);
