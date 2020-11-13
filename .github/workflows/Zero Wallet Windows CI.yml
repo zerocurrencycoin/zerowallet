@@ -1,0 +1,91 @@
+name: Zero Wallet Windows CI
+
+on:
+  pull_request:
+    branches: [master]
+  push:
+    branches: [master]
+  schedule:
+    - cron: '15 0 * * 1'
+
+jobs:
+
+  linux-build:
+    name: Zero Wallet Windows Build
+    runs-on: ubuntu-18.04
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Install deps (Linux)
+
+        env:
+          DEBIAN_FRONTEND: noninteractive
+
+        run: |
+          sudo apt-get update  # prevents repo404 errors on apt-remove below
+
+          #Zero Depends
+          sudo apt-get install \
+              build-essential pkg-config libc6-dev m4 g++-multilib \
+              autoconf libtool ncurses-dev unzip git python python-zmq \
+              zlib1g-dev wget bsdmainutils automake cmake curl mingw-w64
+          git clone https://github.com/zerocurrencycoin/zero.git zero_win
+
+          #MXE Depends
+          sudo apt-get install \
+              autoconf automake autopoint bash bison \
+              bzip2 flex g++ g++-multilib gettext git gperf intltool \
+              libc6-dev-i386 libgdk-pixbuf2.0-dev libltdl-dev libssl-dev \
+              libtool-bin libxml-parser-perl lzip make \
+              openssl p7zip-full patch perl python \
+              ruby sed unzip wget xz-utils
+          git clone https://github.com/mxe/mxe.git
+
+      - name: Check Static MXE Cache
+        uses: actions/cache@v2
+        id: mxe
+        with:
+          path: ./mxe
+          key: ${{ runner.os }}-MXE-49ff74142bc7a90011f88f9ffce1ed1759e53bd7
+
+      - name: Build MXE
+        if: steps.mxe.outputs.cache-hit != 'true'
+        run: |
+          cd mxe
+          git checkout 49ff74142bc7a90011f88f9ffce1ed1759e53bd7
+          make MXE_TARGETS='x86_64-w64-mingw32.static' qt5
+          cd ..
+
+      - name: Build Node
+        run: |
+          cd zero_win
+          ./zcutil/build-win.sh -j$(nproc)
+          cd ..
+
+      - name: Build Zero Wallet
+        run: |
+
+          mkdir zeroRelease
+          export ZCASH_DIR="$PWD/zeroRelease"
+
+          cp $PWD/zero_win/src/zerod.exe           $ZCASH_DIR/zerod.exe
+          cp $PWD/zero_win/src/zero-cli.exe        $ZCASH_DIR/zero-cli.exe
+          rm ./zero_linux -rf
+
+          strip $ZCASH_DIR/zerod.exe
+          strip $ZCASH_DIR/zero-cli.exe
+
+          export MXE_PATH="$PWD/mxe/usr/bin"
+          export APP_VERSION="1.0.1"
+          export PREV_VERSION="1.0.0"
+
+          ./src/scripts/mkrelease-win-CI.sh
+
+          # tar -czvf zero-win.tar.gz $ZCASH_DIR/zerod.exe $ZCASH_DIR/zero-cli.exe
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v1
+        with:
+          name: zero-win
+          path: ./zero-win.tar.gz
