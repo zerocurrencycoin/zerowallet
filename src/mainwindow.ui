@@ -22,7 +22,7 @@
     <item row="0" column="1">
      <widget class="QTabWidget" name="tabWidget">
       <property name="currentIndex">
-       <number>1</number>
+       <number>0</number>
       </property>
       <widget class="QWidget" name="tab">
        <attribute name="title">
@@ -1005,7 +1005,11 @@
            </widget>
           </item>
           <item>
-           <widget class="QTableView" name="tableZeroNodeLocal"/>
+           <widget class="QTableView" name="tableZeroNodeLocal">
+            <attribute name="verticalHeaderVisible">
+             <bool>false</bool>
+            </attribute>
+           </widget>
           </item>
           <item>
            <widget class="QLabel" name="label_9">
@@ -1015,7 +1019,11 @@
            </widget>
           </item>
           <item>
-           <widget class="QTableView" name="tableZeroNodeGlobal"/>
+           <widget class="QTableView" name="tableZeroNodeGlobal">
+            <attribute name="verticalHeaderVisible">
+             <bool>false</bool>
+            </attribute>
+           </widget>
           </item>
           <item>
            <layout class="QHBoxLayout" name="horizontalLayout_27">
