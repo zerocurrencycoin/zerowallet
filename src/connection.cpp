@@ -136,7 +136,10 @@ void ConnectionLoader::createZcashConf() {
     Ui_createZcashConf ui;
     ui.setupUi(&d);
 
-    QPixmap logo(":/img/res/zerodlogo.gif");
+    QPixmap logo(":/img/res/zero.png");
+    ui.chkFastSync->setEnabled(false); //Disable until option is available in zero
+    ui.chkFastSync->setChecked(false);
+
     ui.lblTopIcon->setPixmap(logo.scaled(128, 128, Qt::KeepAspectRatio, Qt::SmoothTransformation));
     ui.btnPickDir->setEnabled(false);
 
@@ -203,9 +206,9 @@ void ConnectionLoader::createZcashConf() {
     out << "consolidationtxfee=10000\n";
 
     // Fast sync override
-    if (ui.chkFastSync->isChecked()) {
-        out << "fastsync=1\n";
-    }
+    // if (ui.chkFastSync->isChecked()) {
+    //     out << "fastsync=1\n";
+    // }
 
 
     // Datadir override
