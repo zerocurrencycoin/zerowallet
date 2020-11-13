@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>600</width>
-    <height>610</height>
+    <width>650</width>
+    <height>670</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -35,7 +35,7 @@
       <enum>QTabWidget::Rounded</enum>
      </property>
      <property name="currentIndex">
-      <number>0</number>
+      <number>3</number>
      </property>
      <widget class="QWidget" name="tab_2">
       <attribute name="title">
@@ -227,6 +227,192 @@
          </item>
         </widget>
        </item>
+       <item row="11" column="0" colspan="2">
+        <widget class="Line" name="line_2">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+        </widget>
+       </item>
+       <item row="12" column="0">
+        <spacer name="verticalSpacer_2">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="tab_4">
+      <attribute name="title">
+       <string>Wallet Config</string>
+      </attribute>
+      <layout class="QGridLayout" name="gridLayout_3">
+       <item row="0" column="0">
+        <widget class="QCheckBox" name="chkDeleteTx">
+         <property name="text">
+          <string>Enable DeleteTx</string>
+         </property>
+         <property name="checked">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="0" colspan="4">
+        <widget class="QLabel" name="label_5">
+         <property name="text">
+          <string>This will enable wallet transaction pruning to keep the wallet small and fast. Transaction details are retained in the archived list. </string>
+         </property>
+         <property name="wordWrap">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="1">
+        <spacer name="verticalSpacer_5">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeType">
+          <enum>QSizePolicy::Maximum</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>15</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item row="3" column="0" colspan="2">
+        <widget class="QCheckBox" name="chkConsolidation">
+         <property name="text">
+          <string>Enable Sapling Consolidation</string>
+         </property>
+         <property name="checked">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="0" colspan="4">
+        <widget class="QLabel" name="label_14">
+         <property name="text">
+          <string>The will enable automatic wallet consolidation. The wallet will periodically collect notes from a single sapling address and send them back to the same sapling address where they were found, thereby decreasing the notes needed to be maintained. </string>
+         </property>
+         <property name="wordWrap">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="5" column="0" colspan="3">
+        <layout class="QHBoxLayout" name="horizontalLayout">
+         <item>
+          <widget class="QLabel" name="lblConsolidationFee">
+           <property name="text">
+            <string>Consolidation Fee</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLineEdit" name="consolidationFeeAmt">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="text">
+            <string>0.0001</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="lblConsolidationFee_2">
+           <property name="text">
+            <string>Zer</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <spacer name="horizontalSpacer">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>40</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+        </layout>
+       </item>
+       <item row="6" column="2">
+        <spacer name="verticalSpacer_4">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeType">
+          <enum>QSizePolicy::Maximum</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>15</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item row="7" column="0" colspan="4">
+        <widget class="QLabel" name="lblConsolidationAddresses">
+         <property name="text">
+          <string>Consolidation Addresses (Consolidation will run on all addresses unless specified)</string>
+         </property>
+         <property name="wordWrap">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="8" column="0" colspan="3">
+        <widget class="QLineEdit" name="newConsolidationAddress">
+         <property name="placeholderText">
+          <string>Address</string>
+         </property>
+        </widget>
+       </item>
+       <item row="8" column="3">
+        <widget class="QPushButton" name="btnAddConsolidationAddress">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="text">
+          <string>Add</string>
+         </property>
+        </widget>
+       </item>
+       <item row="9" column="0" colspan="4">
+        <widget class="QTableView" name="consolidationAddressTable">
+         <property name="autoFillBackground">
+          <bool>true</bool>
+         </property>
+         <property name="sizeAdjustPolicy">
+          <enum>QAbstractScrollArea::AdjustToContentsOnFirstShow</enum>
+         </property>
+         <attribute name="verticalHeaderVisible">
+          <bool>false</bool>
+         </attribute>
+        </widget>
+       </item>
       </layout>
      </widget>
      <widget class="QWidget" name="tab_3">
@@ -313,13 +499,13 @@
      </widget>
      <widget class="QWidget" name="tab">
       <property name="enabled">
-       <bool>false</bool>
+       <bool>true</bool>
       </property>
       <attribute name="title">
-       <string>zerod connection</string>
+       <string>Connection</string>
       </attribute>
-      <layout class="QVBoxLayout" name="verticalLayout_3">
-       <item>
+      <layout class="QGridLayout" name="gridLayout_4">
+       <item row="0" column="0" colspan="2">
         <widget class="QLabel" name="confMsg">
          <property name="text">
           <string notr="true">&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -329,15 +515,18 @@
          </property>
         </widget>
        </item>
-       <item>
+       <item row="1" column="0" colspan="2">
         <widget class="Line" name="line">
          <property name="orientation">
           <enum>Qt::Horizontal</enum>
          </property>
         </widget>
        </item>
-       <item>
+       <item row="2" column="0">
         <widget class="QLabel" name="label">
+         <property name="enabled">
+          <bool>true</bool>
+         </property>
          <property name="minimumSize">
           <size>
            <width>60</width>
@@ -349,14 +538,17 @@
          </property>
         </widget>
        </item>
-       <item>
+       <item row="3" column="0">
         <widget class="QLineEdit" name="hostname">
+         <property name="enabled">
+          <bool>true</bool>
+         </property>
          <property name="placeholderText">
           <string/>
          </property>
         </widget>
        </item>
-       <item>
+       <item row="4" column="0">
         <widget class="QLabel" name="label_2">
          <property name="minimumSize">
           <size>
@@ -369,15 +561,18 @@
          </property>
         </widget>
        </item>
-       <item>
+       <item row="5" column="0">
         <widget class="QLineEdit" name="port">
          <property name="placeholderText">
           <string/>
          </property>
         </widget>
        </item>
-       <item>
+       <item row="6" column="0">
         <widget class="QLabel" name="label_3">
+         <property name="enabled">
+          <bool>true</bool>
+         </property>
          <property name="minimumSize">
           <size>
            <width>60</width>
@@ -389,11 +584,18 @@
          </property>
         </widget>
        </item>
-       <item>
-        <widget class="QLineEdit" name="rpcuser"/>
+       <item row="7" column="0">
+        <widget class="QLineEdit" name="rpcuser">
+         <property name="enabled">
+          <bool>true</bool>
+         </property>
+        </widget>
        </item>
-       <item>
+       <item row="8" column="0">
         <widget class="QLabel" name="label_4">
+         <property name="enabled">
+          <bool>true</bool>
+         </property>
          <property name="minimumSize">
           <size>
            <width>60</width>
@@ -405,13 +607,13 @@
          </property>
         </widget>
        </item>
-       <item>
+       <item row="9" column="0">
         <widget class="QLineEdit" name="rpcpassword"/>
        </item>
-       <item>
+       <item row="10" column="0" colspan="2">
         <layout class="QVBoxLayout" name="verticalLayout_2"/>
        </item>
-       <item>
+       <item row="11" column="0">
         <spacer name="verticalSpacer">
          <property name="orientation">
           <enum>Qt::Vertical</enum>
@@ -425,6 +627,17 @@
         </spacer>
        </item>
       </layout>
+      <zorder>confMsg</zorder>
+      <zorder>line</zorder>
+      <zorder>label</zorder>
+      <zorder>label_2</zorder>
+      <zorder>label_3</zorder>
+      <zorder>label_4</zorder>
+      <zorder>rpcpassword</zorder>
+      <zorder>rpcuser</zorder>
+      <zorder>port</zorder>
+      <zorder>hostname</zorder>
+      <zorder>verticalSpacer</zorder>
      </widget>
     </widget>
    </item>
