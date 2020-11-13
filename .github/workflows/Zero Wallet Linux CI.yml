@@ -1,0 +1,89 @@
+name: Zero Wallet Linux CI
+
+on:
+  pull_request:
+    branches: [master]
+  push:
+    branches: [master]
+  schedule:
+    - cron: '15 0 * * 1'
+
+jobs:
+
+  linux-build:
+    name: Zero Wallet Linux Build
+    runs-on: ubuntu-18.04
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Install deps (Linux)
+
+        env:
+          DEBIAN_FRONTEND: noninteractive
+        run: |
+          sudo apt-get update  # prevents repo404 errors on apt-remove below
+          sudo apt-get install \
+              build-essential pkg-config libc6-dev m4 g++-multilib \
+              autoconf libtool ncurses-dev unzip git python python-zmq \
+              zlib1g-dev wget bsdmainutils automake cmake curl
+          sudo apt-get install libgl1-mesa-dev libglu1-mesa-dev libclang-dev libwayland-dev #needed to build static Qt
+
+
+      - name: Check Static QT Cache
+        uses: actions/cache@v2
+        id: Qt5
+        with:
+          path: ./qt-everywhere-src-5.15.0
+          key: ${{ runner.os }}-Qt-5.15.0
+
+      - name: Build Static QT
+        if: steps.Qt5.outputs.cache-hit != 'true'
+        run: |
+          curl http://mirrors.ocf.berkeley.edu/qt/archive/qt/5.15/5.15.0/single/qt-everywhere-src-5.15.0.tar.xz -o qt-everywhere-src-5.15.0.tar.xz
+          tar -vxf qt-everywhere-src-5.15.0.tar.xz > /dev/null
+          rm qt-everywhere-src-5.15.0.tar.xz
+          cd qt-everywhere-src-5.15.0
+          ./configure -opensource -confirm-license -static -release -prefix "$PWD/qt5" -ltcg -no-pch -skip webengine -nomake tools -nomake tests -nomake examples
+          make install
+          cd ..
+
+      - name: Build Zero node
+        run: |
+          git clone https://github.com/zerocurrencycoin/zero.git zero_linux
+          cd zero_linux
+          ./zcutil/build.sh -j$(nproc)
+          cd ..
+
+      - name: Build Zero Wallet
+        run: |
+
+          mkdir zeroRelease
+          export ZCASH_DIR="$PWD/zeroRelease"
+
+          cp $PWD/zero_linux/src/zerod           $ZCASH_DIR/zerod
+          cp $PWD/zero_linux/src/zero-cli        $ZCASH_DIR/zero-cli
+          rm ./zero_linux -rf
+
+          strip $ZCASH_DIR/zerod
+          strip $ZCASH_DIR/zero-cli
+
+          export QT_STATIC="$PWD/qt-everywhere-src-5.15.0/qt5"
+          export APP_VERSION="1.0.1"
+          export PREV_VERSION="1.0.0"
+
+          ./src/scripts/mkrelease-linux-CI.sh
+
+          tar -czvf zero-linux.tar.gz $ZCASH_DIR/zerod $ZCASH_DIR/zero-cli
+
+      - name: Upload deb as artifact
+        uses: actions/upload-artifact@v1
+        with:
+          name: zerowallet-linux
+          path: ./artifacts/linux-zerowallet-v$APP_VERSION.deb
+
+      - name: Upload tar as artifact
+        uses: actions/upload-artifact@v1
+        with:
+          name: zerowallet-linux
+          path: ./artifacts/linux-zerowallet-v$APP_VERSION.tar.gz
