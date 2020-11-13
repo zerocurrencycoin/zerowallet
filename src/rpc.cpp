@@ -1002,7 +1002,7 @@ void RPC::refreshGetAllData() {
         for (auto& it : reply["listtransactions"].get<json::array_t>()) {
             double fee = 0;
             if (!it["fee"].is_null()) {
-                fee = it["fee"].get<json::number_float_t>()/10e8;
+                fee = it["fee"].get<json::number_float_t>()/1e8;
             }
 
             QString category = QString::fromStdString(it["category"]);
