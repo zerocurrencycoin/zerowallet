@@ -594,8 +594,48 @@ void RPC::getInfoThenRefresh(bool force) {
             main->statusIcon->setPixmap(i.pixmap(16, 16));
         }
 
-        // Get network sol/s
+
+        // Get ZeroNode info
         json payload = {
+            {"jsonrpc", "1.0"},
+            {"id", "someid"},
+            {"method", "zeronodestats"}
+        };
+
+        conn->doRPCIgnoreError(payload, [=](const json& reply) {
+            auto chainStats = reply["chainStats"].get<json::object_t>();
+            auto nodeCount = reply["nodeCount"].get<json::object_t>();
+
+            int totalNodes = nodeCount["total"].get<int>();
+            double totalSupply = chainStats["supply"].get<double>();
+            ui->totalNodes->setText(QString::number(totalNodes));
+            ui->stableNodes->setText(QString::number(nodeCount["stable"].get<int>()));
+            ui->enabledNodes->setText(QString::number(nodeCount["enabled"].get<int>()));
+            ui->inqueueNodes->setText(QString::number(nodeCount["inqueue"].get<int>()));
+            ui->ipv4Nodes->setText(QString::number(nodeCount["ipv4"].get<int>()));
+            ui->ipv6Nodes->setText(QString::number(nodeCount["ipv6"].get<int>()));
+            ui->onionNodes->setText(QString::number(nodeCount["onion"].get<int>()));
+            ui->lockedCoins->setText(QString::number(totalNodes*10000));
+            if (totalSupply != 0) {
+                ui->lockedPercentage->setText(QString::number(((totalNodes*10000)/totalSupply)*100,'f',2) + "%");
+            } else {
+                ui->lockedPercentage->setText("0.00%");
+            }
+            double roi = 0;
+            double dailyIncome = 0;
+            if (totalNodes !=0) {
+                double znPayment = chainStats["zeronodepayment"].get<double>();
+                dailyIncome = (720/totalNodes) * znPayment;
+                roi = ((dailyIncome * 365)/10000) * 100;
+            }
+            ui->currentRoi->setText(QString::number(roi, 'f', 2) + "%");
+            ui->dailyIncome->setText(QString::number(dailyIncome, 'f', 8));
+        });
+
+
+
+        // Get network sol/s
+        payload = {
             {"jsonrpc", "1.0"},
             {"id", "someid"},
             {"method", "getnetworksolps"}
@@ -617,10 +657,58 @@ void RPC::getInfoThenRefresh(bool force) {
 
         conn->doRPCIgnoreError(payload, [=](const json& reply) {
             QString clientname    = QString::fromStdString( reply["subversion"].get<json::string_t>() );
+            qint64 nodeVersion    = reply["version"].get<json::number_unsigned_t>();
+            qint64 protocolversion    = reply["protocolversion"].get<json::number_unsigned_t>();
+
 
             ui->clientname->setText(clientname);
+            ui->nodeVersion->setText(QString::number(nodeVersion));
+            ui->protocolVersion->setText(QString::number(protocolversion));
         });
 
+
+        // Get supply
+        payload = {
+            {"jsonrpc", "1.0"},
+            {"id", "someid"},
+            {"method", "getsupply"}
+        };
+
+
+        conn->doRPCIgnoreError(payload, [=](const json& reply) {
+            auto supply = reply["supply"].get<double>();
+
+            ui->chainValue->setText(QString::number(supply, 'f', 8));
+        });
+
+        // Get wallet info
+        payload = {
+            {"jsonrpc", "1.0"},
+            {"id", "someid"},
+            {"method", "getinfo"}
+        };
+
+        conn->doRPCIgnoreError(payload, [=](const json& reply) {
+            auto walletversion = reply["walletversion"].get<double>();
+
+            ui->walletVersion->setText(QString::number(walletversion, 'f', 0));
+        });
+
+        // Get mining info
+        payload = {
+            {"jsonrpc", "1.0"},
+            {"id", "someid"},
+            {"method", "getmininginfo"}
+        };
+
+        conn->doRPCIgnoreError(payload, [=](const json& reply) {
+            auto generate = reply["generate"].get<json::boolean_t>();
+            if (generate) {
+                ui->mining->setText("Node is mining");
+            } else {
+                ui->mining->setText("Node is not mining");
+            }
+        });
 
         // Call to see if the blockchain is syncing.
         payload = {
@@ -633,6 +721,22 @@ void RPC::getInfoThenRefresh(bool force) {
             auto progress    = reply["verificationprogress"].get<double>();
             bool isSyncing   = progress < 0.9999; // 99.99%
             int  blockNumber = reply["blocks"].get<json::number_unsigned_t>();
+
+            auto valuePools = reply["valuePools"].get<json::array_t>();
+            for (unsigned long i = 0; i < valuePools.size(); i++) {
+                auto pool = valuePools[i]["id"].get<json::string_t>();
+                auto value = valuePools[i]["chainValue"].get<double>();
+                if (pool == "sprout") {
+                    ui->zcPool->setText(QString::number(value, 'f', 8));
+                } else if (pool == "sapling") {
+                    ui->zsPool->setText(QString::number(value, 'f', 8));
+                }
+            }
+
+            auto chainValue = ui->chainValue->text().toDouble();
+            auto sproutValue = ui->zcPool->text().toDouble();
+            auto saplingValue = ui->zsPool->text().toDouble();
+            ui->tPool->setText(QString::number(chainValue-sproutValue-saplingValue, 'f', 8));
 
             int estimatedheight = 0;
             if (reply.find("estimatedheight") != reply.end()) {
