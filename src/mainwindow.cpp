@@ -210,7 +210,9 @@ void MainWindow::restoreSavedStates() {
     QSettings s;
     restoreGeometry(s.value("geometry").toByteArray());
 
+    ui->balancesOverviewTable->horizontalHeader()->restoreState(s.value("balovertablegeometry").toByteArray());
     ui->balancesTable->horizontalHeader()->restoreState(s.value("baltablegeometry").toByteArray());
+
     ui->transactionsTable->horizontalHeader()->restoreState(s.value("tratablegeometry").toByteArray());
 
     // Explicitly set the tx table resize headers, since some previous values may have made them
@@ -230,6 +232,7 @@ void MainWindow::closeEvent(QCloseEvent* event) {
     QSettings s;
 
     s.setValue("geometry", saveGeometry());
+    s.setValue("balovertablegeometry", ui->balancesOverviewTable->horizontalHeader()->saveState());
     s.setValue("baltablegeometry", ui->balancesTable->horizontalHeader()->saveState());
     s.setValue("tratablegeometry", ui->transactionsTable->horizontalHeader()->saveState());
     s.setValue("gzntablegeometry", ui->tableZeroNodeGlobal->horizontalHeader()->saveState());
@@ -1321,11 +1324,67 @@ void MainWindow::setupBalancesTab() {
     };
 
     // Double click opens up memo if one exists
+    QObject::connect(ui->balancesOverviewTable, &QTableView::doubleClicked, [=](auto index) {
+        index = index.sibling(index.row(), 0);
+        auto addr = AddressBook::addressFromAddressLabel(ui->balancesOverviewTable->model()->data(index).toString());
+
+        fnDoSendFrom(addr);
+    });
+
+    // Double click opens up memo if one exists
     QObject::connect(ui->balancesTable, &QTableView::doubleClicked, [=](auto index) {
         index = index.sibling(index.row(), 0);
         auto addr = AddressBook::addressFromAddressLabel(ui->balancesTable->model()->data(index).toString());
 
         fnDoSendFrom(addr);
+    });
+
+    // Setup context menu on balances tab
+    ui->balancesOverviewTable->setContextMenuPolicy(Qt::CustomContextMenu);
+    QObject::connect(ui->balancesOverviewTable, &QTableView::customContextMenuRequested, [=] (QPoint pos) {
+        QModelIndex index = ui->balancesOverviewTable->indexAt(pos);
+        if (index.row() < 0) return;
+
+        index = index.sibling(index.row(), 0);
+        auto addr = AddressBook::addressFromAddressLabel(
+                            ui->balancesOverviewTable->model()->data(index).toString());
+
+        QMenu menu(this);
+
+        menu.addAction(tr("Copy address"), [=] () {
+            QClipboard *clipboard = QGuiApplication::clipboard();
+            clipboard->setText(addr);
+            ui->statusBar->showMessage(tr("Copied to clipboard"), 3 * 1000);
+        });
+
+        menu.addAction(tr("Get private key"), [=] () {
+            this->exportKeys(addr);
+        });
+
+        menu.addAction("Send from " % addr.left(40) % (addr.size() > 40 ? "..." : ""), [=]() {
+            fnDoSendFrom(addr);
+        });
+
+        if (Settings::isTAddress(addr)) {
+            auto defaultSapling = rpc->getDefaultSaplingAddress();
+            if (!defaultSapling.isEmpty()) {
+                menu.addAction(tr("Shield balance to Sapling"), [=] () {
+                    fnDoSendFrom(addr, defaultSapling, true);
+                });
+            }
+
+            menu.addAction(tr("View on block explorer"), [=] () {
+                Settings::openAddressInExplorer(addr);
+            });
+        }
+
+        if (Settings::getInstance()->isSproutAddress(addr)) {
+            menu.addAction(tr("Migrate to Sapling"), [=] () {
+                this->turnstileDoMigration(addr);
+            });
+        }
+
+        menu.exec(ui->balancesOverviewTable->viewport()->mapToGlobal(pos));
     });
 
     // Setup context menu on balances tab

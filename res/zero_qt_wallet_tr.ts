@@ -2,7 +2,7 @@
 <!DOCTYPE TS>
 <TS version="2.1" language="tr_TR">
 <context>
-    <name>BalancesTableModel</name>
+    <name>BalancesOverviewTableModel</name>
     <message>
         <location filename="../src/balancestablemodel.cpp" line="121"/>
         <source>Address</source>

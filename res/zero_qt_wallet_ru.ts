@@ -16,7 +16,7 @@
     </message>
 </context>
 <context>
-    <name>BalancesTableModel</name>
+    <name>BalancesOverviewTableModel</name>
     <message>
         <location filename="../src/balancestablemodel.cpp" line="122"/>
         <source>Address</source>

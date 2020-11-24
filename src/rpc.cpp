@@ -40,6 +40,10 @@ RPC::RPC(MainWindow* main) {
     this->turnstile = new Turnstile(this, main);
 
     // Setup balances table model
+    balancesOverviewTableModel = new BalancesOverviewTableModel(main->ui->balancesOverviewTable);
+    main->ui->balancesOverviewTable->setModel(balancesOverviewTableModel);
+
+    // Setup balances table model
     balancesTableModel = new BalancesTableModel(main->ui->balancesTable);
     main->ui->balancesTable->setModel(balancesTableModel);
 
@@ -90,11 +94,12 @@ RPC::~RPC() {
     delete txTimer;
 
     delete transactionsTableModel;
+    delete balancesOverviewTableModel;
     delete balancesTableModel;
     delete turnstile;
 
     delete utxos;
-    delete allBalances;
+    delete balancesOverview;
     delete usedAddresses;
     delete zaddresses;
     delete taddresses;
@@ -495,7 +500,11 @@ void RPC::noConnection() {
     // Clear balances table.
     QMap<QString, double> emptyBalances;
     QList<UnspentOutput>  emptyOutputs;
-    balancesTableModel->setNewData(&emptyBalances, &emptyOutputs);
+    balancesOverviewTableModel->setNewData(&emptyBalances, &emptyOutputs);
+
+    // Clear balances table.
+    QList<allBalances>  emptyAllBalances;
+    balancesTableModel->setNewData(&emptyAllBalances);
 
     // Clear Transactions table.
     QList<TransactionItem> emptyTxs;
@@ -1001,7 +1010,8 @@ void RPC::updateUI(bool anyUnconfirmed) {
     ui->unconfirmedWarning->setVisible(anyUnconfirmed);
 
     // Update balances model data, which will update the table too
-    balancesTableModel->setNewData(allBalances, utxos);
+    balancesOverviewTableModel->setNewData(balancesOverview, utxos);
+    balancesTableModel->setNewData(addressBalances);
 
     // Update from address
     main->updateFromCombo();
@@ -1076,7 +1086,8 @@ void RPC::refreshGetAllData() {
     getAllData([=] (json reply) {
 
         // 1. Update Balance Data
-
+        auto balImmature          = QString::fromStdString(reply["immaturebalance"]).toDouble();
+        auto balLocked            = QString::fromStdString(reply["lockedbalance"]).toDouble();
         auto balT                 = QString::fromStdString(reply["transparentbalance"]).toDouble();
         auto balTUnconfirmed      = QString::fromStdString(reply["transparentbalanceunconfirmed"]).toDouble();
         auto balZ                 = QString::fromStdString(reply["privatebalance"]).toDouble();
@@ -1087,17 +1098,44 @@ void RPC::refreshGetAllData() {
 
         AppDataModel::getInstance()->setBalances(balT + balTUnconfirmed, balZ + balZUnconfirmed);
 
-        ui->balSheilded   ->setText(Settings::getZECDisplayFormat(balZ + balZUnconfirmed));
-        ui->balTransparent->setText(Settings::getZECDisplayFormat(balT + balTUnconfirmed));
-        ui->balTotal      ->setText(Settings::getZECDisplayFormat(balTotal + balTotalUnconfirmed));
+        ui->balImmature       ->setText(Settings::getZECDisplayFormat(balImmature));
+        ui->balLocked         ->setText(Settings::getZECDisplayFormat(balLocked));
+        ui->balUnconfirmed    ->setText(Settings::getZECDisplayFormat(balTUnconfirmed + balZUnconfirmed));
+        ui->balSheilded       ->setText(Settings::getZECDisplayFormat(balZ));
+        ui->balTransparent    ->setText(Settings::getZECDisplayFormat(balT));
+        ui->balTotal          ->setText(Settings::getZECDisplayFormat(balTotal + balTotalUnconfirmed + balLocked + balImmature));
 
+        ui->balImmature       ->setToolTip(Settings::getZECDisplayFormat(balImmature));
+        ui->balLocked         ->setToolTip(Settings::getZECDisplayFormat(balLocked));
+        ui->balUnconfirmed    ->setToolTip(Settings::getZECDisplayFormat(balTUnconfirmed + balZUnconfirmed));
+        ui->balSheilded       ->setToolTip(Settings::getZECDisplayFormat(balZ));
+        ui->balTransparent    ->setToolTip(Settings::getZECDisplayFormat(balT));
+        ui->balTotal          ->setToolTip(Settings::getZECDisplayFormat(balTotal + balTotalUnconfirmed + balLocked + balImmature));
 
-        ui->balSheilded   ->setToolTip(Settings::getZECDisplayFormat(balZ + balZUnconfirmed));
-        ui->balTransparent->setToolTip(Settings::getZECDisplayFormat(balT + balTUnconfirmed));
-        ui->balTotal      ->setToolTip(Settings::getZECDisplayFormat(balTotal + balTotalUnconfirmed));
+        ui->balUSDTotal       ->setText(Settings::getUSDFromZecAmount(balTotal + balTotalUnconfirmed + balLocked + balImmature));
+        ui->balUSDTotal       ->setToolTip(Settings::getUSDFromZecAmount(balTotal + balTotalUnconfirmed + balLocked + balImmature));
 
-        ui->balUSDTotal      ->setText(Settings::getUSDFromZecAmount(balTotal + balTotalUnconfirmed));
-        ui->balUSDTotal      ->setToolTip(Settings::getUSDFromZecAmount(balTotal + balTotalUnconfirmed));
+        //Update data for Balances Tab
+        auto newAddressBalances = new QList<allBalances>;
+        auto balances = reply["addressbalance"][0].items();
+        for (auto it = balances.begin(); it != balances.end(); ++it)
+        {
+            allBalances newAddressBalance;
+            newAddressBalance.address = QString::fromStdString(it.key());
+            newAddressBalance.confirmed = QString::number(it.value()["amount"].get<double>(),'f', 8);
+            newAddressBalance.unconfirmed = QString::number(it.value()["unconfirmed"].get<double>(),'f', 8);
+            newAddressBalance.immature = QString::number(it.value()["immature"].get<double>(),'f', 8);
+            newAddressBalance.locked = QString::number(it.value()["locked"].get<double>(),'f', 8);
+            newAddressBalance.watch = QString::number(it.value()["spendable"].get<json::boolean_t>());
+            long totalBalance = newAddressBalance.confirmed.toDouble() * 1e08;
+            totalBalance += newAddressBalance.unconfirmed.toDouble() * 1e08;
+            totalBalance += newAddressBalance.immature.toDouble() * 1e08;
+            totalBalance += newAddressBalance.locked.toDouble() * 1e08;
+            if (totalBalance > 0) {
+                newAddressBalances->append(newAddressBalance);
+            }
+        }
+        addressBalances = newAddressBalances;
 
 
         // 2. Update Transaction Data
@@ -1191,10 +1229,10 @@ void RPC::refreshGetAllData() {
             auto anyZUnconfirmed = processUnspent(reply, newBalances, newUtxos);
 
             // Swap out the balances and UTXOs
-            delete allBalances;
+            delete balancesOverview;
             delete utxos;
 
-            allBalances = newBalances;
+            balancesOverview = newBalances;
             utxos       = newUtxos;
 
             updateUI(anyTUnconfirmed || anyZUnconfirmed);
