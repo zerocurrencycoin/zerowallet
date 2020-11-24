@@ -101,7 +101,7 @@ public:
     const QList<QString>*             getAllZAddresses()        { return zaddresses; }
     const QList<QString>*             getAllTAddresses()        { return taddresses; }
     const QList<UnspentOutput>*       getUTXOs()                { return utxos; }
-    const QMap<QString, double>*      getAllBalances()          { return allBalances; }
+    const QMap<QString, double>*      getAllBalances()          { return balancesOverview; }
     const QMap<QString, bool>*        getUsedAddresses()        { return usedAddresses; }
 
     void newZaddr(const std::function<void(json)>& cb);
@@ -155,17 +155,19 @@ private:
     QProcess*                   ezcashd                     = nullptr;
 
     QList<UnspentOutput>*       utxos                       = nullptr;
-    QMap<QString, double>*      allBalances                 = nullptr;
+    QMap<QString, double>*      balancesOverview            = nullptr;
+    QList<allBalances>*         addressBalances             = nullptr;
     QMap<QString, bool>*        usedAddresses               = nullptr;
     QList<QString>*             zaddresses                  = nullptr;
     QList<QString>*             taddresses                  = nullptr;
 
     QMap<QString, WatchedTx>    watchingOps;
 
-    GlobalZNTableModel*         globalZeroNodesTableModel   = nullptr;
-    LocalZNTableModel*          localZeroNodesTableModel    = nullptr;
-    TxTableModel*               transactionsTableModel      = nullptr;
-    BalancesTableModel*         balancesTableModel          = nullptr;
+    GlobalZNTableModel*             globalZeroNodesTableModel   = nullptr;
+    LocalZNTableModel*              localZeroNodesTableModel    = nullptr;
+    TxTableModel*                   transactionsTableModel      = nullptr;
+    BalancesOverviewTableModel*     balancesOverviewTableModel  = nullptr;
+    BalancesTableModel*             balancesTableModel          = nullptr;
 
     QTimer*                     timer;
     QTimer*                     txTimer;
