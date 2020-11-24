@@ -637,7 +637,6 @@
       <zorder>rpcuser</zorder>
       <zorder>port</zorder>
       <zorder>hostname</zorder>
-      <zorder>verticalSpacer</zorder>
      </widget>
     </widget>
    </item>
