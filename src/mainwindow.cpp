@@ -1320,7 +1320,7 @@ void MainWindow::setupBalancesTab() {
         }
 
         // And switch to the send tab.
-        ui->tabWidget->setCurrentIndex(1);
+        ui->tabWidget->setCurrentIndex(2);
     };
 
     // Double click opens up memo if one exists
