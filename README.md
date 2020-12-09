@@ -1,23 +1,20 @@
-zerowallet desktop wallet for Zero ($ZER) that runs on Linux, Windows and macOS.
+Desktop wallet for Zero Currency ($ZER) that runs on Linux, Windows and MacOS.
 
-
-![Screenshots](zerowallet.png?raw=true)
 # Installation
 
-Head over to the releases page and grab the latest installers or binary. https://github.com/zerocurrencycoin/zerowallet/releases
+Releases page has the latest [installers and binaries](https://github.com/zerocurrencycoin/zerowallet/releases).
 
 ## zerod
-zerowallet needs a Zero full node running zerod. If you already have a zerod node running, zerowallet will connect to it.
 
-If you don't have one, zerowallet will start its embedded zerod node.
+zerowallet needs `zerod`, Zero full node process running. If one is not already running, zerowallet will start it.
 
-Additionally, if this is the first time you're running zerowallet or a zerod daemon, zerowallet will download the zcash params (~1.7 GB) and configure `zero.conf` for you.
-
-Pass `--no-embedded` to disable the embedded zerod and force zerowallet to connect to an external node.
+If this is the first time you're running `zerowallet`, it will download the Zcash cryptographic params (~1.7 GB) and configure desktop user defaults in `zero.conf`.
+`
+Option `--no-embedded` forces zerowallet to connect to a running `zerod` full node process.
 
 ## Compiling from source
-zerowallet is written in C++ 14, and can be compiled with g++/clang++/visual c++. It also depends on Qt5, which you can get from [here](https://www.qt.io/download). Note that if you are compiling from source, you won't get the embedded zerod by default. You can either run an external zerod, or compile zerod as well.
 
+zerowallet is written in C++ 14, and can be compiled with g++/clang++/visual c++. It also depends on Qt5, [available from](https://www.qt.io/download). Note that building zerod from source [is a separate task](https://github.com/zerocurrencycoin/Zero#-building).
 
 ### Building on Linux
 
@@ -32,6 +29,7 @@ make -j$(nproc)
 ```
 
 ### Building on Windows
+
 You need Visual Studio 2017 (The free C++ Community Edition works just fine).
 
 From the VS Tools command prompt
@@ -44,13 +42,14 @@ nmake
 debug\zerowallet.exe
 ```
 
-To create the Visual Studio project files so you can compile and run from Visual Studio:
+To create the Visual Studio project files, in order to compile and run in Visual Studio:
 ```
 c:\Qt5\bin\qmake.exe zero-qt-wallet.pro -tp vc CONFIG+=debug
 ```
 
-### Building on macOS
-You need to install the Xcode app or the Xcode command line tools first, and then install Qt.
+### Building on MacOS
+
+Install the Xcode app with the command line tools first, and then install Qt.
 
 ```
 git clone https://github.com/zerocurrencycoin/zerowallet.git
@@ -61,19 +60,24 @@ make
 ./zerowallet.app/Contents/MacOS/zerowallet
 ```
 
-### Emulating the embedded node
+#### Emulating the embedded node
 
-In binary releases, zerowallet will use node binaries in the current directory to sync a node from scratch.
-It does not attempt to download them, it bundles them. To simulate this from a developer setup, you can symlink
-these four files in your Git repo:
+In binary releases, zerowallet will launch `zerod` executable in the current directory.
+To simulate this in a developer setup on Linux, assuming zerowallet and zero git repos are in the same directory, place symbolic links in `zerowallet/src`
 
 ```
     ln -s ../zero/src/zerod
     ln -s ../zero/src/zero-cli
 ```
 
-The above assumes zerowallet and zero git repos are in the same directory. File names on Windows will need to be tweaked.
-
 ### Support
 
 For support or other questions, Join [Discord](https://discordapp.com/invite/Jq5knn5), or tweet at [@zerocurrencies](https://twitter.com/zerocurrencies) or [file an issue](https://github.com/zerocurrencycoin/zerowallet/issues).
+
+🔒 Security Warnings
+-----------------
+[Backup your wallet](https://github.com/zerocurrencycoin/Zero/wiki/Wallet-Backup) often and keep it safe and secret.
+
+See important [Security Information](https://z.cash/support/security/).
+
+**Zero is very much experimental and a work in progress.** Use it at your own risk.
