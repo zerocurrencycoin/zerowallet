@@ -2128,7 +2128,7 @@
   </action>
   <action name="actionBackup_wallet_dat">
    <property name="text">
-    <string>&amp;Backup wallet.dat</string>
+    <string>&amp;Backup wallet.zero</string>
    </property>
   </action>
   <action name="actionExport_transactions">
