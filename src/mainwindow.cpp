@@ -102,7 +102,7 @@ MainWindow::MainWindow(QWidget *parent) :
     // Export All Private Keys
     QObject::connect(ui->actionExport_All_Private_Keys, &QAction::triggered, this, &MainWindow::exportAllKeys);
 
-    // Backup wallet.dat
+    // Backup wallet.zero
     QObject::connect(ui->actionBackup_wallet_dat, &QAction::triggered, this, &MainWindow::backupWalletDat);
 
     // Export transactions
@@ -434,8 +434,8 @@ void MainWindow::turnstileDoMigration(QString fromAddr) {
             turnstile.migrateTo->currentText(),
             std::get<0>(privLevel), std::get<1>(privLevel));
 
-        QMessageBox::information(this, "Backup your wallet.dat",
-                                    "The migration will now start. You can check progress in the File -> Sapling Turnstile menu.\n\nYOU MUST BACKUP YOUR wallet.dat NOW!\n\nNew Addresses have been added to your wallet which will be used for the migration.",
+        QMessageBox::information(this, "Backup your wallet.zero",
+                                    "The migration will now start. You can check progress in the File -> Sapling Turnstile menu.\n\nYOU MUST BACKUP YOUR wallet.zero NOW!\n\nNew Addresses have been added to your wallet which will be used for the migration.",
                                     QMessageBox::Ok);
     }
 }
@@ -1177,7 +1177,7 @@ void MainWindow::exportTransactions() {
 }
 
 /**
- * Backup the wallet.dat file. This is kind of a hack, since it has to read from the filesystem rather than an RPC call
+ * Backup the wallet.zero file. This is kind of a hack, since it has to read from the filesystem rather than an RPC call
  * This might fail for various reasons - Remote zerod, non-standard locations, custom params passed to zerod, many others
 */
 void MainWindow::backupWalletDat() {
@@ -1185,26 +1185,26 @@ void MainWindow::backupWalletDat() {
         return;
 
     QDir zcashdir(rpc->getConnection()->config->zcashDir);
-    QString backupDefaultName = "zero-wallet-backup-" + QDateTime::currentDateTime().toString("yyyyMMdd") + ".dat";
+    QString backupDefaultName = "zero-wallet-backup-" + QDateTime::currentDateTime().toString("yyyyMMdd") + ".zero";
 
     if (Settings::getInstance()->isTestnet()) {
         zcashdir.cd("testnet3");
         backupDefaultName = "testnet-" + backupDefaultName;
     }
 
-    QFile wallet(zcashdir.filePath("wallet.dat"));
+    QFile wallet(zcashdir.filePath("wallet.zero"));
     if (!wallet.exists()) {
-        QMessageBox::critical(this, tr("No wallet.dat"), tr("Couldn't find the wallet.dat on this computer") + "\n" +
+        QMessageBox::critical(this, tr("No wallet.zero"), tr("Couldn't find the wallet.zero on this computer") + "\n" +
             tr("You need to back it up from the machine zerod is running on"), QMessageBox::Ok);
         return;
     }
 
-    QUrl backupName = QFileDialog::getSaveFileUrl(this, tr("Backup wallet.dat"), backupDefaultName, "Data file (*.dat)");
+    QUrl backupName = QFileDialog::getSaveFileUrl(this, tr("Backup wallet.zero"), backupDefaultName, "Data file (*.zero)");
     if (backupName.isEmpty())
         return;
 
     if (!wallet.copy(backupName.toLocalFile())) {
-        QMessageBox::critical(this, tr("Couldn't backup"), tr("Couldn't backup the wallet.dat file.") +
+        QMessageBox::critical(this, tr("Couldn't backup"), tr("Couldn't backup the wallet.zero file.") +
             tr("You need to back it up manually."), QMessageBox::Ok);
     }
 }
