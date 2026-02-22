@@ -2,7 +2,7 @@ Desktop wallet for Zero Currency ($ZER) that runs on Linux, Windows and MacOS.
 
 # Installation
 
-Releases page has the latest [installers and binaries](https://github.com/zerocurrencycoin/zerowallet/releases).
+Releases page has the latest [installers and binaries](https://github.com/zerocurrencycoin/zerowallet/releases). See [RELEASE.md](RELEASE.md) for building and publishing binary releases.
 
 ## zerod
 

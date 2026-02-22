@@ -9,20 +9,20 @@ echo "Building libsodium"
 
 # Go into the lib sodium directory
 cd res/libsodium
-if [ ! -f libsodium-1.0.18.tar.gz ]; then
-    wget https://download.libsodium.org/libsodium/releases/libsodium-1.0.18.tar.gz
+if [ ! -f libsodium-1.0.21.tar.gz ]; then
+    wget https://download.libsodium.org/libsodium/releases/libsodium-1.0.21.tar.gz
 fi
 
 if [ ! -d win ]; then
     mkdir win
-    tar -C ./win -xf libsodium-1.0.18.tar.gz
+    tar -C ./win -xf libsodium-1.0.21.tar.gz
 else
-    rm -r win/libsodium-1.0.18
-    tar -C ./win -xf libsodium-1.0.18.tar.gz
+    rm -r win/libsodium-1.0.21
+    tar -C ./win -xf libsodium-1.0.21.tar.gz
 fi
 
 # Now build it
-cd ./win/libsodium-1.0.18
+cd ./win/libsodium-1.0.21
 
 export HOST=x86_64-w64-mingw32
 CXX=x86_64-w64-mingw32-g++-posix
@@ -38,4 +38,4 @@ cd ..
 cd ..
 
 # copy the library to the parents's res/ folder
-cp win/libsodium-1.0.18/src/libsodium/.libs/libsodium.a ../
+cp win/libsodium-1.0.21/src/libsodium/.libs/libsodium.a ../

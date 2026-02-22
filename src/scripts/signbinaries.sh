@@ -1,26 +1,14 @@
 #!/bin/bash
 
-# Accept the variables as command line arguments as well
-POSITIONAL=()
-while [[ $# -gt 0 ]]
-do
-key="$1"
-
-case $key in
-    -v|--version)
-    APP_VERSION="$2"
-    shift # past argument
-    shift # past value
-    ;;
-    *)    # unknown option
-    POSITIONAL+=("$1") # save it in an array for later
-    shift # past argument
-    ;;
-esac
+# Parse args (env vars override). Same -v/--version as mkrelease scripts.
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    -v|--version) APP_VERSION="$2"; shift 2 ;;
+    *) shift ;;
+  esac
 done
-set -- "${POSITIONAL[@]}" # restore positional parameters
 
-if [ -z $APP_VERSION ]; then echo "APP_VERSION is not set"; exit 1; fi
+if [ -z "$APP_VERSION" ]; then echo "APP_VERSION is not set. Use -v/--version or set env."; exit 1; fi
 
 # Store the hash and signatures here
 rm -rf release/signatures
