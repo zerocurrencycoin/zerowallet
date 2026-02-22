@@ -45,7 +45,7 @@ echo -n "Configuring............"
 # Build
 #TODO
 ./src/scripts/dotranslations.sh >/dev/null
-$QT_STATIC/bin/qmake zero-qt-wallet.pro CONFIG+=release >/dev/null
+$QT_STATIC/bin/qmake zero-qt-wallet.pro CONFIG+=release CONFIG+=sdk_no_version_check >/dev/null
 echo "[OK]"
 
 
