@@ -1,52 +1,29 @@
-QT_STATIC#!/bin/bash
-
-# Accept the variables as command line arguments as well
-POSITIONAL=()
-while [[ $# -gt 0 ]]
-do
-key="$1"
-
-case $key in
-    -q|--qt_static)
-    QT_STATIC="$2"
-    shift # past argument
-    shift # past value
-    ;;
-    -z|--zcash_path)
-    ZCASH_DIR="$2"
-    shift # past argument
-    shift # past value
-    ;;
-    -v|--version)
-    APP_VERSION="$2"
-    shift # past argument
-    shift # past value
-    ;;
-    *)    # unknown option
-    POSITIONAL+=("$1") # save it in an array for later
-    shift # past argument
-    ;;
-esac
+#!/bin/bash
+# Parse args (env vars override). Same interface as mkrelease-linux/win.
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    -q|--qt|--qt_static) QT_STATIC="$2"; shift 2 ;;
+    -z|--zero) ZERO_DIR="$2"; shift 2 ;;
+    -v|--version) APP_VERSION="$2"; shift 2 ;;
+    *) shift ;;
+  esac
 done
-set -- "${POSITIONAL[@]}" # restore positional parameters
 
-if [ -z $QT_STATIC ]; then
-    echo "QT_STATIC is not set. Please set it to the base directory of Qt";
+ZERO_DIR="${ZERO_DIR:-../Zero/src}"
+QT_STATIC="${QT_STATIC:-$(brew --prefix qt@5 2>/dev/null)}"
+
+if [ -z "$QT_STATIC" ]; then
+    echo "QT_STATIC is not set. Use -q/--qt or 'brew install qt@5'. Default: brew --prefix qt@5";
     exit 1;
 fi
 
-if [ -z $ZCASH_DIR ]; then
-    echo "ZCASH_DIR is not set. Please set it to the base directory of a compiled zerod";
-    exit 1;
-fi
-
-if [ -z $APP_VERSION ]; then
+if [ -z "$APP_VERSION" ]; then
     echo "APP_VERSION is not set. Please set it to the current release version of the app";
     exit 1;
 fi
 
-if [ ! -f $ZCASH_DIR/zerod ]; then
-    echo "Could not find compiled zerod in $ZCASH_DIR/.";
+if [ ! -f "$ZERO_DIR/zerod" ]; then
+    echo "Could not find compiled zerod in $ZERO_DIR/.";
     exit 1;
 fi
 
@@ -81,8 +58,8 @@ echo -n "Deploying.............."
 mkdir artifacts >/dev/null 2>&1
 rm -f artifcats/zerowallet.dmg >/dev/null 2>&1
 rm -f artifacts/rw* >/dev/null 2>&1
-cp $ZCASH_DIR/zerod zerowallet.app/Contents/MacOS/
-cp $ZCASH_DIR/zero-cli zerowallet.app/Contents/MacOS/
+cp $ZERO_DIR/zerod zerowallet.app/Contents/MacOS/
+cp $ZERO_DIR/zero-cli zerowallet.app/Contents/MacOS/
 $QT_STATIC/bin/macdeployqt zerowallet.app
 echo "[OK]"
 

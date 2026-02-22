@@ -1,37 +1,33 @@
 #!/bin/bash
-if [ -z $QT_STATIC ]; then
-    echo "QT_STATIC is not set. Please set it to the base directory of a statically compiled Qt";
+# Parse args (env vars override)
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    -z|--zero) ZERO_DIR="$2"; shift 2 ;;
+    -v|--version) APP_VERSION="$2"; shift 2 ;;
+    -p|--prev) PREV_VERSION="$2"; shift 2 ;;
+    -q|--qt) QT_STATIC="$2"; shift 2 ;;
+    -m|--mxe) MXE_PATH="$2"; shift 2 ;;
+    *) shift ;;
+  esac
+done
+
+ZERO_DIR="${ZERO_DIR:-../Zero/src}"
+
+if [ -z "$QT_STATIC" ]; then
+    echo "QT_STATIC is not set. Use -q/--qt or set env."
     exit 1;
 fi
 
-if [ -z $APP_VERSION ]; then echo "APP_VERSION is not set"; exit 1; fi
-if [ -z $PREV_VERSION ]; then echo "PREV_VERSION is not set"; exit 1; fi
+if [ -z "$APP_VERSION" ]; then echo "APP_VERSION is not set. Use -v/--version or set env."; exit 1; fi
+if [ -z "$PREV_VERSION" ]; then echo "PREV_VERSION is not set. Use -p/--prev or set env."; exit 1; fi
 
-if [ -z $ZCASH_DIR ]; then
-    echo "ZCASH_DIR is not set. Please set it to the base directory of a Zero project with built Zero binaries."
+if [ ! -f "$ZERO_DIR/zerod" ]; then
+    echo "Couldn't find zerod in $ZERO_DIR/. Please build zerod."
     exit 1;
 fi
 
-if [ ! -f $ZCASH_DIR/zerod ]; then
-    echo "Couldn't find zerod in $ZCASH_DIR/. Please build zerod."
-    exit 1;
-fi
-
-if [ ! -f $ZCASH_DIR/zero-cli ]; then
-    echo "Couldn't find zero-cli in $ZCASH_DIR/. Please build zerod."
-    exit 1;
-fi
-
-
-## Ensure that zerod is built
-if [ ! -f $ZCASH_DIR/zerod ]; then
-    echo "Couldn't find zerod in $ZCASH_DIR/. Please build zerod"
-    exit 1;
-fi
-
-
-if [ ! -f $ZCASH_DIR/zero-cli ]; then
-    echo "Couldn't find zero-cli in $ZCASH_DIR/. Please build zero-cli"
+if [ ! -f "$ZERO_DIR/zero-cli" ]; then
+    echo "Couldn't find zero-cli in $ZERO_DIR/. Please build zerod."
     exit 1;
 fi
 
@@ -81,8 +77,8 @@ mkdir bin/zerowallet-v$APP_VERSION > /dev/null
 strip zerowallet
 
 cp zerowallet                     bin/zerowallet-v$APP_VERSION > /dev/null
-cp $ZCASH_DIR/zerod               bin/zerowallet-v$APP_VERSION > /dev/null
-cp $ZCASH_DIR/zero-cli            bin/zerowallet-v$APP_VERSION > /dev/null
+cp $ZERO_DIR/zerod               bin/zerowallet-v$APP_VERSION > /dev/null
+cp $ZERO_DIR/zero-cli            bin/zerowallet-v$APP_VERSION > /dev/null
 cp README.md                      bin/zerowallet-v$APP_VERSION > /dev/null
 cp LICENSE                        bin/zerowallet-v$APP_VERSION > /dev/null
 
@@ -119,11 +115,11 @@ cat src/scripts/control | sed "s/RELEASE_VERSION/$APP_VERSION/g" > $debdir/DEBIA
 
 cp zerowallet                   $debdir/usr/local/bin/
 
-strip $ZCASH_DIR/zerod
-strip $ZCASH_DIR/zero-cli
+strip $ZERO_DIR/zerod
+strip $ZERO_DIR/zero-cli
 
-cp $ZCASH_DIR/zerod             $debdir/usr/local/bin/zerod
-cp $ZCASH_DIR/zero-cli          $debdir/usr/local/bin/zero-cli
+cp $ZERO_DIR/zerod             $debdir/usr/local/bin/zerod
+cp $ZERO_DIR/zero-cli          $debdir/usr/local/bin/zero-cli
 
 mkdir -p                        $debdir/usr/share/pixmaps/
 cp res/zero.xpm                 $debdir/usr/share/pixmaps/
@@ -140,20 +136,22 @@ echo "[OK]"
 echo ""
 echo "[Windows]"
 
-if [ -z $MXE_PATH ]; then
-    echo "MXE_PATH is not set. Set it to ~/github/mxe/usr/bin if you want to build Windows"
+MXE_PATH="${MXE_PATH:-$HOME/mxe/usr/bin}"
+[ -d "$MXE_PATH" ] || MXE_PATH="$HOME/github/mxe/usr/bin"
+if [ -z "$MXE_PATH" ] || [ ! -d "$MXE_PATH" ]; then
+    echo "MXE_PATH not found. Defaults: \$HOME/mxe/usr/bin, \$HOME/github/mxe/usr/bin. Use -m/--mxe to override."
     echo "Not building Windows"
     exit 0;
 fi
 
-if [ ! -f $ZCASH_DIR/zerod.exe ]; then
-    echo "Couldn't find zerod.exe in $ZCASH_DIR/. Please build zerod.exe"
+if [ ! -f "$ZERO_DIR/zerod.exe" ]; then
+    echo "Couldn't find zerod.exe in $ZERO_DIR/. Please build zerod.exe"
     exit 1;
 fi
 
 
-if [ ! -f $ZCASH_DIR/zero-cli.exe ]; then
-    echo "Couldn't find zero-cli.exe in $ZCASH_DIR/. Please build zerod.exe"
+if [ ! -f "$ZERO_DIR/zero-cli.exe" ]; then
+    echo "Couldn't find zero-cli.exe in $ZERO_DIR/. Please build zerod.exe"
     exit 1;
 fi
 
@@ -181,8 +179,8 @@ echo "[OK]"
 echo -n "Packaging.............."
 mkdir release/zerowallet-v$APP_VERSION > /dev/null 2>&1
 cp release/zerowallet.exe             release/zerowallet-v$APP_VERSION > /dev/null
-cp $ZCASH_DIR/zerod.exe               release/zerowallet-v$APP_VERSION > /dev/null
-cp $ZCASH_DIR/zero-cli.exe            release/zerowallet-v$APP_VERSION > /dev/null
+cp $ZERO_DIR/zerod.exe               release/zerowallet-v$APP_VERSION > /dev/null
+cp $ZERO_DIR/zero-cli.exe            release/zerowallet-v$APP_VERSION > /dev/null
 cp README.md                          release/zerowallet-v$APP_VERSION > /dev/null
 cp LICENSE                            release/zerowallet-v$APP_VERSION > /dev/null
 cd release && zip -r Windows-zerowallet-v$APP_VERSION.zip zerowallet-v$APP_VERSION/ > /dev/null
