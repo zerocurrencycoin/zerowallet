@@ -153,7 +153,9 @@ void AddressBook::open(MainWindow* parent, QLineEdit* target) {
     // Import Button
     QObject::connect(ab.btnImport, &QPushButton::clicked, [&] () {
         // Get the import file name.
-        auto fileName = QFileDialog::getOpenFileUrl(&d, QObject::tr("Import Address Book"), QUrl(), 
+        QString dir = QStandardPaths::writableLocation(QStandardPaths::HomeLocation);
+        QUrl defaultUrl = QUrl::fromLocalFile(dir);
+        auto fileName = QFileDialog::getOpenFileUrl(&d, QObject::tr("Import Address Book"), defaultUrl,
             "CSV file (*.csv)");
         if (fileName.isEmpty())
             return;

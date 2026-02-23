@@ -22,9 +22,9 @@ void BalancesOverviewTableModel::setNewData(const QMap<QString, double>* balance
     // Process the address balances into a list
     delete modeldata;
     modeldata = new QList<std::tuple<QString, double>>();
+    // Display 0 Balance: include all addresses (was: if (balances->value(keyIt) > 0) skip)
     std::for_each(balances->keyBegin(), balances->keyEnd(), [=] (auto keyIt) {
-        if (balances->value(keyIt) > 0)
-            modeldata->push_back(std::make_tuple(keyIt, balances->value(keyIt)));
+        modeldata->push_back(std::make_tuple(keyIt, balances->value(keyIt)));
     });
 
     // And then update the data

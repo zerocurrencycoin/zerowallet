@@ -1127,13 +1127,12 @@ void RPC::refreshGetAllData() {
             newAddressBalance.immature = QString::number(it.value()["immature"].get<double>(),'f', 8);
             newAddressBalance.locked = QString::number(it.value()["locked"].get<double>(),'f', 8);
             newAddressBalance.watch = QString::number(it.value()["spendable"].get<json::boolean_t>());
-            double totalBalance = it.value()["amount"].get<double>();
-            totalBalance += it.value()["unconfirmed"].get<double>();
-            totalBalance += it.value()["immature"].get<double>();
-            totalBalance += it.value()["locked"].get<double>();
-            if (totalBalance > 0.0) {
-                newAddressBalances->append(newAddressBalance);
-            }
+            // Display 0 Balance: include all addresses (was: if (totalBalance > 0.0) skip)
+            // double totalBalance = it.value()["amount"].get<double>();
+            // totalBalance += it.value()["unconfirmed"].get<double>();
+            // totalBalance += it.value()["immature"].get<double>();
+            // totalBalance += it.value()["locked"].get<double>();
+            newAddressBalances->append(newAddressBalance);
         }
         addressBalances = newAddressBalances;
 

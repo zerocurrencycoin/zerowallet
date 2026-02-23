@@ -159,7 +159,10 @@ void ConnectionLoader::createZcashConf() {
     });
 
     QObject::connect(ui.btnPickDir, &QPushButton::clicked, [=]() {
-        auto datadir = QFileDialog::getExistingDirectory(main, QObject::tr("Choose data directory"), ui.lblDirName->text(), QFileDialog::ShowDirsOnly);
+        QString startDir = ui.lblDirName->text();
+        if (startDir.isEmpty())
+            startDir = QStandardPaths::writableLocation(QStandardPaths::HomeLocation);
+        auto datadir = QFileDialog::getExistingDirectory(main, QObject::tr("Choose data directory"), startDir, QFileDialog::ShowDirsOnly);
         if (!datadir.isEmpty()) {
             ui.lblDirName->setText(QDir::toNativeSeparators(datadir));
         }

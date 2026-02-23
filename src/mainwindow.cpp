@@ -131,6 +131,7 @@ MainWindow::MainWindow(QWidget *parent) :
     // Set up about action
     QObject::connect(ui->actionAbout, &QAction::triggered, [=] () {
         QDialog aboutDialog(this);
+        aboutDialog.setWindowFlags(aboutDialog.windowFlags() | Qt::Window);
         Ui_about about;
         about.setupUi(&aboutDialog);
         Settings::saveRestore(&aboutDialog);
@@ -508,6 +509,7 @@ void MainWindow::setupSettingsModal() {
     // Set up File -> Settings action
     QObject::connect(ui->actionSettings, &QAction::triggered, [=]() {
         QDialog settingsDialog(this);
+        settingsDialog.setWindowFlags(settingsDialog.windowFlags() | Qt::Window);
         Ui_Settings settings;
         settings.setupUi(&settingsDialog);
         Settings::saveRestore(&settingsDialog);
@@ -1163,9 +1165,11 @@ void MainWindow::importPrivKey() {
 void MainWindow::exportTransactions() {
     // First, get the export file name
     QString exportName = "zero-transactions-" + QDateTime::currentDateTime().toString("yyyyMMdd") + ".csv";
+    QString dir = QStandardPaths::writableLocation(QStandardPaths::HomeLocation);
+    QUrl defaultUrl = QUrl::fromLocalFile(QDir(dir).filePath(exportName));
 
     QUrl csvName = QFileDialog::getSaveFileUrl(this,
-            tr("Export transactions"), exportName, "CSV file (*.csv)");
+            tr("Export transactions"), defaultUrl, "CSV file (*.csv)");
 
     if (csvName.isEmpty())
         return;
@@ -1199,7 +1203,9 @@ void MainWindow::backupWalletDat() {
         return;
     }
 
-    QUrl backupName = QFileDialog::getSaveFileUrl(this, tr("Backup wallet.zero"), backupDefaultName, "Data file (*.zero)");
+    QString dir = QStandardPaths::writableLocation(QStandardPaths::HomeLocation);
+    QUrl defaultUrl = QUrl::fromLocalFile(QDir(dir).filePath(backupDefaultName));
+    QUrl backupName = QFileDialog::getSaveFileUrl(this, tr("Backup wallet.zero"), defaultUrl, "Data file (*.zero)");
     if (backupName.isEmpty())
         return;
 
@@ -1242,8 +1248,10 @@ void MainWindow::exportKeys(QString addr) {
 
     // Wire up save button
     QObject::connect(pui.buttonBox->button(QDialogButtonBox::Save), &QPushButton::clicked, [=] () {
+        QString dir = QStandardPaths::writableLocation(QStandardPaths::HomeLocation);
+        QString defaultName = allKeys ? "zero-all-privatekeys.txt" : "zero-privatekey.txt";
         QString fileName = QFileDialog::getSaveFileName(this, tr("Save File"),
-                           allKeys ? "zero-all-privatekeys.txt" : "zero-privatekey.txt");
+                           QDir(dir).filePath(defaultName));
         QFile file(fileName);
         if (!file.open(QIODevice::WriteOnly)) {
             QMessageBox::information(this, tr("Unable to open file"), file.errorString());
