@@ -1,3 +1,40 @@
+# TODO
+
+## UI / UX (macOS DMG testing 2026-02)
+
+- ~~**Save transactions (Export transactions):** File dialog does not allow selecting directory~~ Fixed: default to Documents.
+- ~~**Backup wallet.zero:** File dialog does not allow selecting directory~~ Fixed: default to Documents.
+- ~~**Help / About dialogs:** Opened windows lack iconize (minimize) or quit (close) in title bar~~ Fixed: setWindowFlags(Qt::Window) for About and Settings.
+- ~~**Addresses with 0 balance not shown under Balances**~~ Fixed: include zero-balance in addressBalances and balancesOverview.
+- ~~**Save problem in other menu dialogs**~~ Fixed: Import Address Book, Choose data directory now use proper default paths.
+
+### File dialog default directory (refactor candidate)
+
+Repeated pattern: `QStandardPaths::writableLocation(QStandardPaths::HomeLocation)` used at 5 call sites for user-facing save/open dialogs. Each site is 2–3 lines; repetition is minor but centralizing would simplify future changes (e.g., switch default to Documents).
+
+**References:**
+
+| File | Line | Usage | API |
+|------|------|-------|-----|
+| `src/mainwindow.cpp` | 1168 | Export transactions | `getSaveFileUrl` with default filename |
+| `src/mainwindow.cpp` | 1206 | Backup wallet.zero | `getSaveFileUrl` with default filename |
+| `src/mainwindow.cpp` | 1251 | Export private keys | `getSaveFileName` with default filename |
+| `src/addressbook.cpp` | 156 | Import Address Book | `getOpenFileUrl` (dir only) |
+| `src/connection.cpp` | 164 | Choose data directory | `getExistingDirectory` |
+
+**Proposed helper (optional):**
+
+```cpp
+// e.g. in a util or precompiled header
+static inline QString defaultFileDialogDir() {
+    return QStandardPaths::writableLocation(QStandardPaths::HomeLocation);
+}
+```
+
+Replace each `QString dir = QStandardPaths::writableLocation(QStandardPaths::HomeLocation);` with `QString dir = defaultFileDialogDir();`. Low priority; current inline code is acceptable.
+
+---
+
 # Security Vulnerability Report & Recommendations
 
 ## Critical Security Issues Found

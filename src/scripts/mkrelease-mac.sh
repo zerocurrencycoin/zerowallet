@@ -64,9 +64,13 @@ $QT_STATIC/bin/macdeployqt zerowallet.app
 echo "[OK]"
 
 
-echo -n "Building dmg..........."
+echo -n "Signing................"
 mv zerowallet.app ZeroWallet.app
-create-dmg --volname "ZeroWallet-v$APP_VERSION" --volicon "res/logo.icns" --window-pos 200 120 --icon "ZeroWallet.app" 200 190  --app-drop-link 600 185 --hide-extension "ZeroWallet.app"  --window-size 800 400 --hdiutil-quiet --background res/dmgbg.png  artifacts/macOS-zerowallet-v$APP_VERSION.dmg ZeroWallet.app >/dev/null 2>&1
+codesign --force --deep --sign - ZeroWallet.app
+echo "[OK]"
+
+echo -n "Building dmg..........."
+create-dmg --volname "ZeroWallet-v$APP_VERSION" --volicon "res/logo.icns" --window-pos 200 120 --icon "ZeroWallet.app" 200 190 --app-drop-link 600 185 --hide-extension "ZeroWallet.app" --window-size 800 400 --hdiutil-quiet --background res/dmgbg.png artifacts/macOS-zerowallet-v$APP_VERSION.dmg ZeroWallet.app >/dev/null 2>&1
 
 #mkdir bin/dmgbuild >/dev/null 2>&1
 #sed "s/RELEASE_VERSION/${APP_VERSION}/g" res/appdmg.json > bin/dmgbuild/appdmg.json
