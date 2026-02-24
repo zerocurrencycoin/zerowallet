@@ -248,8 +248,8 @@
     </message>
     <message>
         <location filename="../src/mainwindow.ui" line="709"/>
-        <source>Transparent Address (Public, Metadata-Leaking)</source>
-        <translation>Прозрачный адрес (общедоступный, утечка метаданных)</translation>
+        <source>Transparent Address (Public)</source>
+        <translation>Прозрачный адрес (общедоступный)</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.ui" line="733"/>

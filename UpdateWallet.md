@@ -122,6 +122,19 @@ macOS injects items into the Edit menu ("Start Dictation", "Emoji & Symbols", "W
 
 **Proposed helper:** `defaultFileDialogDir()` returning `QStandardPaths::writableLocation(QStandardPaths::HomeLocation)`.
 
+### zerod Features: Document and Test Coverage
+
+| Feature | zerod config / RPC | zerowallet code | Test coverage |
+|---------|--------------------|-----------------|---------------|
+| **rescan** | `rescan=1` in zero.conf; restart zerod | `rpc.cpp` remove rescan after use; `mainwindow.cpp` import keys with rescan; `connection.cpp` rescan detection | Manual: import key, external zerod restart |
+| **reindex** | `reindex=1` in zero.conf; restart zerod | `rpc.cpp` remove reindex after use; Settings Reindex button writes to conf, restarts wallet | Manual: Settings → Reindex, restart |
+| **deletetx** | `deletetx=1` in zero.conf | `mainwindow.cpp` 734–747 toggle; `connection.cpp` 670, 707; `settings.cpp` 144, 243 | Manual: Settings → Wallet Config |
+| **consolidation** | `consolidation=1`, `consolidationtxfee`, `consolidationaddresses` | `mainwindow.cpp` 543–635, 753–764; `connection.cpp` 206–208, 673–682; `settings.ui` 306, 323, 404 | Manual: enable consolidation, set fee, add addresses |
+| **Custom fields** | consolidation addresses list | `settings.consolidationAddressTable`; `ConsolodationAddressModel`; context menu Copy/Delete | Manual: add/remove addresses |
+| **shield change** | zerod behavior | `websockets.cpp` 688: TODO Respect autoshield change setting | Not implemented |
+
+**Gaps:** No automated tests. Shield change setting not wired. Rescan/reindex require zerod restart; external zerod needs manual `-rescan`/`-reindex`.
+
 ---
 
 ## zerowallet GitHub Issues
@@ -695,3 +708,36 @@ No package-manager installs for library upgrades — all vendored. For builds: *
 - MXE automation in CI
 - Pre-built MXE containers
 - 32-bit Windows, ARM64 support
+
+---
+
+## Testing Checklist
+
+Run before release. zerod must be running and synced (or testnet). Prereq: fresh or existing `~/.zero/` (or `~/Library/Application Support/zero` on macOS).
+
+### Recent Fixes (Priority)
+
+| # | Test | Pass |
+|---|------|------|
+| 1 | **Addresses with 0 balance:** Receive tab → addresses with zero balance appear in dropdown and balances overview | |
+| 2 | **File dialogs:** Export transactions, Backup wallet.zero, Export private keys → default dir is Home (or Documents per platform) | |
+| 3 | **Help / About:** Dialogs open as proper windows (not tool windows); can move, minimize | |
+| 4 | **Import Address Book / Choose data dir:** File dialog opens with correct default path | |
+| 5 | **First run (zero.conf):** Wallet creates `zero.conf` with `rpcuser=zero`, `rpcpassword` 20 chars; zerod accepts credentials | |
+| 6 | **Mobile connect:** Off by default; Connect Mobile not opened until user explicitly opens it | |
+| 7 | **Single instance:** Second launch → primary window raised; payment URI forwarded if passed as arg | |
+
+### Major Functionality
+
+| # | Test | Pass |
+|---|------|------|
+| 8 | **Connect:** zerod running → wallet connects; status shows synced or syncing | |
+| 9 | **Receive:** New shielded address → `z_getnewaddress` succeeds; address in dropdown | |
+| 10 | **Send:** Send tab → enter amount, address, memo → send succeeds | |
+| 11 | **Settings:** Wallet Config, Consolidation addresses → add, copy, delete (context menu) | |
+| 12 | **Address Book:** Add, edit, delete entries | |
+| 13 | **Recurring:** Create recurring payment; list shows entry | |
+| 14 | **Backup:** Backup wallet.zero → file saved | |
+| 15 | **Turnstile:** If shown, completes without hang | |
+| 16 | **DeleteTx:** Settings → DeleteTx option; transaction delete works | |
+| 17 | **QR payment URI:** Open `zero:...` URI → primary window handles; payment prefilled | |

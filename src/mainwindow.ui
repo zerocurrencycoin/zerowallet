@@ -930,7 +930,7 @@
                   </sizepolicy>
                  </property>
                  <property name="text">
-                  <string>Transparent Address (Public, Metadata-Leaking)</string>
+                  <string>Transparent Address (Public)</string>
                  </property>
                 </widget>
                </item>
