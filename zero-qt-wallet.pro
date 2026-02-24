@@ -127,6 +127,19 @@ DEFINES += QAPPLICATION_CLASS=QApplication
 
 QMAKE_INFO_PLIST = res/Info.plist
 
+# macOS dev build: strip leftover Frameworks/PlugIns from prior mkrelease to avoid duplicate Qt load.
+# Symlink PlugIns to Homebrew Qt plugins so app finds cocoa platform plugin (mkrelease overwrites).
+macx {
+    clean-app-deploy.target = clean-app-deploy
+    clean-app-deploy.commands = -rm -rf zerowallet.app/Contents/Frameworks zerowallet.app/Contents/PlugIns
+    clean-app-deploy.depends = FORCE
+    QMAKE_EXTRA_TARGETS += clean-app-deploy
+    PRE_TARGETDEPS += clean-app-deploy
+
+    QT5_PREFIX = $$system(brew --prefix qt@5)
+    QMAKE_POST_LINK = ln -sf $$QT5_PREFIX/plugins zerowallet.app/Contents/PlugIns
+}
+
 win32: RC_ICONS = res/icon.ico
 ICON = res/logo.icns
 

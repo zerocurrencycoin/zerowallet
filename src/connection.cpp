@@ -107,19 +107,18 @@ void ConnectionLoader::doAutoConnect(bool tryEzcashdStart) {
 }
 
 QString randomPassword() {
-    static const char alphanum[] =
+    static const char charset[] =
         "0123456789"
         "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-        "abcdefghijklmnopqrstuvwxyz";
+        "abcdefghijklmnopqrstuvwxyz"
+        "!@#$%^&*()_+-=[]{}|\\:;\"'<>?,./~";
+    const int charsetLen = sizeof(charset) - 1;  // exclude null
+    const int passwordLength = 20;
 
-    const int passwordLength = 10;
-    char* s = new char[passwordLength + 1];
-
-    for (int i = 0; i < passwordLength; ++i) {
-        s[i] = alphanum[randombytes_uniform(sizeof(alphanum))];
-    }
-
-    s[passwordLength] = 0;
+    std::string s;
+    s.reserve(passwordLength);
+    for (int i = 0; i < passwordLength; ++i)
+        s += charset[randombytes_uniform(charsetLen)];
     return QString::fromStdString(s);
 }
 

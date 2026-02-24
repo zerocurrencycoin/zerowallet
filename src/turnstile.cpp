@@ -160,13 +160,11 @@ QList<double> Turnstile::splitAmount(double amount, int parts) {
     //qDebug() << amounts;
 
     // Ensure they all add up!
-    double sumofparts = 0;
-    for (auto a : amounts) {
-        sumofparts += a;
-    }
-    
-    // Add the Tx fees
-    sumofparts += amounts.size() * Settings::getMinerFee();
+    // double sumofparts = 0;
+    // for (auto a : amounts) {
+    //     sumofparts += a;
+    // }
+    // sumofparts += amounts.size() * Settings::getMinerFee();
 
     return amounts;
 }

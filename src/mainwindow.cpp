@@ -61,9 +61,6 @@ MainWindow::MainWindow(QWidget *parent) :
     // Set up exit action
     QObject::connect(ui->actionExit, &QAction::triggered, this, &MainWindow::close);
 
-    // Set up donate action
-    QObject::connect(ui->actionDonate, &QAction::triggered, this, &MainWindow::donate);
-
     QObject::connect(ui->actionDiscord, &QAction::triggered, this, &MainWindow::discord);
 
     QObject::connect(ui->actionWebsite, &QAction::triggered, this, &MainWindow::website);
@@ -166,15 +163,8 @@ MainWindow::MainWindow(QWidget *parent) :
 
     restoreSavedStates();
 
-    if (AppDataServer::getInstance()->isAppConnected()) {
-        auto ads = AppDataServer::getInstance();
-
-        QString wormholecode = "";
-        if (ads->getAllowInternetConnection())
-            wormholecode = ads->getWormholeCode(ads->getSecretHex());
-
-        createWebsocket(wormholecode);
-    }
+    // Mobile connect: optional, off by default. Websockets only start when user
+    // explicitly opens Connect Mobile dialog (connectAppDialog).
 }
 
 void MainWindow::createWebsocket(QString wormholecode) {
@@ -610,6 +600,10 @@ void MainWindow::setupSettingsModal() {
             auto addrModel = dynamic_cast<ConsolodationAddressModel *>(settings.consolidationAddressTable->model());
             QString addr = addrModel->getAddress(index.row());
 
+            menu.addAction(tr("Copy Address"), [=] () {
+                QGuiApplication::clipboard()->setText(addr);
+                ui->statusBar->showMessage(tr("Address copied to clipboard."), 2 * 1000);
+            });
             menu.addAction(tr("Delete Address"), [=] () {
                 addrModel->deleteAddress(addr);
                 ui->statusBar->showMessage(tr("Consolidation Address Removed."), 3 * 1000);
@@ -836,21 +830,6 @@ void MainWindow::website() {
 //     QString url = "https://safenodes.org/";
 //     QDesktopServices::openUrl(QUrl(url));
 // }
-
-void MainWindow::donate() {
-    // Set up a donation to me :)
-    clearSendForm();
-
-    ui->Address1->setText(Settings::getDonationAddr());
-    ui->Address1->setCursorPosition(0);
-    ui->Amount1->setText("0.00");
-    ui->MemoTxt1->setText(tr("Some feedback about ZeroWallet or Zero...!"));
-
-    ui->statusBar->showMessage(tr("Send OleksandrBlack feedback about ") % Settings::getTokenName() % tr(" or ZeroWallet"));
-
-    // And switch to the send tab.
-    ui->tabWidget->setCurrentIndex(1);
-}
 
 /**
  * Validate an address

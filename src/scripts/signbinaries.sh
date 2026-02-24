@@ -20,8 +20,15 @@ cd artifacts
 rm -f sha256sum-v$APP_VERSION.txt
 rm -f signatures-v$APP_VERSION.tar.gz
 
-# sha256sum the binaries
-sha256sum *$APP_VERSION* > sha256sum-v$APP_VERSION.txt
+# sha256 the binaries (sha256sum on Linux, shasum -a 256 on macOS)
+if command -v sha256sum >/dev/null 2>&1; then
+  sha256sum *$APP_VERSION* > sha256sum-v$APP_VERSION.txt
+elif command -v shasum >/dev/null 2>&1; then
+  shasum -a 256 *$APP_VERSION* > sha256sum-v$APP_VERSION.txt
+else
+  echo "Neither sha256sum nor shasum found. Install coreutils (Linux) or use macOS (shasum built-in)."
+  exit 1
+fi
 
 for i in $( ls *zerowallet-v$APP_VERSION* sha256sum-v$APP_VERSION* ); do
   echo "Signing" $i
