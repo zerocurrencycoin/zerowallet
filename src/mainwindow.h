@@ -125,8 +125,6 @@ private:
     void memoButtonClicked(int number, bool includeReplyTo = false);
     void setMemoEnabled(int number, bool enabled);
 
-    void donate();
-
     void website();
     void discord();
     // void safenodes();

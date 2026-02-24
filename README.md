@@ -2,7 +2,7 @@ Desktop wallet for Zero Currency ($ZER) that runs on Linux, Windows and MacOS.
 
 # Installation
 
-Releases page has the latest [installers and binaries](https://github.com/zerocurrencycoin/zerowallet/releases). See [RELEASE.md](RELEASE.md) for building and publishing binary releases.
+Releases page has the latest [installers and binaries](https://github.com/zerocurrencycoin/zerowallet/releases). See [BUILD.md](BUILD.md) for building and publishing binary releases.
 
 ## zerod
 
@@ -14,7 +14,7 @@ Option `--no-embedded` forces zerowallet to connect to a running `zerod` full no
 
 ## Compiling from source
 
-zerowallet is written in C++ 14, and can be compiled with g++/clang++/visual c++. It also depends on Qt5, [available from](https://www.qt.io/download). Note that building zerod from source [is a separate task](https://github.com/zerocurrencycoin/Zero#-building).
+zerowallet is written in C++ 14, and can be compiled with g++/clang++/visual c++. It also depends on Qt5, [available from](https://www.qt.io/download). Note that building zerod from source [is a separate task](https://github.com/zerocurrencycoin/Zero#-building). See [BUILD.md](BUILD.md) for full build and release details.
 
 ### Building on Linux
 

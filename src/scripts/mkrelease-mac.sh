@@ -37,6 +37,7 @@ export PATH=$PATH:/usr/local/bin
 #Clean
 echo -n "Cleaning..............."
 make distclean >/dev/null 2>&1
+rm -rf zerowallet.app ZeroWallet.app
 rm -f artifacts/macOS-zerowallet-v$APP_VERSION.dmg
 echo "[OK]"
 
@@ -60,6 +61,7 @@ rm -f artifcats/zerowallet.dmg >/dev/null 2>&1
 rm -f artifacts/rw* >/dev/null 2>&1
 cp $ZERO_DIR/zerod zerowallet.app/Contents/MacOS/
 cp $ZERO_DIR/zero-cli zerowallet.app/Contents/MacOS/
+rm -rf zerowallet.app/Contents/PlugIns
 $QT_STATIC/bin/macdeployqt zerowallet.app
 echo "[OK]"
 
@@ -84,4 +86,6 @@ if [ ! -f artifacts/macOS-zerowallet-v$APP_VERSION.dmg ]; then
     echo "[ERROR]"
     exit 1
 fi
+rm -rf artifacts/ZeroWallet.app
+mv ZeroWallet.app artifacts/
 echo  "[OK]"
