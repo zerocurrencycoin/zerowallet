@@ -68,7 +68,8 @@ echo "[OK]"
 
 echo -n "Signing................"
 mv zerowallet.app ZeroWallet.app
-codesign --force --deep --sign - ZeroWallet.app
+CODESIGN_IDENTITY="${CODESIGN_IDENTITY:--}"
+codesign --force --deep --sign "$CODESIGN_IDENTITY" ZeroWallet.app
 echo "[OK]"
 
 echo -n "Building dmg..........."

@@ -1,0 +1,10 @@
+---
+description: User-facing vs project documentation boundaries
+alwaysApply: true
+---
+
+# Documentation Split
+
+**User-facing docs** (README, BUILD) must never reference **project docs** (UpdateWallet).
+
+Use "user-facing" and "project" for doc classification — not "external"/"internal" or "public"/"private".

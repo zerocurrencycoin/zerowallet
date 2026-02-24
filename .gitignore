@@ -1,3 +1,5 @@
+# Cursor: .cursor/rules/, AGENTS.md are versioned. .vscode is local.
+
 bin/
 debug/
 build/

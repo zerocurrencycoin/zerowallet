@@ -1,0 +1,8 @@
+---
+description: Ask before creating new files
+alwaysApply: true
+---
+
+# File Creation
+
+Ask for confirmation before creating new files unless the user explicitly requests them.
