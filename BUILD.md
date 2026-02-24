@@ -2,6 +2,14 @@
 
 Build and release workflow for zerowallet. Supports local builds and [GitHub Actions](.github/workflows/).
 
+## Dependencies
+
+| Component | Version / Source | Notes |
+|-----------|------------------|-------|
+| Qt | 5.x | Qt5 from Homebrew (macOS), static Qt (Linux), MXE (Windows) |
+| zerod | Zero | Built from [Zero](https://github.com/zerocurrencycoin/zero); binaries in `ZERO_DIR` |
+| SingleApplication | Vendored | [itay-grudev/SingleApplication](https://github.com/itay-grudev/SingleApplication); single-instance, URI forwarding |
+
 ## Terminology (first use)
 
 | Term | Definition |

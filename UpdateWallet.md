@@ -1,10 +1,10 @@
-# UpdateWallet — Internal Documentation
+# UpdateWallet — Project Documentation
 
-Internal document for history, directions, design decisions, planning, issue tracking, futures and wants. **Wallet-specific:** bundling zerod, invoking zerod, zerowallet UI and build — not general Zero node information. Covers everything [README](README.md) and [BUILD](BUILD.md) do not.
+Project document for history, directions, design decisions, planning, issue tracking, futures and wants. **Wallet-specific:** bundling zerod, invoking zerod, zerowallet UI and build — not general Zero node information. Covers everything [README](README.md) and [BUILD](BUILD.md) do not.
 
-**Document references:** General — zerowallet [README](README.md), Zero full node [README](https://github.com/zerocurrencycoin/zero) (repo root), Zero internal UpdateZero.md (repo root). Other references point to specific sections or subsections for a particular item (e.g. BUILD §macOS App Signing and Distribution).
+**Document references:** General — zerowallet [README](README.md), Zero full node [README](https://github.com/zerocurrencycoin/zero) (repo root), Zero project UpdateZero.md (repo root). Other references point to specific sections or subsections for a particular item (e.g. BUILD §macOS App Signing and Distribution).
 
-**Document structure:** Some docs are user-facing (README, BUILD); others are project-internal (UpdateWallet, Zero's Subsidy, UpdateZero). Do not reference internal docs from user-facing docs.
+**Document structure:** Some docs are user-facing (README, BUILD); others are project (UpdateWallet, Zero's Subsidy, UpdateZero). Do not reference project docs from user-facing docs.
 
 ---
 
@@ -58,13 +58,29 @@ SilentDragon/master ← ALTERNATE UPDATE SOURCE
 
 **zerowallet CANNOT pull updates from zecwallet v0.9.0 onwards** due to incompatible architectures, different build systems, zero code overlap. The upstream fork chain (safewallet ← SilentDragon) remains the update source; they kept Qt/C++.
 
+### SingleApplication (Single-Instance, URI Forwarding)
+
+**Source:** [itay-grudev/SingleApplication](https://github.com/itay-grudev/SingleApplication) — replacement for QtSingleApplication for Qt 5/6.
+
+**Setup:** Vendored in `singleapplication/`. Build: `include(singleapplication/singleapplication.pri)` in `zero-qt-wallet.pro`. Core files: `singleapplication.{h,cpp}`, `singleapplication_p.{h,cpp}`, `SingleApplication` (convenience header), `singleapplication.pri`.
+
+**Reasons for vendoring (not submodule):**
+- Build uses Qt `.pri` only; upstream CMake, examples, `.github/` are unused.
+- Vendoring pins the exact version; submodule updates can break the build.
+- Simpler for contributors: no `git submodule init/update`.
+- Upstream fork chain (SilentDragon, Safewallet) all vendor SingleApplication.
+
+**Usage:** `SingleApplication a(argc, argv, true)` — allow secondary instances. Secondary: `a.sendMessage(uri)` then `a.exit(0)`. Primary: `receivedMessage` → `payZcashURI(uri)`. Enables: single instance, raise existing window, forward payment URIs from second launch.
+
+**Version:** Newer than Safewallet/SilentDragon (2015–2023 license, `userData` param, `SendMode`). Upstream files in `.gitignore`: `.github/`, `examples/`, `CMakeLists.txt`, etc. — not needed for build.
+
 ### Zero / Zcash Divergence (Advice)
 
 Zero still has full P2P alert code (alertkeys.h, sendalert.cpp, alert_tests.cpp). Zcash removed it Aug 2025. **Advice:** This belongs in a Zero full node document (e.g. Subsidy.md §15.5 or UpdateZero), not in zerowallet docs. Retain here only if needed for wallet–zerod interface context.
 
 ### Subsidy.md (Zero Full Node Repo)
 
-**Subsidy.md** in Zero full node repo root — internal document (like UpdateWallet). Documents block subsidy, halving, founders reward (7.5%), zeronode payments (20–40%), consensus constants. **§15 Addresses and Keys in Code** — wallet-relevant:
+**Subsidy.md** in Zero full node repo root — project document (like UpdateWallet). Documents block subsidy, halving, founders reward (7.5%), zeronode payments (20–40%), consensus constants. **§15 Addresses and Keys in Code** — wallet-relevant:
 - §15.3 **ZeroWallet donation address** — `zerowallet/src/settings.cpp:490, 568`
 - §15.6 Wallet address creation (RPCs `getnewaddress`, `z_getnewaddress`)
 
@@ -551,7 +567,7 @@ zerod built separately, copied into zerowallet package. No submodule. `ZERO_DIR`
 | Location | Issue |
 |----------|-------|
 | `src/amount.h` | `MAX_MONEY = 16.95M ZER`; Zero total supply ~25.6M ZER exceeds this; validation uses per-subsidy `MoneyRange` only |
-| Zero `TODO.md`, `TEST.md` | Outdated `338665500000000` total subsidy reference |
+| Zero `TODO.md`, `TEST_ZERO.md` | Outdated `338665500000000` total subsidy reference |
 | Zero `README.md` | "Stable supply is 3888 ZER, after first halfing" — ambiguous; 3888 ≈ daily emission (720×5.4), not total supply |
 | Zero `doc/tor.md` | `"subver" : "/MagicBean:1.0.0/"` — legacy; Zero uses Ambrym |
 
