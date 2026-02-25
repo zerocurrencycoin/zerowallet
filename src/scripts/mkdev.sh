@@ -1,0 +1,9 @@
+#!/bin/bash
+# Wrapper: run mkdev-<platform>.sh. Pass all args through.
+# Linux -> mkdev-linux, macOS -> mkdev-mac, else -> mkdev-win (cross-build from Linux)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+case "$(uname -s)" in
+  Linux)  exec "$SCRIPT_DIR/mkdev-linux.sh" "$@" ;;
+  Darwin) exec "$SCRIPT_DIR/mkdev-mac.sh" "$@" ;;
+  *)      exec "$SCRIPT_DIR/mkdev-win.sh" "$@" ;;
+esac
