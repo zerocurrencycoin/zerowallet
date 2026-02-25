@@ -1,5 +1,9 @@
 #!/bin/bash
 # Parse args (env vars override). Same interface as mkrelease-linux/win.
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ME="mkrelease-mac"
+. "$SCRIPT_DIR/lib-log.sh"
+
 while [[ $# -gt 0 ]]; do
   case "$1" in
     -q|--qt|--qt_static) QT_STATIC="$2"; shift 2 ;;
@@ -12,50 +16,25 @@ done
 ZERO_DIR="${ZERO_DIR:-../Zero/src}"
 QT_STATIC="${QT_STATIC:-$(brew --prefix qt@5 2>/dev/null)}"
 
-if [ -z "$QT_STATIC" ]; then
-    echo "QT_STATIC is not set. Use -q/--qt or 'brew install qt@5'. Default: brew --prefix qt@5";
-    exit 1;
-fi
-
-if [ -z "$APP_VERSION" ]; then
-    echo "APP_VERSION is not set. Please set it to the current release version of the app";
-    exit 1;
-fi
-
-if [ ! -f "$ZERO_DIR/zerod" ]; then
-    echo "Could not find compiled zerod in $ZERO_DIR/.";
-    exit 1;
-fi
-
-if ! cat src/version.h | grep -q "$APP_VERSION"; then
-    echo "Version mismatch in src/version.h"
-    exit 1
-fi
+[ -z "$QT_STATIC" ] && err "QT_STATIC not set. Use -q/--qt or 'brew install qt@5'. Default: brew --prefix qt@5"
+[ -z "$APP_VERSION" ] && err "APP_VERSION not set. Set to current release version with -v/--version"
+[ ! -f "$ZERO_DIR/zerod" ] && err "zerod not found in $ZERO_DIR. Build Zero first."
+grep -q "$APP_VERSION" src/version.h 2>/dev/null || err "Version mismatch in src/version.h (expected $APP_VERSION)"
 
 export PATH=$PATH:/usr/local/bin
 
-#Clean
-echo -n "Cleaning..............."
 make distclean >/dev/null 2>&1
 rm -rf zerowallet.app ZeroWallet.app
 rm -f artifacts/macOS-zerowallet-v$APP_VERSION.dmg
-echo "[OK]"
+step_done "Cleaning"
 
-
-echo -n "Configuring............"
-# Build
-#TODO
 ./src/scripts/dotranslations.sh >/dev/null
 $QT_STATIC/bin/qmake zero-qt-wallet.pro CONFIG+=release CONFIG+=sdk_no_version_check >/dev/null
-echo "[OK]"
+step_done "Configuring"
 
-
-echo -n "Building..............."
 make -j4 >/dev/null
-echo "[OK]"
+step_done "Building"
 
-#Qt deploy
-echo -n "Deploying.............."
 mkdir artifacts >/dev/null 2>&1
 rm -f artifcats/zerowallet.dmg >/dev/null 2>&1
 rm -f artifacts/rw* >/dev/null 2>&1
@@ -63,30 +42,16 @@ cp $ZERO_DIR/zerod zerowallet.app/Contents/MacOS/
 cp $ZERO_DIR/zero-cli zerowallet.app/Contents/MacOS/
 rm -rf zerowallet.app/Contents/PlugIns
 $QT_STATIC/bin/macdeployqt zerowallet.app
-echo "[OK]"
+step_done "Deploying"
 
-
-echo -n "Signing................"
 mv zerowallet.app ZeroWallet.app
 CODESIGN_IDENTITY="${CODESIGN_IDENTITY:--}"
 codesign --force --deep --sign "$CODESIGN_IDENTITY" ZeroWallet.app
-echo "[OK]"
+step_done "Signing"
 
-echo -n "Building dmg..........."
 create-dmg --volname "ZeroWallet-v$APP_VERSION" --volicon "res/logo.icns" --window-pos 200 120 --icon "ZeroWallet.app" 200 190 --app-drop-link 600 185 --hide-extension "ZeroWallet.app" --window-size 800 400 --hdiutil-quiet --background res/dmgbg.png artifacts/macOS-zerowallet-v$APP_VERSION.dmg ZeroWallet.app >/dev/null 2>&1
 
-#mkdir bin/dmgbuild >/dev/null 2>&1
-#sed "s/RELEASE_VERSION/${APP_VERSION}/g" res/appdmg.json > bin/dmgbuild/appdmg.json
-#cp res/logo.icns bin/dmgbuild/
-#cp res/dmgbg.png bin/dmgbuild/
-
-#cp -r zerowallet.app bin/dmgbuild/
-
-#appdmg --quiet bin/dmgbuild/appdmg.json artifacts/macOS-zerowallet-v$APP_VERSION.dmg >/dev/null
-if [ ! -f artifacts/macOS-zerowallet-v$APP_VERSION.dmg ]; then
-    echo "[ERROR]"
-    exit 1
-fi
+[ ! -f artifacts/macOS-zerowallet-v$APP_VERSION.dmg ] && err "DMG not created"
 rm -rf artifacts/ZeroWallet.app
 mv ZeroWallet.app artifacts/
-echo  "[OK]"
+step_done "Building dmg"
