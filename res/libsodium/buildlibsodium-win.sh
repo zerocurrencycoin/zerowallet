@@ -1,11 +1,12 @@
 #!/bin/bash
+# Run from repo root. Builds libsodium for Windows (MXE).
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)/src/scripts"
+ME="buildlibsodium-win"
+. "$SCRIPT_DIR/lib-log.sh"
 
-# First thing to do is see if libsodium.a exists in the res folder. If it does, then there's nothing to do
-if [ -f res/libsodium.a ]; then
-    rm res/libsodium.a
-fi
+[ -f res/libsodium.a ] && rm res/libsodium.a
 
-echo "Building libsodium"
+notice "Building libsodium..."
 
 # Go into the lib sodium directory
 cd res/libsodium

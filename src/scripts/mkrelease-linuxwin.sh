@@ -1,6 +1,10 @@
 #!/bin/bash
 # Linux + Windows release in one run. Must run on Linux (host); Windows via MXE cross-build.
-[ "$(uname -s)" = "Linux" ] || { echo "mkrelease-linuxwin.sh must run on Linux." >&2; exit 1; }
+[ "$(uname -s)" = "Linux" ] || { echo "mkrelease-linuxwin: ERROR: must run on Linux." >&2; exit 1; }
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ME="mkrelease-linuxwin"
+. "$SCRIPT_DIR/lib-log.sh"
 
 # Parse args (env vars override)
 while [[ $# -gt 0 ]]; do
@@ -16,66 +20,38 @@ done
 
 ZERO_DIR="${ZERO_DIR:-../Zero/src}"
 
-if [ -z "$QT_STATIC" ]; then
-    echo "QT_STATIC is not set. Use -q/--qt or set env."
-    exit 1;
-fi
+[ -z "$QT_STATIC" ] && err "QT_STATIC not set. Use -q/--qt or set env."
+[ -z "$APP_VERSION" ] && err "APP_VERSION not set. Use -v/--version or set env."
+[ -z "$PREV_VERSION" ] && err "PREV_VERSION not set. Use -p/--prev or set env."
+[ ! -f "$ZERO_DIR/zerod" ] && err "zerod not found in $ZERO_DIR. Build Zero first."
+[ ! -f "$ZERO_DIR/zero-cli" ] && err "zero-cli not found in $ZERO_DIR. Build Zero first."
 
-if [ -z "$APP_VERSION" ]; then echo "APP_VERSION is not set. Use -v/--version or set env."; exit 1; fi
-if [ -z "$PREV_VERSION" ]; then echo "PREV_VERSION is not set. Use -p/--prev or set env."; exit 1; fi
+sed -i "s/${PREV_VERSION}/${APP_VERSION}/g" zero-qt-wallet.pro >/dev/null
+sed -i "s/${PREV_VERSION}/${APP_VERSION}/g" README.md >/dev/null
+step_done "Version files"
 
-if [ ! -f "$ZERO_DIR/zerod" ]; then
-    echo "Couldn't find zerod in $ZERO_DIR/. Please build zerod."
-    exit 1;
-fi
-
-if [ ! -f "$ZERO_DIR/zero-cli" ]; then
-    echo "Couldn't find zero-cli in $ZERO_DIR/. Please build zerod."
-    exit 1;
-fi
-
-echo -n "Version files.........."
-# Replace the version number in the .pro file so it gets picked up everywhere
-sed -i "s/${PREV_VERSION}/${APP_VERSION}/g" zero-qt-wallet.pro > /dev/null
-
-# Also update it in the README.md
-sed -i "s/${PREV_VERSION}/${APP_VERSION}/g" README.md > /dev/null
-echo "[OK]"
-
-echo -n "Cleaning..............."
 rm -rf bin/*
 rm -rf artifacts/*
 make distclean >/dev/null 2>&1
-echo "[OK]"
+step_done "Cleaning"
 
-echo ""
-echo "[Building on" `lsb_release -r`"]"
+section "Linux ($(lsb_release -rs 2>/dev/null || echo 'build'))"
 
-echo -n "Configuring............"
-#TODO
 ./src/scripts/dotranslations.sh >/dev/null
-$QT_STATIC/bin/qmake zero-qt-wallet.pro -spec linux-clang CONFIG+=release > /dev/null
-echo "[OK]"
+$QT_STATIC/bin/qmake zero-qt-wallet.pro -spec linux-clang CONFIG+=release >/dev/null
+step_done "Configuring"
 
+rm -rf bin/zero-qt-wallet* >/dev/null
+rm -rf bin/zerowallet* >/dev/null
+make clean >/dev/null
+make -j$(nproc) >/dev/null
+step_done "Building"
 
-echo -n "Building..............."
-rm -rf bin/zero-qt-wallet* > /dev/null
-rm -rf bin/zerowallet* > /dev/null
-make clean > /dev/null
-make -j$(nproc) > /dev/null
-echo "[OK]"
-
-
-# Test for Qt
-echo -n "Static link............"
 if [[ $(ldd zerowallet | grep -i "Qt") ]]; then
-    echo "FOUND QT; ABORT; RELEASE BUILD REQUIRES STATIC QT";
-    exit 1
+    err "release build requires static Qt; found dynamic Qt linkage"
 fi
-echo "[OK]"
+step_done "Static link"
 
-
-echo -n "Packaging.............."
 mkdir bin/zerowallet-v$APP_VERSION > /dev/null
 strip zerowallet
 
@@ -91,24 +67,12 @@ cd ..
 mkdir artifacts >/dev/null 2>&1
 mkdir release >/dev/null 2>&1
 cp bin/linux-zerowallet-v$APP_VERSION.tar.gz ./artifacts/linux-zerowallet-v$APP_VERSION.tar.gz
-echo "[OK]"
+step_done "Packaging"
 
+[ ! -f artifacts/linux-zerowallet-v$APP_VERSION.tar.gz ] && err "tar.gz artifact not created"
+tar tf "artifacts/linux-zerowallet-v$APP_VERSION.tar.gz" | wc -l | grep -q "6" || err "package contents incomplete"
+step_done "Package contents"
 
-if [ -f artifacts/linux-zerowallet-v$APP_VERSION.tar.gz ] ; then
-    echo -n "Package contents......."
-    # Test if the package is built OK
-    if tar tf "artifacts/linux-zerowallet-v$APP_VERSION.tar.gz" | wc -l | grep -q "6"; then
-        echo "[OK]"
-    else
-        echo "[ERROR]"
-        exit 1
-    fi
-else
-    echo "[ERROR]"
-    exit 1
-fi
-
-echo -n "Building deb..........."
 debdir=bin/deb/zerowallet-v$APP_VERSION
 mkdir -p $debdir > /dev/null
 mkdir    $debdir/DEBIAN
@@ -132,54 +96,35 @@ cp src/scripts/desktopentry     $debdir/usr/share/applications/zerowallet.deskto
 
 dpkg-deb --build                $debdir >/dev/null
 cp $debdir.deb                  artifacts/linux-zerowallet-v$APP_VERSION.deb
-echo "[OK]"
+step_done "Building deb"
 
-
-
-echo ""
-echo "[Windows]"
+section "Windows"
 
 MXE_PATH="${MXE_PATH:-$HOME/mxe/usr/bin}"
-[ -d "$MXE_PATH" ] || MXE_PATH="$HOME/github/mxe/usr/bin"
 if [ -z "$MXE_PATH" ] || [ ! -d "$MXE_PATH" ]; then
-    echo "MXE_PATH not found. Defaults: \$HOME/mxe/usr/bin, \$HOME/github/mxe/usr/bin. Use -m/--mxe to override."
-    echo "Not building Windows"
-    exit 0;
+    warn "MXE_PATH not found. Default: \$HOME/mxe/usr/bin. Use -m/--mxe to override."
+    notice "Skipping Windows build"
+    exit 0
 fi
 
-if [ ! -f "$ZERO_DIR/zerod.exe" ]; then
-    echo "Couldn't find zerod.exe in $ZERO_DIR/. Please build zerod.exe"
-    exit 1;
-fi
-
-
-if [ ! -f "$ZERO_DIR/zero-cli.exe" ]; then
-    echo "Couldn't find zero-cli.exe in $ZERO_DIR/. Please build zerod.exe"
-    exit 1;
-fi
+[ ! -f "$ZERO_DIR/zerod.exe" ] && err "zerod.exe not found in $ZERO_DIR. Build Zero for Windows first."
+[ ! -f "$ZERO_DIR/zero-cli.exe" ] && err "zero-cli.exe not found in $ZERO_DIR. Build Zero for Windows first."
 
 export PATH=$MXE_PATH:$PATH
 
-echo -n "Configuring............"
-make clean  > /dev/null
+make clean >/dev/null
 rm -f zero-qt-wallet-mingw.pro
 rm -rf release/
-#Mingw seems to have trouble with precompiled headers, so strip that option from the .pro file
-cat zero-qt-wallet.pro | sed "s/precompile_header/release/g" | sed "s/PRECOMPILED_HEADER.*//g"  > zero-qt-wallet-mingw.pro
+cat zero-qt-wallet.pro | sed "s/precompile_header/release/g" | sed "s/PRECOMPILED_HEADER.*//g" > zero-qt-wallet-mingw.pro
+step_done "Configuring"
 
-echo "[OK]"
+res/libsodium/buildlibsodium-win.sh >/dev/null
+step_done "Building libsodium"
 
+x86_64-w64-mingw32.static-qmake-qt5 zero-qt-wallet-mingw.pro CONFIG+=release >/dev/null
+make -j32 >/dev/null
+step_done "Building"
 
-echo -n "Building Libsodium..............."
-res/libsodium/buildlibsodium-win.sh > /dev/null
-echo "[Libsodium Complete]"
-echo -n "Building..............."
-x86_64-w64-mingw32.static-qmake-qt5 zero-qt-wallet-mingw.pro CONFIG+=release > /dev/null
-make -j32 > /dev/null
-echo "[OK]"
-
-
-echo -n "Packaging.............."
 mkdir release/zerowallet-v$APP_VERSION > /dev/null 2>&1
 cp release/zerowallet.exe             release/zerowallet-v$APP_VERSION > /dev/null
 cp $ZERO_DIR/zerod.exe               release/zerowallet-v$APP_VERSION > /dev/null
@@ -191,17 +136,8 @@ cd ..
 
 mkdir artifacts >/dev/null 2>&1
 cp release/Windows-zerowallet-v$APP_VERSION.zip ./artifacts/
-echo "[OK]"
+step_done "Packaging"
 
-if [ -f artifacts/Windows-zerowallet-v$APP_VERSION.zip ] ; then
-    echo -n "Package contents......."
-    if unzip -l "artifacts/Windows-zerowallet-v$APP_VERSION.zip" | wc -l | grep -q "11"; then
-        echo "[OK]"
-    else
-        echo "[ERROR]"
-        exit 1
-    fi
-else
-    echo "[ERROR]"
-    exit 1
-fi
+[ ! -f artifacts/Windows-zerowallet-v$APP_VERSION.zip ] && err "Windows zip artifact not created"
+unzip -l "artifacts/Windows-zerowallet-v$APP_VERSION.zip" | wc -l | grep -q "11" || err "package contents incomplete"
+step_done "Package contents"

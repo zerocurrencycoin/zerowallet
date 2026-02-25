@@ -1,4 +1,7 @@
 #!/bin/bash
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ME="signbinaries"
+. "$SCRIPT_DIR/lib-log.sh"
 
 # Parse args (env vars override). Same -v/--version as mkrelease scripts.
 while [[ $# -gt 0 ]]; do
@@ -8,7 +11,7 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-if [ -z "$APP_VERSION" ]; then echo "APP_VERSION is not set. Use -v/--version or set env."; exit 1; fi
+[ -z "$APP_VERSION" ] && err "APP_VERSION not set. Use -v/--version or set env."
 
 # Store the hash and signatures here
 rm -rf release/signatures
@@ -26,12 +29,11 @@ if command -v sha256sum >/dev/null 2>&1; then
 elif command -v shasum >/dev/null 2>&1; then
   shasum -a 256 *$APP_VERSION* > sha256sum-v$APP_VERSION.txt
 else
-  echo "Neither sha256sum nor shasum found. Install coreutils (Linux) or use macOS (shasum built-in)."
-  exit 1
+  err "Neither sha256sum nor shasum found. Install coreutils (Linux) or use macOS (shasum built-in)."
 fi
 
 for i in $( ls *zerowallet-v$APP_VERSION* sha256sum-v$APP_VERSION* ); do
-  echo "Signing" $i
+  notice "Signing $i"
   gpg --batch --output ../release/signatures/$i.sig --detach-sig $i
 done
 

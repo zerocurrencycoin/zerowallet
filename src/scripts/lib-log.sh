@@ -4,11 +4,15 @@
 # warn: non-fatal warning, to stderr
 # info: informational, to stdout
 # notice: progress/status, to stdout
+# step_done: step label + [OK] (e.g. "Version files........ [OK]")
+# section: blank line + section header (e.g. "[Windows]")
 
 err()   { echo "${ME:-script}: ERROR: $*" >&2; exit 1; }
 warn()  { echo "${ME:-script}: WARN: $*" >&2; }
 info()  { echo "${ME:-script}: $*"; }
 notice() { echo "${ME:-script}: $*"; }
+step_done() { printf "%s: %-24s [OK]\n" "${ME:-script}" "$1"; }
+section() { echo ""; notice "[$1]"; }
 
 # Call when build fails and LOG_FILE is set. Outputs analysis to stderr.
 analyze_build_log() {

@@ -1,9 +1,9 @@
 #!/bin/bash
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ME="dotranslations"
+. "$SCRIPT_DIR/lib-log.sh"
 
-if [ -z $QT_STATIC ]; then
-    echo "QT_STATIC is not set. Please set it to the base directory of a statically compiled Qt";
-    exit 1;
-fi
+[ -z "$QT_STATIC" ] && err "QT_STATIC not set. Set to base directory of statically compiled Qt, or run from mkrelease script."
 
 rm -f res/*.qm
 $QT_STATIC/bin/lrelease zero-qt-wallet.pro

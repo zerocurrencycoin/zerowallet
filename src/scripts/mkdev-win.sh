@@ -28,7 +28,6 @@ log_capture() {
 }
 
 MXE_PATH="${MXE_PATH:-$HOME/mxe/usr/bin}"
-[ -d "$MXE_PATH" ] || MXE_PATH="$HOME/github/mxe/usr/bin"
 [ -d "$MXE_PATH" ] || err "MXE not found. Set MXE_PATH or install to ~/mxe. See BUILD.md Windows."
 
 export PATH="$MXE_PATH:$PATH"
