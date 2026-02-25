@@ -1,6 +1,8 @@
 # Cursor: .cursor/rules/, AGENTS.md are versioned. .vscode is local.
 
 bin/
+logs/
+qt5-static/
 debug/
 build/
 release/
