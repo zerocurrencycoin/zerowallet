@@ -135,6 +135,8 @@ macOS injects items into the Edit menu ("Start Dictation", "Emoji & Symbols", "W
 
 **Gaps:** No automated tests. Shield change setting not wired. Rescan/reindex require zerod restart; external zerod needs manual `-rescan`/`-reindex`.
 
+**Zero test and doc support:** Zero repo ([zerocurrencycoin/Zero](https://github.com/zerocurrencycoin/Zero)) has `doc/`, `contrib/`, `qa/`. `zerod -?` lists command-line options. Sample configs: `contrib/zero.conf`, `contrib/debian/examples/zero.conf`. Reindex, rescan, deletetx, consolidation are zerod config options; Zero's own test coverage and documentation for these live in the Zero repo (e.g. `qa/` RPC tests, UpdateZero.md if present). zerowallet does not duplicate Zero's option docs; consult Zero for authoritative behavior and tests.
+
 ---
 
 ## zerowallet GitHub Issues
