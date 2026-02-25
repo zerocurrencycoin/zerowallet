@@ -1,4 +1,8 @@
 #!/bin/bash
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ME="mkrelease-linux"
+. "$SCRIPT_DIR/lib-log.sh"
+
 # Parse args (env vars override)
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -11,24 +15,39 @@ while [[ $# -gt 0 ]]; do
 done
 
 ZERO_DIR="${ZERO_DIR:-../Zero/src}"
+REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+QT_STATIC="${QT_STATIC:-$REPO_ROOT/qt5-static}"
 
-if [ -z "$QT_STATIC" ]; then
-    echo "QT_STATIC is not set. Use -q/--qt or set env."
-    exit 1;
+[ ! -d "$QT_STATIC" ] || [ ! -x "$QT_STATIC/bin/qmake" ] && err "QT_STATIC not found at $QT_STATIC. Run ./src/scripts/build-qt-static.sh first, or set -q/--qt."
+
+# Version defaults: APP from src/version.h, PREV from git tag (vN.N.N or N.N.N). If same, .h not updated: use git for -p, bump patch for -v.
+valid_semver() { [[ "$1" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; }
+get_app_from_h() { grep -E '^#define APP_VERSION "[0-9]+\.[0-9]+\.[0-9]+"' src/version.h 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+'; }
+get_git_tag()  { git describe --tags --abbrev=0 2>/dev/null | sed 's/^[vV]//' | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1; }
+patch_plus1()  { echo "$1" | awk -F. -v OFS=. '{$3++; print}'; }
+patch_minus1() { echo "$1" | awk -F. -v OFS=. '{c=$3-1; if(c<0){c=0; $2--}; if($2<0)$2=0; print $1,$2,c}'; }
+
+APP_H=$(get_app_from_h)
+GIT_V=$(get_git_tag)
+
+if [ -z "$APP_VERSION" ]; then
+  [ -z "$APP_H" ] && err "src/version.h has no valid #define APP_VERSION \"X.Y.Z\". Use -v."
+  if [ -n "$GIT_V" ] && [ "$APP_H" = "$GIT_V" ]; then
+    APP_VERSION=$(patch_plus1 "$APP_H")
+    PREV_VERSION="${PREV_VERSION:-$GIT_V}"
+    notice "version.h unchanged ($APP_H == git tag); using -v $APP_VERSION -p $GIT_V"
+  else
+    APP_VERSION="$APP_H"
+    PREV_VERSION="${PREV_VERSION:-$(patch_minus1 "$APP_H")}"
+    [ -n "$GIT_V" ] && notice "version.h updated ($APP_H); using -v $APP_VERSION -p $PREV_VERSION (git: $GIT_V)"
+  fi
 fi
+valid_semver "$APP_VERSION" || err "APP_VERSION invalid format (need X.Y.Z): $APP_VERSION"
+[ -z "$PREV_VERSION" ] && PREV_VERSION=$(patch_minus1 "$APP_VERSION")
+valid_semver "$PREV_VERSION" || err "PREV_VERSION invalid format (need X.Y.Z): $PREV_VERSION"
 
-if [ -z "$APP_VERSION" ]; then echo "APP_VERSION is not set. Use -v/--version or set env."; exit 1; fi
-if [ -z "$PREV_VERSION" ]; then echo "PREV_VERSION is not set. Use -p/--prev or set env."; exit 1; fi
-
-if [ ! -f "$ZERO_DIR/zerod" ]; then
-    echo "Couldn't find zerod in $ZERO_DIR/. Please build zerod."
-    exit 1;
-fi
-
-if [ ! -f "$ZERO_DIR/zero-cli" ]; then
-    echo "Couldn't find zero-cli in $ZERO_DIR/. Please build zerod."
-    exit 1;
-fi
+[ ! -f "$ZERO_DIR/zerod" ] && err "zerod not found in $ZERO_DIR. Build Zero first."
+[ ! -f "$ZERO_DIR/zero-cli" ] && err "zero-cli not found in $ZERO_DIR. Build Zero first."
 
 echo -n "Version files.........."
 # Replace the version number in the .pro file so it gets picked up everywhere
@@ -65,8 +84,7 @@ echo "[OK]"
 # Test for Qt
 echo -n "Static link............"
 if [[ $(ldd zerowallet | grep -i "Qt") ]]; then
-    echo "FOUND QT; ABORT; RELEASE BUILD REQUIRES STATIC QT";
-    exit 1
+    err "release build requires static Qt; found dynamic Qt linkage"
 fi
 echo "[OK]"
 
@@ -90,19 +108,14 @@ cp bin/linux-zerowallet-v$APP_VERSION.tar.gz ./artifacts/linux-zerowallet-v$APP_
 echo "[OK]"
 
 
-if [ -f artifacts/linux-zerowallet-v$APP_VERSION.tar.gz ] ; then
-    echo -n "Package contents......."
-    # Test if the package is built OK
-    if tar tf "artifacts/linux-zerowallet-v$APP_VERSION.tar.gz" | wc -l | grep -q "6"; then
-        echo "[OK]"
-    else
-        echo "[ERROR]"
-        exit 1
-    fi
-else
-    echo "[ERROR]"
-    exit 1
+if [ ! -f artifacts/linux-zerowallet-v$APP_VERSION.tar.gz ]; then
+    err "tar.gz artifact not created"
 fi
+echo -n "Package contents......."
+if ! tar tf "artifacts/linux-zerowallet-v$APP_VERSION.tar.gz" | wc -l | grep -q "6"; then
+    err "package contents incomplete"
+fi
+echo "[OK]"
 
 echo -n "Building deb..........."
 debdir=bin/deb/zerowallet-v$APP_VERSION
