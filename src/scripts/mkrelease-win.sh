@@ -19,18 +19,17 @@ done
 
 resolve_zero_dir win
 resolve_qt win release
+resolve_version
+check_version_mismatch
 
-[ -z "$APP_VERSION" ] && err "APP_VERSION not set. Use -v/--version or set env."
-[ -z "$PREV_VERSION" ] && err "PREV_VERSION not set. Use -p/--prev or set env."
 [ ! -f "$ZERO_DIR/zerod.exe" ] && err "zerod.exe not found in $ZERO_DIR. Build Zero for Windows first."
 [ ! -f "$ZERO_DIR/zero-cli.exe" ] && err "zero-cli.exe not found in $ZERO_DIR. Build Zero for Windows first."
 
-check_version_mismatch
 apply_version_sed
 
 rm -rf bin/*
 rm -rf artifacts/*
-make distclean >/dev/null 2>&1
+make distclean >/dev/null 2>&1 || true
 step_done "Cleaning"
 
 ./src/scripts/dotranslations.sh >/dev/null 2>/dev/null || true
@@ -38,7 +37,7 @@ step_done "Configuring"
 
 section "Windows"
 
-if [ -z "$MXE_PATH" ] || [ ! -d "$MXE_PATH" ]; then
+if [ -z "${MXE_PATH:-}" ] || [ ! -d "$MXE_PATH" ]; then
     warn "MXE_PATH not found. Default: \$HOME/mxe/usr/bin. Use -m/--mxe to override."
     notice "Skipping Windows build"
     exit 0
@@ -46,7 +45,6 @@ fi
 
 export PATH=$MXE_PATH:$PATH
 
-make clean >/dev/null
 rm -f zero-qt-wallet-mingw.pro
 rm -rf release/
 sed "s/precompile_header/release/g" zero-qt-wallet.pro | sed "s/PRECOMPILED_HEADER.*//g" > zero-qt-wallet-mingw.pro
@@ -73,13 +71,15 @@ ZEROD_IN_PKG="$PKGDIR/zerod.exe"
 notice "zerod.exe: $ZEROD_IN_PKG (same dir as zerowallet.exe)"
 step_done "zerod path verified"
 
-cd release && zip -r "Windows-zerowallet-v${APP_VERSION}.zip" "zerowallet-v${APP_VERSION}/" >/dev/null
-cd ..
+(cd release && zip -r "Windows-zerowallet-v${APP_VERSION}.zip" "zerowallet-v${APP_VERSION}/" >/dev/null 2>&1) || err "zip failed"
 
-mkdir artifacts >/dev/null 2>&1
+mkdir -p artifacts
 cp "release/Windows-zerowallet-v${APP_VERSION}.zip" ./artifacts/
 step_done "Packaging"
 
 [ ! -f "artifacts/Windows-zerowallet-v${APP_VERSION}.zip" ] && err "Windows zip artifact not created"
-unzip -l "artifacts/Windows-zerowallet-v$APP_VERSION.zip" | wc -l | grep -q "11" || err "package contents incomplete"
+# Verify zip contains zerowallet.exe, zerod.exe, zero-cli.exe (wallet expects zerod next to zerowallet)
+for f in zerowallet.exe zerod.exe zero-cli.exe; do
+  unzip -l "artifacts/Windows-zerowallet-v$APP_VERSION.zip" | grep -q "$f" || err "package missing $f"
+done
 step_done "Package contents"

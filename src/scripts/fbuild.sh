@@ -114,7 +114,7 @@ resolve_qt() {
 # Resolve ZERO_DIR. $1: platform (linux|mac|win). Uses ZERO_BASE: ../Zero, else ../ZeroLinux or ../ZeroWin.
 resolve_zero_dir() {
   local plat="${1:-linux}"
-  [ -n "$ZERO_DIR" ] && return 0
+  [ -n "${ZERO_DIR:-}" ] && return 0
   local base="../Zero"
   case "$plat" in
     linux|mac) [ -d "$base" ] || base="../ZeroLinux" ;;
@@ -139,7 +139,7 @@ resolve_zero_dirs_linuxwin() {
 
 # Detect MXE path. Sets MXE_PATH if unset. Checks $HOME/mxe/usr/bin, /opt/mxe/usr/bin.
 detect_mxe() {
-  [ -n "$MXE_PATH" ] && return 0
+  [ -n "${MXE_PATH:-}" ] && return 0
   for p in "$HOME/mxe/usr/bin" /opt/mxe/usr/bin; do
     [ -x "$p/x86_64-w64-mingw32.static-qmake-qt5" ] && { MXE_PATH="$p"; return 0; }
   done
@@ -157,7 +157,7 @@ patch_minus1() { echo "$1" | awk -F. -v OFS=. '{c=$3-1; if(c<0){c=0; $2--}; if($
 resolve_version() {
   local app_h; app_h=$(get_app_from_h)
   local git_v; git_v=$(get_git_tag)
-  if [ -z "$APP_VERSION" ]; then
+  if [ -z "${APP_VERSION:-}" ]; then
     [ -z "$app_h" ] && err "src/version.h has no valid #define APP_VERSION \"X.Y.Z\". Use -v."
     if [ -n "$git_v" ] && [ "$app_h" = "$git_v" ]; then
       APP_VERSION=$(patch_plus1 "$app_h")
@@ -170,7 +170,7 @@ resolve_version() {
     fi
   fi
   valid_semver "$APP_VERSION" || err "APP_VERSION invalid format (need X.Y.Z): $APP_VERSION"
-  [ -z "$PREV_VERSION" ] && PREV_VERSION=$(patch_minus1 "$APP_VERSION")
+  [ -z "${PREV_VERSION:-}" ] && PREV_VERSION=$(patch_minus1 "$APP_VERSION")
   valid_semver "$PREV_VERSION" || err "PREV_VERSION invalid format (need X.Y.Z): $PREV_VERSION"
 }
 
