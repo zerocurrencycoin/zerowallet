@@ -12,4 +12,4 @@ Read README.md, BUILD.md
 
 **Errors:** Acknowledge concisely; focus on solutions
 
-**Doc:** Specific and measurable,; no superlatives without evidence, state limitations and scope
+**Doc:** Specific and measurable; no superlatives without evidence, state limitations and scope

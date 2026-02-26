@@ -4,23 +4,20 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)/src/scripts"
 ME="buildlibsodium"
 . "$SCRIPT_DIR/lib-log.sh"
+. "res/libsodium/libsodium-common.sh"
 
-[ -f res/libsodium.a ] && { rm res/libsodium.a; rm -rf res/libsodium/libsodium-1.0.21; }
+[ -f res/libsodium.a ] && { rm res/libsodium.a; rm -rf res/libsodium/libsodium-${LIBSODIUM_VER}; }
 
 notice "Building libsodium..."
 
-# Go into the lib sodium directory
 cd res/libsodium
-if [ ! -f libsodium-1.0.21.tar.gz ]; then
-    wget https://download.libsodium.org/libsodium/releases/libsodium-1.0.21.tar.gz
+libsodium_download
+
+if [ ! -d "libsodium-${LIBSODIUM_VER}" ]; then
+    tar xf "$LIBSODIUM_TAR"
 fi
 
-if [ ! -d libsodium-1.0.21 ]; then
-    tar xf libsodium-1.0.21.tar.gz
-fi
-
-# Now build it
-cd libsodium-1.0.21
+cd "libsodium-${LIBSODIUM_VER}"
 LIBS="" ./configure > /dev/null
 make clean > /dev/null 2>&1
 if [[ "$OSTYPE" == "darwin"* ]]; then
@@ -30,11 +27,10 @@ else
 fi
 cd ..
 
-# copy the library to res/ folder
-if [ -f libsodium-1.0.21/src/libsodium/.libs/libsodium.a ]; then
-    cp libsodium-1.0.21/src/libsodium/.libs/libsodium.a ../
-elif [ -f libsodium-1.0.21/.libs/libsodium.a ]; then
-    cp libsodium-1.0.21/.libs/libsodium.a ../
+if [ -f "libsodium-${LIBSODIUM_VER}/src/libsodium/.libs/libsodium.a" ]; then
+    cp "libsodium-${LIBSODIUM_VER}/src/libsodium/.libs/libsodium.a" ../
+elif [ -f "libsodium-${LIBSODIUM_VER}/.libs/libsodium.a" ]; then
+    cp "libsodium-${LIBSODIUM_VER}/.libs/libsodium.a" ../
 else
     err "libsodium.a not found after build"
 fi

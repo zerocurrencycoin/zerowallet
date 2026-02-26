@@ -1,15 +1,18 @@
 #!/bin/bash
-# Linux + Windows release in one run. Must run on Linux (host); Windows via MXE cross-build.
+# Linux + Windows release in one run. DEPRECATED: use mkrelease-linux and mkrelease-win separately.
+# Must run on Linux (host); Windows via MXE cross-build.
 [ "$(uname -s)" = "Linux" ] || { echo "mkrelease-linuxwin: ERROR: must run on Linux." >&2; exit 1; }
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ME="mkrelease-linuxwin"
 . "$SCRIPT_DIR/lib-log.sh"
 
-# Parse args (env vars override)
+# Parse args (env vars override). Zero outputs Linux and Windows to different dirs.
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    -z|--zero) ZERO_DIR="$2"; shift 2 ;;
+    -z|--zero) ZERO_DIR="$2"; shift 2 ;;  # legacy: sets both
+    --zerolinux) ZERO_DIR_LINUX="$2"; shift 2 ;;
+    --zerowin) ZERO_DIR_WIN="$2"; shift 2 ;;
     -v|--version) APP_VERSION="$2"; shift 2 ;;
     -p|--prev) PREV_VERSION="$2"; shift 2 ;;
     -q|--qt) QT_STATIC="$2"; shift 2 ;;
@@ -18,13 +21,17 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-ZERO_DIR="${ZERO_DIR:-../Zero/src}"
+# Default: ../Zero; if absent, ../ZeroLinux / ../ZeroWin. Binaries in src/
+for _base in "../Zero" "../ZeroLinux"; do [ -d "$_base" ] && break; done
+ZERO_DIR_LINUX="${ZERO_DIR_LINUX:-${ZERO_DIR:-$_base/src}}"
+for _base in "../Zero" "../ZeroWin"; do [ -d "$_base" ] && break; done
+ZERO_DIR_WIN="${ZERO_DIR_WIN:-${ZERO_DIR:-$_base/src}}"
 
 [ -z "$QT_STATIC" ] && err "QT_STATIC not set. Use -q/--qt or set env."
 [ -z "$APP_VERSION" ] && err "APP_VERSION not set. Use -v/--version or set env."
 [ -z "$PREV_VERSION" ] && err "PREV_VERSION not set. Use -p/--prev or set env."
-[ ! -f "$ZERO_DIR/zerod" ] && err "zerod not found in $ZERO_DIR. Build Zero first."
-[ ! -f "$ZERO_DIR/zero-cli" ] && err "zero-cli not found in $ZERO_DIR. Build Zero first."
+[ ! -f "$ZERO_DIR_LINUX/zerod" ] && err "zerod not found in $ZERO_DIR_LINUX. Build Zero for Linux first."
+[ ! -f "$ZERO_DIR_LINUX/zero-cli" ] && err "zero-cli not found in $ZERO_DIR_LINUX. Build Zero for Linux first."
 
 sed -i "s/${PREV_VERSION}/${APP_VERSION}/g" zero-qt-wallet.pro >/dev/null
 sed -i "s/${PREV_VERSION}/${APP_VERSION}/g" README.md >/dev/null
@@ -44,7 +51,7 @@ step_done "Configuring"
 rm -rf bin/zero-qt-wallet* >/dev/null
 rm -rf bin/zerowallet* >/dev/null
 make clean >/dev/null
-make -j$(nproc) >/dev/null
+make -j${JOBS:-2} >/dev/null
 step_done "Building"
 
 if [[ $(ldd zerowallet | grep -i "Qt") ]]; then
@@ -56,8 +63,8 @@ mkdir bin/zerowallet-v$APP_VERSION > /dev/null
 strip zerowallet
 
 cp zerowallet                     bin/zerowallet-v$APP_VERSION > /dev/null
-cp $ZERO_DIR/zerod               bin/zerowallet-v$APP_VERSION > /dev/null
-cp $ZERO_DIR/zero-cli            bin/zerowallet-v$APP_VERSION > /dev/null
+cp $ZERO_DIR_LINUX/zerod          bin/zerowallet-v$APP_VERSION > /dev/null
+cp $ZERO_DIR_LINUX/zero-cli       bin/zerowallet-v$APP_VERSION > /dev/null
 cp README.md                      bin/zerowallet-v$APP_VERSION > /dev/null
 cp LICENSE                        bin/zerowallet-v$APP_VERSION > /dev/null
 
@@ -82,11 +89,11 @@ cat src/scripts/control | sed "s/RELEASE_VERSION/$APP_VERSION/g" > $debdir/DEBIA
 
 cp zerowallet                   $debdir/usr/local/bin/
 
-strip $ZERO_DIR/zerod
-strip $ZERO_DIR/zero-cli
+strip $ZERO_DIR_LINUX/zerod
+strip $ZERO_DIR_LINUX/zero-cli
 
-cp $ZERO_DIR/zerod             $debdir/usr/local/bin/zerod
-cp $ZERO_DIR/zero-cli          $debdir/usr/local/bin/zero-cli
+cp $ZERO_DIR_LINUX/zerod       $debdir/usr/local/bin/zerod
+cp $ZERO_DIR_LINUX/zero-cli    $debdir/usr/local/bin/zero-cli
 
 mkdir -p                        $debdir/usr/share/pixmaps/
 cp res/zero.xpm                 $debdir/usr/share/pixmaps/
@@ -100,15 +107,21 @@ step_done "Building deb"
 
 section "Windows"
 
-MXE_PATH="${MXE_PATH:-$HOME/mxe/usr/bin}"
+# MXE: ~/mxe, /opt/mxe (build-from-source only)
+if [ -z "$MXE_PATH" ]; then
+  for p in "$HOME/mxe/usr/bin" /opt/mxe/usr/bin; do
+    [ -x "$p/x86_64-w64-mingw32.static-qmake-qt5" ] && { MXE_PATH="$p"; break; }
+  done
+  MXE_PATH="${MXE_PATH:-$HOME/mxe/usr/bin}"
+fi
 if [ -z "$MXE_PATH" ] || [ ! -d "$MXE_PATH" ]; then
     warn "MXE_PATH not found. Default: \$HOME/mxe/usr/bin. Use -m/--mxe to override."
     notice "Skipping Windows build"
     exit 0
 fi
 
-[ ! -f "$ZERO_DIR/zerod.exe" ] && err "zerod.exe not found in $ZERO_DIR. Build Zero for Windows first."
-[ ! -f "$ZERO_DIR/zero-cli.exe" ] && err "zero-cli.exe not found in $ZERO_DIR. Build Zero for Windows first."
+[ ! -f "$ZERO_DIR_WIN/zerod.exe" ] && err "zerod.exe not found in $ZERO_DIR_WIN. Build Zero for Windows first."
+[ ! -f "$ZERO_DIR_WIN/zero-cli.exe" ] && err "zero-cli.exe not found in $ZERO_DIR_WIN. Build Zero for Windows first."
 
 export PATH=$MXE_PATH:$PATH
 
@@ -122,13 +135,13 @@ res/libsodium/buildlibsodium-win.sh >/dev/null
 step_done "Building libsodium"
 
 x86_64-w64-mingw32.static-qmake-qt5 zero-qt-wallet-mingw.pro CONFIG+=release >/dev/null
-make -j32 >/dev/null
+make -j${JOBS:-2} >/dev/null
 step_done "Building"
 
 mkdir release/zerowallet-v$APP_VERSION > /dev/null 2>&1
 cp release/zerowallet.exe             release/zerowallet-v$APP_VERSION > /dev/null
-cp $ZERO_DIR/zerod.exe               release/zerowallet-v$APP_VERSION > /dev/null
-cp $ZERO_DIR/zero-cli.exe            release/zerowallet-v$APP_VERSION > /dev/null
+cp $ZERO_DIR_WIN/zerod.exe            release/zerowallet-v$APP_VERSION > /dev/null
+cp $ZERO_DIR_WIN/zero-cli.exe         release/zerowallet-v$APP_VERSION > /dev/null
 cp README.md                          release/zerowallet-v$APP_VERSION > /dev/null
 cp LICENSE                            release/zerowallet-v$APP_VERSION > /dev/null
 cd release && zip -r Windows-zerowallet-v$APP_VERSION.zip zerowallet-v$APP_VERSION/ > /dev/null

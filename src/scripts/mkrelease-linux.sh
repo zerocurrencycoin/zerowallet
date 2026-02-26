@@ -14,7 +14,12 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-ZERO_DIR="${ZERO_DIR:-../Zero/src}"
+# Default: ../Zero; if absent, ../ZeroLinux. Binaries in src/
+if [ -z "$ZERO_DIR" ]; then
+  ZERO_BASE="../Zero"
+  [ -d "$ZERO_BASE" ] || ZERO_BASE="../ZeroLinux"
+  ZERO_DIR="$ZERO_BASE/src"
+fi
 REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 QT_STATIC="${QT_STATIC:-$REPO_ROOT/qt5-static}"
 
@@ -68,7 +73,7 @@ step_done "Configuring"
 rm -rf bin/zero-qt-wallet* > /dev/null
 rm -rf bin/zerowallet* > /dev/null
 make clean > /dev/null
-make -j$(nproc) > /dev/null
+make -j${JOBS:-2} > /dev/null
 step_done "Building"
 
 if [[ $(ldd zerowallet | grep -i "Qt") ]]; then

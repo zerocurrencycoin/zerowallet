@@ -796,7 +796,7 @@ void MainWindow::sendButton() {
                 if (!recurringPaymentHash.isEmpty()) {
                     // Since this is the send button payment, this is the first payment
                     Recurring::getInstance()->updatePaymentItem(recurringPaymentHash, 0,
-                            "", errStr, PaymentStatus::ERROR);
+                            "", errStr, PaymentStatus::PAYMENT_ERROR);
                 }
 
                 QMessageBox::critical(this, QObject::tr("Transaction Error"), errStr, QMessageBox::Ok);

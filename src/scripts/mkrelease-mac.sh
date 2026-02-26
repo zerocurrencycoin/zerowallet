@@ -13,7 +13,12 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-ZERO_DIR="${ZERO_DIR:-../Zero/src}"
+# Default: ../Zero; if absent, ../ZeroLinux. Binaries in src/
+if [ -z "$ZERO_DIR" ]; then
+  ZERO_BASE="../Zero"
+  [ -d "$ZERO_BASE" ] || ZERO_BASE="../ZeroLinux"
+  ZERO_DIR="$ZERO_BASE/src"
+fi
 QT_STATIC="${QT_STATIC:-$(brew --prefix qt@5 2>/dev/null)}"
 
 [ -z "$QT_STATIC" ] && err "QT_STATIC not set. Use -q/--qt or 'brew install qt@5'. Default: brew --prefix qt@5"
@@ -32,7 +37,7 @@ step_done "Cleaning"
 $QT_STATIC/bin/qmake zero-qt-wallet.pro CONFIG+=release CONFIG+=sdk_no_version_check >/dev/null
 step_done "Configuring"
 
-make -j4 >/dev/null
+make -j${JOBS:-2} >/dev/null
 step_done "Building"
 
 mkdir artifacts >/dev/null 2>&1

@@ -466,7 +466,7 @@ zip -r Windows-zerowallet-v$APP_VERSION.zip release/zerowallet-v$APP_VERSION/
 
 ### References
 
-- [MXE (M Cross Environment)](https://mxe.cc/)
+- MXE build-from-source: https://github.com/mxe/mxe
 - [Qt Cross-Compilation](https://doc.qt.io/qt-5/configure-options.html)
 - [MinGW-w64](http://mingw-w64.org/)
 - [ZeroWallet Build Scripts](src/scripts/)
@@ -482,6 +482,30 @@ zip -r Windows-zerowallet-v$APP_VERSION.zip release/zerowallet-v$APP_VERSION/
 - zerod default datadir: `~/.zero/`
 - No doc on zerowallet ↔ zerod connection flow
 
+### zero.conf Creation (when absent)
+
+When zerowallet runs in embedded mode (use embedded zerod) and no `zero.conf` exists at the default datadir (`~/.zero/` on Linux, `Library/Application Support/Zero/` on macOS, `%APPDATA%\Zero\` on Windows), the wallet creates one via `createZcashConf()` in `src/connection.cpp` (lines 127–230).
+
+**Written on creation:**
+
+| Option | Value | Source | Notes |
+|--------|-------|--------|-------|
+| `server` | 1 | connection.cpp:194 | RPC server |
+| `rpcuser` | zero | connection.cpp:195 | RPC auth |
+| `rpcpassword` | random 20 chars | connection.cpp:196, `randomPassword()` | RPC auth |
+| `rpcport` | 23811 | connection.cpp:197 | Zero default |
+| `rpcworkqueue` | 256 | connection.cpp:198 | |
+| `txindex` | 1 | connection.cpp:199 | Standard in Bitcoin/Zcash; verify `zerod -?` |
+| `deletetx` | 1 | connection.cpp:202 | Zero-specific; verify |
+| `keeptxfornblocks` | 1 | connection.cpp:203 | Zero-specific; verify |
+| `keeptxnum` | 1 | connection.cpp:204 | Zero-specific; verify |
+| `consolidation` | 1 | connection.cpp:207 | Zero-specific; verify |
+| `consolidationtxfee` | 10000 | connection.cpp:208 | Zatoshi (10000 = 0.0001 ZER); verify |
+| `datadir` | user-selected | connection.cpp:218 | Optional; custom path |
+| `proxy` | 127.0.0.1:9050 | connection.cpp:223 | Optional; Tor SOCKS5 |
+
+**Verification:** `txindex`, `deletetx`, `keeptxfornblocks`, `keeptxnum`, `consolidation`, `consolidationtxfee`, `datadir`, `proxy` should be confirmed against Zero repo (`zerod -?`, `src/init.cpp`, or config parsing). Zero example `contrib/debian/examples/zero.conf` does not list these; they are Zero-specific. `proxy` and `datadir` are standard Bitcoin/Zcash options.
+
 ---
 
 ## RPC Debug Logging
@@ -495,25 +519,7 @@ zip -r Windows-zerowallet-v$APP_VERSION.zip release/zerowallet-v$APP_VERSION/
 
 ## How zerod Gets Bundled
 
-zerod built separately, copied into zerowallet package. No submodule. `ZERO_DIR` = pre-built binaries.
-
-**CI:** Workflows clone Zero, build zerod, set `ZERO_DIR`. Local default: `../Zero/src`.
-
-**build.sh / build-win.sh** (in Zero repo, not zerowallet):
-- **Linux:** `./zcutil/build.sh -j$(nproc)` — builds zerod and zero-cli into `zero_linux/src/`
-- **Windows:** `./zcutil/build-win.sh -j$(nproc)` — cross-builds zerod.exe and zero-cli.exe into `zero_win/src/`
-- Arguments after `-j` go to make. Other flags (e.g. `--disable-mining`) go before make args.
-
-**mkrelease scripts:**
-
-| Script | Platform | Use |
-|--------|----------|-----|
-| `mkrelease.sh` | Linux + Windows | Needs `QT_STATIC`, `ZERO_DIR`, `APP_VERSION`, `PREV_VERSION`. Defaults: `ZERO_DIR=../Zero/src`, `MXE_PATH=$HOME/mxe/usr/bin`. |
-| `mkrelease-linux.sh` | Linux | Produces `artifacts/linux-zerowallet-v$APP_VERSION.tar.gz` and `.deb`. Used by CI and locally. |
-| `mkrelease-win.sh` | Windows | Produces `artifacts/Windows-zerowallet-v$APP_VERSION.zip`. Defaults: `ZERO_DIR=../Zero/src`, `MXE_PATH=$HOME/mxe/usr/bin`. |
-| `mkrelease-mac.sh` | macOS | Defaults: `ZERO_DIR=../Zero/src`, `QT_STATIC=$(brew --prefix qt@5)`. Builds zerowallet, copies zerod/zero-cli into app bundle, macdeployqt, ad-hoc signs, creates DMG. See [BUILD](BUILD.md) §macOS App Signing and Distribution for Developer ID and notarization. |
-
-**ZERO_DIR:** Directory containing built zerod and zero-cli binaries. Not the Zero source tree. Expected: `zerod` and `zero-cli` (Linux/macOS) or `zerod.exe` and `zero-cli.exe` (Windows). Override with `-z` or `ZERO_DIR`.
+See [BUILD](BUILD.md) §ZERO_DIR and §Script summary. zerod built separately; `ZERO_DIR` = pre-built binaries. Default `../Zero`; if absent, Linux uses `../ZeroLinux`, Windows uses `../ZeroWin`. MXE build-from-source only; no prebuilt.
 
 ---
 
@@ -619,7 +625,7 @@ zerod built separately, copied into zerowallet package. No submodule. `ZERO_DIR`
 | Dep | URL |
 |-----|-----|
 | Qt 5.15.17 | https://download.qt.io/archive/qt/5.15/5.15.17/single/qt-everywhere-opensource-src-5.15.17.tar.xz |
-| libsodium 1.0.21 | https://download.libsodium.org/libsodium/releases/libsodium-1.0.21.tar.gz |
+| libsodium 1.0.21 | https://github.com/jedisct1/libsodium/releases/download/1.0.21-RELEASE/libsodium-1.0.21.tar.gz |
 | OpenSSL 1.1.1w | https://www.openssl.org/source/openssl-1.1.1w.tar.gz |
 
 **Build:**

@@ -23,7 +23,7 @@ enum PaymentStatus {
     PENDING,
     SKIPPED,
     COMPLETED,
-    ERROR,
+    PAYMENT_ERROR,  /* ERROR conflicts with Windows macro */
     UNKNOWN
 };
 

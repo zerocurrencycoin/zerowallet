@@ -6,6 +6,8 @@
 # notice: progress/status, to stdout
 # step_done: step label + [OK] (e.g. "Version files........ [OK]")
 # section: blank line + section header (e.g. "[Windows]")
+# JOBS: parallel jobs (Linux: nproc, macOS: sysctl hw.ncpu, fallback: 2)
+JOBS=$(nproc 2>/dev/null || (sysctl -n hw.ncpu 2>/dev/null) || echo 2)
 
 err()   { echo "${ME:-script}: ERROR: $*" >&2; exit 1; }
 warn()  { echo "${ME:-script}: WARN: $*" >&2; }

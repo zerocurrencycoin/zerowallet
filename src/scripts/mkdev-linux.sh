@@ -1,6 +1,6 @@
 #!/bin/bash
 # Dev build for Linux: system Qt, CONFIG+=debug, no packaging.
-# Output: ./zerowallet in repo root.
+# Output: zerowallet in repo root.
 set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
@@ -10,13 +10,12 @@ cd "$REPO_ROOT"
 
 # -L or -L=path: capture log. Default: logs/mkdev-linux.log
 LOG_FILE=""
-JOBS=2
 CONFIG="debug"
 while [[ $# -gt 0 ]]; do
   case "$1" in
     -L) LOG_FILE="${LOG_FILE:-$REPO_ROOT/logs/mkdev-linux.log}"; shift ;;
     -L=*) LOG_FILE="${1#-L=}"; shift ;;
-    -j) JOBS="${2:-$(nproc)}"; shift 2 ;;
+    -j) JOBS="$2"; shift 2 ;;
     -j*) JOBS="${1#-j}"; shift ;;
     -r) CONFIG="release"; shift ;;
     *) shift ;;

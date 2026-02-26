@@ -10,13 +10,12 @@ cd "$REPO_ROOT"
 
 # -L or -L=path: capture log. Default: logs/mkdev-mac.log
 LOG_FILE=""
-JOBS=4
 CONFIG="debug"
 while [[ $# -gt 0 ]]; do
   case "$1" in
     -L) LOG_FILE="${LOG_FILE:-$REPO_ROOT/logs/mkdev-mac.log}"; shift ;;
     -L=*) LOG_FILE="${1#-L=}"; shift ;;
-    -j) JOBS="${2:-4}"; shift 2 ;;
+    -j) JOBS="$2"; shift 2 ;;
     -j*) JOBS="${1#-j}"; shift ;;
     -r) CONFIG="release"; shift ;;
     *) shift ;;

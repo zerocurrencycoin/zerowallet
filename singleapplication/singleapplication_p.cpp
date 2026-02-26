@@ -58,11 +58,18 @@
 #endif
 
 #ifdef Q_OS_WIN
-    #ifndef NOMINMAX
-        #define NOMINMAX 1
+    #ifndef WIN_LEAN
+        #define WIN_LEAN 1
     #endif
-    #include <windows.h>
-    #include <lmcons.h>
+    #if WIN_LEAN
+        /* Minimal declarations for GetUserNameW - avoid windows.h entirely */
+        #include <cwchar>
+        #define UNLEN 256
+        extern "C" __attribute__((dllimport)) int __stdcall GetUserNameW(wchar_t* lpBuffer, unsigned long* pcbBuffer);
+    #else
+        #include <windows.h>
+        #include <lmcons.h>
+    #endif
 #endif
 
 SingleApplicationPrivate::SingleApplicationPrivate( SingleApplication *q_ptr )
@@ -102,8 +109,7 @@ QString SingleApplicationPrivate::getUsername()
 {
 #ifdef Q_OS_WIN
       wchar_t username[UNLEN + 1];
-      // Specifies size of the buffer on input
-      DWORD usernameLength = UNLEN + 1;
+      unsigned long usernameLength = UNLEN + 1;
       if( GetUserNameW( username, &usernameLength ) )
           return QString::fromWCharArray( username );
 #if QT_VERSION < QT_VERSION_CHECK(5, 10, 0)
