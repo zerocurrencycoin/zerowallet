@@ -12,8 +12,9 @@ docs/website/public
 .vscode/
 res/libsodium.a
 res/libsodiumd.a
+res/liblibsodium.a
+res/liblibsodiumd.a
 res/libsodium/libsodium*
-res/libsodium.a
 res/libsodium/win/
 src/ui_*.h
 *.autosave

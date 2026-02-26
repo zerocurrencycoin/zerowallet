@@ -1,9 +1,9 @@
 #!/bin/bash
 cd "$(dirname "$0")/../.."
-set -e
+set -e -u -o pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)/src/scripts"
 ME="buildlibsodium"
-. "$SCRIPT_DIR/lib-log.sh"
+. "$SCRIPT_DIR/fbuild.sh"
 . "res/libsodium/libsodium-common.sh"
 
 [ -f res/libsodium.a ] && { rm res/libsodium.a; rm -rf res/libsodium/libsodium-${LIBSODIUM_VER}; }

@@ -1,7 +1,8 @@
 #!/bin/bash
+set -e -u -o pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ME="signbinaries"
-. "$SCRIPT_DIR/lib-log.sh"
+. "$SCRIPT_DIR/fbuild.sh"
 
 # Parse args (env vars override). Same -v/--version as mkrelease scripts.
 while [[ $# -gt 0 ]]; do

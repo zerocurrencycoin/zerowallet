@@ -1,30 +1,25 @@
 #!/bin/bash
+set -e -u -o pipefail
 # Parse args (env vars override). Same interface as mkrelease-linux/win.
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ME="mkrelease-mac"
-. "$SCRIPT_DIR/lib-log.sh"
+. "$(dirname "${BASH_SOURCE[0]}")/fbuild.sh"
+cd "$REPO_ROOT"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    -q|--qt|--qt_static) QT_STATIC="$2"; shift 2 ;;
+    -q|--qt) QT_PREFIX="$2"; shift 2 ;;
     -z|--zero) ZERO_DIR="$2"; shift 2 ;;
     -v|--version) APP_VERSION="$2"; shift 2 ;;
     *) shift ;;
   esac
 done
 
-# Default: ../Zero; if absent, ../ZeroLinux. Binaries in src/
-if [ -z "$ZERO_DIR" ]; then
-  ZERO_BASE="../Zero"
-  [ -d "$ZERO_BASE" ] || ZERO_BASE="../ZeroLinux"
-  ZERO_DIR="$ZERO_BASE/src"
-fi
-QT_STATIC="${QT_STATIC:-$(brew --prefix qt@5 2>/dev/null)}"
-
-[ -z "$QT_STATIC" ] && err "QT_STATIC not set. Use -q/--qt or 'brew install qt@5'. Default: brew --prefix qt@5"
+resolve_zero_dir mac
+resolve_qt mac release
+[ -z "$QT_PREFIX" ] && err "QT_PREFIX not set. Use -q/--qt or 'brew install qt@5'. Default: brew --prefix qt@5"
 [ -z "$APP_VERSION" ] && err "APP_VERSION not set. Set to current release version with -v/--version"
 [ ! -f "$ZERO_DIR/zerod" ] && err "zerod not found in $ZERO_DIR. Build Zero first."
-grep -q "$APP_VERSION" src/version.h 2>/dev/null || err "Version mismatch in src/version.h (expected $APP_VERSION)"
+check_version_mismatch
 
 export PATH=$PATH:/usr/local/bin
 
@@ -34,7 +29,7 @@ rm -f artifacts/macOS-zerowallet-v$APP_VERSION.dmg
 step_done "Cleaning"
 
 ./src/scripts/dotranslations.sh >/dev/null
-$QT_STATIC/bin/qmake zero-qt-wallet.pro CONFIG+=release CONFIG+=sdk_no_version_check >/dev/null
+$QMAKE zero-qt-wallet.pro CONFIG+=release CONFIG+=sdk_no_version_check >/dev/null
 step_done "Configuring"
 
 make -j${JOBS:-2} >/dev/null
@@ -46,7 +41,7 @@ rm -f artifacts/rw* >/dev/null 2>&1
 cp $ZERO_DIR/zerod zerowallet.app/Contents/MacOS/
 cp $ZERO_DIR/zero-cli zerowallet.app/Contents/MacOS/
 rm -rf zerowallet.app/Contents/PlugIns
-$QT_STATIC/bin/macdeployqt zerowallet.app
+$QT_PREFIX/bin/macdeployqt zerowallet.app
 step_done "Deploying"
 
 mv zerowallet.app ZeroWallet.app

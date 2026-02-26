@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e -u -o pipefail
 for size in 16 32 48 128 256; do
     inkscape -z -e $size.png -w $size -h $size logo.svg >/dev/null 2>/dev/null
 done

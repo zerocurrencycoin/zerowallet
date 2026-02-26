@@ -65,7 +65,7 @@ jobs:
           rm -rf ./zero_linux
           strip $ZERO_DIR/zerod
           strip $ZERO_DIR/zero-cli
-          export QT_STATIC="$PWD/qt-everywhere-opensource-src-5.15.18/qt5"
+          export QT_PREFIX="$PWD/qt-everywhere-opensource-src-5.15.18/qt5"
           ./src/scripts/mkrelease-linux.sh
 
           tar -czvf zero-linux.tar.gz $ZERO_DIR/zerod $ZERO_DIR/zero-cli
