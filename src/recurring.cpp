@@ -467,7 +467,7 @@ void Recurring::executeRecurringPayment(MainWindow* main, RecurringPaymentInfo r
             for (auto paymentNumber: paymentNumbers) {
                 updatePaymentItem(rpi.getHash(), paymentNumber, 
                     "", QObject::tr("No ZEC price was available to convert from USD"),
-                    PaymentStatus::ERROR);
+                    PaymentStatus::PAYMENT_ERROR);
             }
             return;
         }
@@ -504,7 +504,7 @@ void Recurring::executeRecurringPayment(MainWindow* main, RecurringPaymentInfo r
         } else {
             // Errored out. Bummer.
             for (int paymentNumber: paymentNumbers) {
-                updatePaymentItem(rpi.getHash(), paymentNumber, "", err, PaymentStatus::ERROR);
+                updatePaymentItem(rpi.getHash(), paymentNumber, "", err, PaymentStatus::PAYMENT_ERROR);
             }
         }
     });
@@ -722,7 +722,7 @@ QVariant RecurringPaymentsListViewModel::data(const QModelIndex &index, int role
                     case PaymentStatus::PENDING:     return tr("Pending");
                     case PaymentStatus::SKIPPED:     return tr("Skipped");
                     case PaymentStatus::COMPLETED:   return tr("Paid");
-                    case PaymentStatus::ERROR:       return tr("Error");
+                    case PaymentStatus::PAYMENT_ERROR:       return tr("Error");
                     case PaymentStatus::UNKNOWN:     return tr("Unknown");
                     default:                         return tr("Unknown");
                 }

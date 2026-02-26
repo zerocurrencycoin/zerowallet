@@ -1,6 +1,6 @@
 # Build and Release Guide
 
-Build and release workflow for zerowallet. Supports local builds and [GitHub Actions](.github/workflows/). Platforms: Linux, macOS, Windows.
+Build and release workflow for zerowallet. Supports local builds, with [GitHub Actions](.github/workflows/) on n the roadmap. Platforms: Linux, macOS, Windows.
 
 ## Quick Start
 
@@ -10,7 +10,7 @@ Build and release workflow for zerowallet. Supports local builds and [GitHub Act
 - **macOS:** `brew install create-dmg qt@5`
 - **Windows:** Cross-build from Linux; see [Windows](#windows) below.
 
-Build zerod in the Zero repo, then run the platform mkrelease script. See [ZERO_DIR](#zero_dir) and [Platform Notes](#platform-notes).
+Build zerod in the Zero repo root, then run the platform mkrelease script. See [ZERO_DIR](#zero_dir) and [Platform Notes](#platform-notes).
 
 ---
 
@@ -18,21 +18,21 @@ Build zerod in the Zero repo, then run the platform mkrelease script. See [ZERO_
 
 | Component | Version / Source | Notes |
 |-----------|------------------|-------|
-| Qt | 5.15.18 or later | See [Qt](#qt) below. |
-| zerod | Zero | Built from [Zero](https://github.com/zerocurrencycoin/zero); binaries in `ZERO_DIR` |
+| Qt | 5.15.18 or later | See [Qt](#qt). |
+| zerod | - | Built from [Zero](https://github.com/zerocurrencycoin/zero); Binaries in `ZERO_DIR` |
 | libsodium | 1.0.21 | Vendored in `res/` |
 | nlohmann/json | 3.6.1 | Vendored in `src/3rdparty/` |
-| SingleApplication | v3.5.4 vendored | `singleapplication/`; single-instance, URI forwarding |
+| SingleApplication | v3.5.4 Vendored | `singleapplication/`; single-instance |
 
 Qt is the only versioned external dependency; others are vendored.
 
 ### Qt
 
-One-time install per platform. Custom path via `-q` or `QT_STATIC` only when needed.
+One-time install per platform. Custom path via `-q` or `QT_STATIC`, only when needed.
 
 | Platform | Source | Install |
 |----------|--------|---------|
-| **Linux** | Static Qt 5.15.18+ from [Qt archives](https://download.qt.io/archive/qt/5.15/5.15.18/single/) | `./src/scripts/build-qt-static.sh` (local) or CI cache |
+| **Linux** | Static Qt 5.15.18+ from [Qt archives](https://download.qt.io/archive/qt/5.15/5.15.18/single/) | `./src/scripts/build-qt-static.sh` |
 | **macOS** | Homebrew `qt@5` | `brew install qt@5`. Default: `$(brew --prefix qt@5)`. |
 | **Windows** | MXE (cross-build) | See [Windows](#windows) below. |
 
@@ -44,47 +44,50 @@ One-time install per platform. Custom path via `-q` or `QT_STATIC` only when nee
 
 | File | Purpose |
 |------|---------|
-| `lib-log.sh` | Shared logging: err, warn, info, notice, analyze_build_log |
-| `mkdev.sh` | Wrapper: runs mkdev-linux/mac/win per platform |
-| `mkdev-linux.sh` | Linux dev build → `./zerowallet`. `-r` `-j N` `-L` |
-| `mkdev-mac.sh` | macOS dev build → `zerowallet.app`. `-r` `-j N` `-L` |
-| `mkdev-win.sh` | Linux→Win dev (MXE) → `release/zerowallet.exe`. `-L` `-m` |
-| `mkrelease.sh` | Wrapper: runs mkrelease-linux/mac/win per platform |
-| `mkrelease-linux.sh` | Linux release → `artifacts/linux-zerowallet-vX.Y.Z.tar.gz`, `.deb` |
-| `mkrelease-mac.sh` | macOS release → `artifacts/macOS-zerowallet-vX.Y.Z.dmg` |
-| `mkrelease-win.sh` | Linux→Win release (MXE) → `artifacts/Windows-zerowallet-vX.Y.Z.zip` |
-| `mkrelease-linuxwin.sh` | Linux host only: Linux + Windows in one run (requires MXE) |
+| `lib-log.sh` | Helper: shared logging (err, warn, info, notice, analyze_build_log), sets JOBS |
+| `mkdev.sh` | Wrapper: runs mkdev-linux, mkdev-mac, or mkdev-win per platform |
+| `mkdev-linux.sh` | Linux dev build. Output: `zerowallet`. `-r` `-j N` `-L` |
+| `mkdev-mac.sh` | macOS dev build. Output: `zerowallet.app`. `-r` `-j N` `-L` |
+| `mkdev-win.sh` | Linux→Win dev (MXE). Output: `bin/zerowallet.exe`. `-L` `-m` `-r` |
+| `mkrelease.sh` | Wrapper: runs mkrelease-linux, mkrelease-mac, or mkrelease-win per platform |
+| `mkrelease-linux.sh` | Linux release. Output: `artifacts/linux-zerowallet-vX.Y.Z.tar.gz`, `.deb` |
+| `mkrelease-mac.sh` | macOS release. Output: `artifacts/macOS-zerowallet-vX.Y.Z.dmg` |
+| `mkrelease-win.sh` | Linux→Win release (MXE). Output: `artifacts/Windows-zerowallet-vX.Y.Z.zip` |
+| `mkrelease-linuxwin.sh` | Linux host only: Linux + Windows in one run. **Deprecated:** use mkrelease-linux and mkrelease-win separately. |
 | `build-qt-static.sh` | Linux: static Qt in `qt5-static/` (one-time) |
 | `dotranslations.sh` | Qt lrelease for translations (requires QT_STATIC) |
+| `install` | MXE deps and check. `./src/scripts/install --deps` or `--check` |
 | `signbinaries.sh` | GPG signatures and sha256sums. `-v X.Y.Z` |
 | `control` | Debian package control template |
 | `desktopentry` | Desktop entry for Linux .deb |
+
 
 ### Script summary
 
 | Script | Platform | Output |
 |--------|----------|--------|
-| `mkdev.sh` | Any | Wrapper: runs mkdev-linux/mac/win per platform |
-| `mkdev-linux.sh` | Linux | Dev: `./zerowallet`. `-r` `-j N` `-L` |
-| `mkdev-mac.sh` | macOS | Dev: `zerowallet.app`. `-r` `-j N` `-L` |
-| `mkdev-win.sh` | Linux→Win | Dev: `release/zerowallet.exe` (MXE cross-build). `-L` `-m` |
-| `mkrelease.sh` | Any | Wrapper: runs mkrelease-linux/mac/win per platform |
-| `mkrelease-linux.sh` | Linux | `artifacts/linux-zerowallet-vX.Y.Z.tar.gz`, `.deb` |
-| `mkrelease-mac.sh` | macOS | `artifacts/macOS-zerowallet-vX.Y.Z.dmg` |
-| `mkrelease-win.sh` | Linux→Win | `artifacts/Windows-zerowallet-vX.Y.Z.zip` |
-| `mkrelease-linuxwin.sh` | Linux only | Linux + Windows in one run (requires MXE) |
-| `build-qt-static.sh` | Linux | Static Qt in `qt5-static/` (one-time) |
-| `signbinaries.sh` | Any | GPG signatures and sha256sums |
+| `mkdev.sh` | default | Wrapper |
+| `mkdev-linux.sh` | Linux | `zerowallet` |
+| `mkdev-mac.sh` | macOS | `zerowallet.app` |
+| `mkdev-win.sh` | Windows | `bin/zerowallet.exe` |
+| `mkrelease.sh` | default | Wrapper |
+| `mkrelease-linux.sh` | Linux | `artifacts/*.tar.gz`, `artifacts/*.deb` |
+| `mkrelease-mac.sh` | macOS | `artifacts/*.dmg` |
+| `mkrelease-win.sh` | Windows | `artifacts/*.zip` |
+| `mkrelease-linuxwin.sh` | Linux+Win | Both (deprecated) |
+| `build-qt-static.sh` | Linux | `qt5-static/` |
+| `signbinaries.sh` | any | GPG signatures |
 
 ### Unified Arguments
 
 | Flag | Env | Default | Description |
 |------|-----|---------|-------------|
-| `-z`, `--zero` | `ZERO_DIR` | `../Zero/src` | Directory with zerod binaries; see [ZERO_DIR](#zero_dir) below |
+| `-z`, `--zero` | `ZERO_DIR` | `../Zero/src` or `../ZeroLinux/src`/`../ZeroWin/src` if absent | Directory with zerod binaries; see [ZERO_DIR](#zero_dir) below |
+| `--zerolinux`, `--zerowin` | `ZERO_DIR_LINUX`, `ZERO_DIR_WIN` | — | (mkrelease-linuxwin only) Override Linux/Windows zerod dirs |
 | `-v`, `--version` | `APP_VERSION` | from `src/version.h` | Release version. See [APP_VERSION](#app_version) below. |
 | `-p`, `--prev` | `PREV_VERSION` | patch−1 of APP_VERSION | Previous version for sed. See [PREV](#prev) below. |
 | `-q`, `--qt` | `QT_STATIC` | `./qt5-static/` (repo root) | Qt prefix for Linux release |
-| `-m`, `--mxe` | `MXE_PATH` | — | MXE `usr/bin` (Windows only) |
+| `-m`, `--mxe` | `MXE_PATH` | auto-detect | MXE `usr/bin` path (Windows only). `-m` expects bin dir, not repo root. |
 
 ### APP_VERSION / PREV_VERSION
 
@@ -97,11 +100,15 @@ Both from `src/version.h` and git tag (supports `vN.N.N` or `N.N.N`). Logic:
 
 ### ZERO_DIR
 
-Directory containing built `zerod` and `zero-cli` (or `.exe` on Windows). Not the Zero source tree. Default `../Zero/src` assumes Zero repo as sibling; Zero build outputs to `src/` on Linux (layout may differ on Windows). Override with `-z` or `ZERO_DIR`. zerowallet packages copy binaries at build time; no zerod source in zerowallet. Stripping: Linux and Windows scripts strip binaries before packaging; macOS not stripped.
+Directory containing built `zerod` and `zero-cli` (or `.exe` on Windows). A given repo builds either Linux or Windows, not both; do not build different platforms in the same directory. Default `../Zero`; if absent, Linux scripts use `../ZeroLinux`, Windows scripts use `../ZeroWin`. Binaries in `src/` subdir. Override with `-z` or `ZERO_DIR`. For mkrelease-linuxwin use `--zerolinux` and `--zerowin`. Stripping: Linux and Windows scripts strip binaries before packaging; macOS not stripped.
 
 ### PREV
 
 Used by `sed` to replace the previous version in `zero-qt-wallet.pro`, `README.md`, and (Linux) `src/scripts/control`. See [APP_VERSION](#app_version) for default logic. macOS: `mkrelease-mac.sh` reads `version.h` only for DMG name.
+
+### Jobs (-j)
+
+`JOBS` = hw.ncpu or 2; `-j$JOBS`. Only `-jN` or `-j N`: `-j4` → `JOBS="${1#-j}"` (strip `-j` prefix); `-j 4` → `JOBS="$2"`. `lib-log.sh` (helper) sets `JOBS` (Linux: nproc, macOS: sysctl hw.ncpu, fallback: 2).
 
 ### Log capture and failure analysis
 
@@ -113,7 +120,7 @@ mkdev scripts support `-L` or `-L=path` to capture build output. Default: `logs/
 
 ### Linux
 
-**Dev build:** `./src/scripts/mkdev.sh` or `./src/scripts/mkdev-linux.sh`. Options: `-r` release config, `-j N` jobs, `-L` or `-L=path` capture log to `logs/mkdev-linux.log`. On failure with `-L`, run `analyze_build_log` (errors/warnings). Output: `./zerowallet`.
+**Dev build:** `./src/scripts/mkdev.sh` or `./src/scripts/mkdev-linux.sh`. Options: `-r` release config, `-j N` jobs, `-L` or `-L=path` capture log to `logs/mkdev-linux.log`. On failure with `-L`, run `analyze_build_log` (errors/warnings). Output: `zerowallet`.
 
 **Release build (local):**
 
@@ -127,7 +134,7 @@ mkdev scripts support `-L` or `-L=path` to capture build output. Default: `logs/
 ./src/scripts/mkrelease-linux.sh
 ```
 
-To build Linux and Windows in one run (Linux host, requires MXE): `./src/scripts/mkrelease-linuxwin.sh`.
+**mkrelease-linuxwin** (deprecated): Builds Linux and Windows in one run. Confusing: requires two Zero builds in separate dirs, inlines both phases instead of calling mkrelease-linux and mkrelease-win, and mixes platform-specific logic. Run `mkrelease-linux.sh` and `mkrelease-win.sh` separately.
 
 ### macOS
 
@@ -202,13 +209,24 @@ xcrun stapler staple artifacts/macOS-zerowallet-vX.Y.Z.dmg
 
 ### Windows
 
-**Dev build (cross from Linux):** `./src/scripts/mkdev-win.sh`. Requires [MXE](#mxe) with qtbase, qtwebsockets. Options: `-L` `-m MXE_PATH`. Output: `release/zerowallet.exe`.
+**Dev build (cross from Linux):** `./src/scripts/mkdev-win.sh`. Requires [MXE](#mxe) with qtbase, qtwebsockets. Options: `-L` `-m PATH` `-r` release config. Default: CONFIG+=debug (like mkdev-linux/mac). Output: `bin/zerowallet.exe`.
 
-**Release:** Cross-build from Linux or WSL. Build zerod: `cd ../Zero && ./zcutil/build-win.sh`. Run `mkrelease-win.sh` with `-z`, `-v`, `-p`, `-m` (MXE path). Requires [MXE](#mxe).
+**Release:** Cross-build from Linux or WSL. Build zerod: `cd ../Zero && ./zcutil/build-win.sh`. Minimal: `./src/scripts/mkrelease-win.sh`. Override with `-z`, `-v`, `-p`, `-m` as needed.
 
 #### MXE
 
-[MXE](https://mxe.cc/) (M Cross Environment) for MinGW + static Qt. Clone to `~/mxe`; `make MXE_TARGETS='x86_64-w64-mingw32.static' qtbase qtwebsockets` (2–4 h). Set `MXE_PATH` to `usr/bin`. Build: `./src/scripts/mkrelease-win.sh -z $ZERO_DIR -v X.Y.Z -p X.Y.(Z-1) -m $MXE_PATH`
+MXE (M Cross Environment) for MinGW + static Qt. Build from source only; we do not use prebuilt packages with stale dist support. Scripts auto-detect MXE in (first match): `$HOME/mxe/usr/bin`, `/opt/mxe/usr/bin`. Override with `-m` or `MXE_PATH`. Design: `MXE_ROOT=~/mxe`, `MXE_PATH=$MXE_ROOT/usr/bin`; `-m` expects `usr/bin` path.
+
+| Path | Source |
+|------|--------|
+| `$HOME/mxe/usr/bin` | User build-from-source (default) |
+| `/opt/mxe/usr/bin` | System build-from-source ([FHS 3.0 §3.13](https://refspecs.linuxfoundation.org/FHS_3.0/fhs/ch03s13.html): /opt for add-on software) |
+
+**Build from source:** Clone to `~/mxe`; `make MXE_TARGETS='x86_64-w64-mingw32.static' qtbase qtwebsockets` (may take over an hour). Or system-wide: `/opt/mxe`.
+
+**Install deps:** `sudo apt install autoconf automake bison bzip2 flex g++ g++-multilib gettext git gperf libc6-dev-i386 libgdk-pixbuf2.0-dev libltdl-dev libssl-dev libtool-bin make openssl p7zip-full patch perl pkg-config python3-mako python3-setuptools ruby sed unzip wget xz-utils zstd`
+
+**Project files:** `zero-qt-wallet.pro` is the main project file (Linux, macOS). For MinGW cross-build, scripts generate `zero-qt-wallet-mingw.pro` by stripping precompiled headers (PCH); PCH often causes issues with MinGW cross-compilation. The mingw file is generated on the fly and gitignored.
 
 ---
 

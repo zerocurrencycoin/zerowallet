@@ -1,36 +1,46 @@
 #!/bin/bash
 # Run from repo root. Builds libsodium for Windows (MXE).
+# Matches Zero depends/packages/libsodium.mk: 1.0.21, same URLs.
+# Optional: ZERO_DEPENDS=/path/to/Zero/depends to copy from Zero's build (skip rebuild).
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)/src/scripts"
 ME="buildlibsodium-win"
 . "$SCRIPT_DIR/lib-log.sh"
 
 [ -f res/libsodium.a ] && rm res/libsodium.a
 
+# Share with Zero: copy from Zero's depends if available
+if [ -n "$ZERO_DEPENDS" ] && [ -f "$ZERO_DEPENDS/x86_64-w64-mingw32/lib/libsodium.a" ]; then
+    notice "Copying libsodium from Zero depends ($ZERO_DEPENDS)"
+    cp "$ZERO_DEPENDS/x86_64-w64-mingw32/lib/libsodium.a" res/
+    cp res/libsodium.a res/libsodiumd.a
+    exit 0
+fi
+
 notice "Building libsodium..."
 
-# Go into the lib sodium directory
 cd res/libsodium
-if [ ! -f libsodium-1.0.21.tar.gz ]; then
-    wget https://download.libsodium.org/libsodium/releases/libsodium-1.0.21.tar.gz
-fi
+. "$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)/res/libsodium/libsodium-common.sh"
+libsodium_download
 
 if [ ! -d win ]; then
     mkdir win
-    tar -C ./win -xf libsodium-1.0.21.tar.gz
+    tar -C ./win -xf "$LIBSODIUM_TAR"
 else
-    rm -r win/libsodium-1.0.21
-    tar -C ./win -xf libsodium-1.0.21.tar.gz
+    rm -rf win/libsodium-${LIBSODIUM_VER}
+    tar -C ./win -xf "$LIBSODIUM_TAR"
 fi
 
 # Now build it
-cd ./win/libsodium-1.0.21
+cd "./win/libsodium-${LIBSODIUM_VER}"
 
 export HOST=x86_64-w64-mingw32
-CXX=x86_64-w64-mingw32-g++-posix
-CC=x86_64-w64-mingw32-gcc-posix
+# MXE: x86_64-w64-mingw32.static-gcc (not Debian gcc-posix)
+CC=$(command -v x86_64-w64-mingw32.static-gcc 2>/dev/null)
+[ -n "$CC" ] || { echo "buildlibsodium-win: x86_64-w64-mingw32.static-gcc not found. MXE in PATH?" >&2; exit 1; }
+CXX="${CC%gcc}g++"
 PREFIX="$(pwd)/depends/$HOST"
 
-LIBS="" ./configure --prefix="${PREFIX}" --host=x86_64-w64-mingw32 CC="${CC} -g " CXX="${CXX} -g " > /dev/null
+LIBS="" ./configure --prefix="${PREFIX}" --host=x86_64-w64-mingw32 CC="${CC} -g" CXX="${CXX} -g" > /dev/null
 
 make clean > /dev/null 2>&1
 make > /dev/null 2>&1
@@ -38,5 +48,7 @@ make > /dev/null 2>&1
 cd ..
 cd ..
 
-# copy the library to the parents's res/ folder
-cp win/libsodium-1.0.21/src/libsodium/.libs/libsodium.a ../
+# copy the library to the parent's res/ folder
+cp "win/libsodium-${LIBSODIUM_VER}/src/libsodium/.libs/libsodium.a" ../
+# debug build links -llibsodiumd; provide libsodiumd.a (same lib)
+cp ../libsodium.a ../libsodiumd.a

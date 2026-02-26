@@ -14,8 +14,19 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-ZERO_DIR="${ZERO_DIR:-../Zero/src}"
-MXE_PATH="${MXE_PATH:-$HOME/mxe/usr/bin}"
+# Default: ../Zero; if absent, ../ZeroWin. Binaries in src/
+if [ -z "$ZERO_DIR" ]; then
+  ZERO_BASE="../Zero"
+  [ -d "$ZERO_BASE" ] || ZERO_BASE="../ZeroWin"
+  ZERO_DIR="$ZERO_BASE/src"
+fi
+# MXE: ~/mxe, /opt/mxe (build-from-source only)
+if [ -z "$MXE_PATH" ]; then
+  for p in "$HOME/mxe/usr/bin" /opt/mxe/usr/bin; do
+    [ -x "$p/x86_64-w64-mingw32.static-qmake-qt5" ] && { MXE_PATH="$p"; break; }
+  done
+  MXE_PATH="${MXE_PATH:-$HOME/mxe/usr/bin}"
+fi
 
 [ -z "$APP_VERSION" ] && err "APP_VERSION not set. Use -v/--version or set env."
 [ -z "$PREV_VERSION" ] && err "PREV_VERSION not set. Use -p/--prev or set env."
@@ -54,7 +65,7 @@ res/libsodium/buildlibsodium-win.sh >/dev/null
 step_done "Building libsodium"
 
 x86_64-w64-mingw32.static-qmake-qt5 zero-qt-wallet-mingw.pro CONFIG+=release >/dev/null
-make -j32 >/dev/null
+make -j${JOBS:-2} >/dev/null
 step_done "Building"
 
 mkdir release/zerowallet-v$APP_VERSION >/dev/null 2>&1
