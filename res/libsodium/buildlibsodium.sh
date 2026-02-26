@@ -2,7 +2,9 @@
 cd "$(dirname "$0")/../.."
 set -e -u -o pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)/src/scripts"
+# shellcheck disable=SC2034
 ME="buildlibsodium"
+# shellcheck disable=SC1091
 . "$SCRIPT_DIR/fbuild.sh"
 . "res/libsodium/libsodium-common.sh"
 

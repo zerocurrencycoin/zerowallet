@@ -3,10 +3,13 @@
 # Output: qt5-static/ in zerowallet repo root.
 set -e -u -o pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck disable=SC2034
 ME="build-qt-static"
+# shellcheck disable=SC1091
 . "$SCRIPT_DIR/fbuild.sh"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 QT_PREFIX="$REPO_ROOT/qt5-static"
+# shellcheck disable=SC2034
 QT_SRC="$REPO_ROOT/qt5-static/qt-everywhere-opensource-src-5.15.18"
 URL="https://download.qt.io/archive/qt/5.15/5.15.18/single/qt-everywhere-opensource-src-5.15.18.tar.xz"
 
@@ -36,7 +39,7 @@ notice "Configuring (prefix=$QT_PREFIX)..."
     -skip webengine -nomake tools -nomake tests -nomake examples
 
 notice "Building (this takes 30-60 min)..."
-make -j$(nproc) || err "Qt build failed"
+make -j"$(nproc)" || err "Qt build failed"
 make install || err "Qt install failed"
 
 notice "Done. QT_PREFIX=$QT_PREFIX"

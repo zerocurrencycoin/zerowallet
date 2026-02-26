@@ -1,3 +1,4 @@
+# shellcheck shell=bash
 # Shared build helpers for mkdev/mkrelease scripts.
 # Usage: ME="script-name"; . "$(dirname "$0")/fbuild.sh"
 # Provides: SCRIPT_DIR, REPO_ROOT, JOBS, err, warn, info, notice, step_done, section,
@@ -30,7 +31,7 @@ analyze_build_log() {
 
 # Log capture: tee to LOG_FILE or cat. Used in mkdev scripts.
 log_capture() {
-  [ -n "$LOG_FILE" ] && tee -a "$LOG_FILE" || cat
+  if [ -n "${LOG_FILE:-}" ]; then tee -a "$LOG_FILE"; else cat; fi
 }
 
 # Call on build failure: analyze log if set, then err.
@@ -42,6 +43,7 @@ build_fail() {
 # Parse common mkdev args. Sets LOG_FILE, CONFIG (debug|release), JOBS, RUN_AFTER_BUILD.
 # Platform-specific: -m|--mxe for Windows (sets MXE_PATH).
 # Usage: parse_mkdev_args "logs/mkdev-linux.log" "$@"
+# shellcheck disable=SC2034
 parse_mkdev_args() {
   local default_log="$1"
   shift
@@ -101,6 +103,7 @@ resolve_qt() {
       ;;
     win)
       detect_mxe
+      # shellcheck disable=SC2034
       QMAKE="x86_64-w64-mingw32.static-qmake-qt5"
       export PATH="$MXE_PATH:$PATH"
       ;;
@@ -152,8 +155,8 @@ patch_minus1() { echo "$1" | awk -F. -v OFS=. '{c=$3-1; if(c<0){c=0; $2--}; if($
 
 # Resolve APP_VERSION and PREV_VERSION (mkrelease-linux logic). Call from repo root.
 resolve_version() {
-  local app_h=$(get_app_from_h)
-  local git_v=$(get_git_tag)
+  local app_h; app_h=$(get_app_from_h)
+  local git_v; git_v=$(get_git_tag)
   if [ -z "$APP_VERSION" ]; then
     [ -z "$app_h" ] && err "src/version.h has no valid #define APP_VERSION \"X.Y.Z\". Use -v."
     if [ -n "$git_v" ] && [ "$app_h" = "$git_v" ]; then

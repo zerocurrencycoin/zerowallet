@@ -4,11 +4,14 @@ set -e -u -o pipefail
 # Must run on Linux (host); Windows via MXE cross-build.
 [ "$(uname -s)" = "Linux" ] || { echo "mkrelease-linuxwin: ERROR: must run on Linux." >&2; exit 1; }
 
+# shellcheck disable=SC2034
 ME="mkrelease-linuxwin"
+# shellcheck disable=SC1091
 . "$(dirname "${BASH_SOURCE[0]}")/fbuild.sh"
 cd "$REPO_ROOT"
 
 # Parse args (env vars override). Zero outputs Linux and Windows to different dirs.
+# shellcheck disable=SC2034
 while [[ $# -gt 0 ]]; do
   case "$1" in
     -z|--zero) ZERO_DIR="$2"; shift 2 ;;
@@ -48,58 +51,58 @@ step_done "Configuring"
 rm -rf bin/zero-qt-wallet* >/dev/null
 rm -rf bin/zerowallet* >/dev/null
 make clean >/dev/null
-make -j${JOBS:-2} >/dev/null
+make -j"${JOBS:-2}" >/dev/null
 step_done "Building"
 
-if [[ $(ldd zerowallet | grep -i "Qt") ]]; then
+if ldd zerowallet | grep -qi "Qt"; then
     err "release build requires static Qt; found dynamic Qt linkage"
 fi
 step_done "Static link"
 
-mkdir bin/zerowallet-v$APP_VERSION > /dev/null
+mkdir "bin/zerowallet-v${APP_VERSION}" > /dev/null
 strip zerowallet
 
-cp zerowallet                     bin/zerowallet-v$APP_VERSION > /dev/null
-cp $ZERO_DIR_LINUX/zerod          bin/zerowallet-v$APP_VERSION > /dev/null
-cp $ZERO_DIR_LINUX/zero-cli       bin/zerowallet-v$APP_VERSION > /dev/null
-cp README.md                      bin/zerowallet-v$APP_VERSION > /dev/null
-cp LICENSE                        bin/zerowallet-v$APP_VERSION > /dev/null
+cp zerowallet                     "bin/zerowallet-v${APP_VERSION}/" > /dev/null
+cp "$ZERO_DIR_LINUX/zerod"        "bin/zerowallet-v${APP_VERSION}/" > /dev/null
+cp "$ZERO_DIR_LINUX/zero-cli"     "bin/zerowallet-v${APP_VERSION}/" > /dev/null
+cp README.md                      "bin/zerowallet-v${APP_VERSION}/" > /dev/null
+cp LICENSE                        "bin/zerowallet-v${APP_VERSION}/" > /dev/null
 
-cd bin && tar czf linux-zerowallet-v$APP_VERSION.tar.gz zerowallet-v$APP_VERSION/ > /dev/null
+cd bin && tar czf "linux-zerowallet-v${APP_VERSION}.tar.gz" "zerowallet-v${APP_VERSION}/" > /dev/null
 cd ..
 
 mkdir artifacts >/dev/null 2>&1
 mkdir release >/dev/null 2>&1
-cp bin/linux-zerowallet-v$APP_VERSION.tar.gz ./artifacts/linux-zerowallet-v$APP_VERSION.tar.gz
+cp "bin/linux-zerowallet-v${APP_VERSION}.tar.gz" "./artifacts/linux-zerowallet-v${APP_VERSION}.tar.gz"
 step_done "Packaging"
 
-[ ! -f artifacts/linux-zerowallet-v$APP_VERSION.tar.gz ] && err "tar.gz artifact not created"
+[ ! -f "artifacts/linux-zerowallet-v${APP_VERSION}.tar.gz" ] && err "tar.gz artifact not created"
 tar tf "artifacts/linux-zerowallet-v$APP_VERSION.tar.gz" | wc -l | grep -q "6" || err "package contents incomplete"
 step_done "Package contents"
 
-debdir=bin/deb/zerowallet-v$APP_VERSION
-mkdir -p $debdir > /dev/null
-mkdir    $debdir/DEBIAN
-mkdir -p $debdir/usr/local/bin
+debdir="bin/deb/zerowallet-v${APP_VERSION}"
+mkdir -p "$debdir" > /dev/null
+mkdir    "$debdir/DEBIAN"
+mkdir -p "$debdir/usr/local/bin"
 
-cat src/scripts/control | sed "s/RELEASE_VERSION/$APP_VERSION/g" > $debdir/DEBIAN/control
+sed "s/RELEASE_VERSION/$APP_VERSION/g" src/scripts/control > "$debdir/DEBIAN/control"
 
-cp zerowallet                   $debdir/usr/local/bin/
+cp zerowallet                   "$debdir/usr/local/bin/"
 
-strip $ZERO_DIR_LINUX/zerod
-strip $ZERO_DIR_LINUX/zero-cli
+strip "$ZERO_DIR_LINUX/zerod"
+strip "$ZERO_DIR_LINUX/zero-cli"
 
-cp $ZERO_DIR_LINUX/zerod       $debdir/usr/local/bin/zerod
-cp $ZERO_DIR_LINUX/zero-cli    $debdir/usr/local/bin/zero-cli
+cp "$ZERO_DIR_LINUX/zerod"       "$debdir/usr/local/bin/zerod"
+cp "$ZERO_DIR_LINUX/zero-cli"    "$debdir/usr/local/bin/zero-cli"
 
-mkdir -p                        $debdir/usr/share/pixmaps/
-cp res/zero.xpm                 $debdir/usr/share/pixmaps/
+mkdir -p                        "$debdir/usr/share/pixmaps/"
+cp res/zero.xpm                 "$debdir/usr/share/pixmaps/"
 
-mkdir -p                        $debdir/usr/share/applications
-cp src/scripts/desktopentry     $debdir/usr/share/applications/zerowallet.desktop
+mkdir -p                        "$debdir/usr/share/applications"
+cp src/scripts/desktopentry     "$debdir/usr/share/applications/zerowallet.desktop"
 
-dpkg-deb --build                $debdir >/dev/null
-cp $debdir.deb                  artifacts/linux-zerowallet-v$APP_VERSION.deb
+dpkg-deb --build                "$debdir" >/dev/null
+cp "${debdir}.deb"              "artifacts/linux-zerowallet-v${APP_VERSION}.deb"
 step_done "Building deb"
 
 section "Windows"
@@ -117,29 +120,29 @@ fi
 make clean >/dev/null
 rm -f zero-qt-wallet-mingw.pro
 rm -rf release/
-cat zero-qt-wallet.pro | sed "s/precompile_header/release/g" | sed "s/PRECOMPILED_HEADER.*//g" > zero-qt-wallet-mingw.pro
+sed "s/precompile_header/release/g" zero-qt-wallet.pro | sed "s/PRECOMPILED_HEADER.*//g" > zero-qt-wallet-mingw.pro
 step_done "Configuring"
 
 res/libsodium/buildlibsodium-win.sh >/dev/null
 step_done "Building libsodium"
 
 $QMAKE zero-qt-wallet-mingw.pro CONFIG+=release >/dev/null
-make -j${JOBS:-2} >/dev/null
+make -j"${JOBS:-2}" >/dev/null
 step_done "Building"
 
-mkdir release/zerowallet-v$APP_VERSION > /dev/null 2>&1
-cp release/zerowallet.exe             release/zerowallet-v$APP_VERSION > /dev/null
-cp $ZERO_DIR_WIN/zerod.exe            release/zerowallet-v$APP_VERSION > /dev/null
-cp $ZERO_DIR_WIN/zero-cli.exe         release/zerowallet-v$APP_VERSION > /dev/null
-cp README.md                          release/zerowallet-v$APP_VERSION > /dev/null
-cp LICENSE                            release/zerowallet-v$APP_VERSION > /dev/null
-cd release && zip -r Windows-zerowallet-v$APP_VERSION.zip zerowallet-v$APP_VERSION/ > /dev/null
+mkdir "release/zerowallet-v${APP_VERSION}" > /dev/null 2>&1
+cp release/zerowallet.exe             "release/zerowallet-v${APP_VERSION}/" > /dev/null
+cp "$ZERO_DIR_WIN/zerod.exe"          "release/zerowallet-v${APP_VERSION}/" > /dev/null
+cp "$ZERO_DIR_WIN/zero-cli.exe"       "release/zerowallet-v${APP_VERSION}/" > /dev/null
+cp README.md                          "release/zerowallet-v${APP_VERSION}/" > /dev/null
+cp LICENSE                            "release/zerowallet-v${APP_VERSION}/" > /dev/null
+cd release && zip -r "Windows-zerowallet-v${APP_VERSION}.zip" "zerowallet-v${APP_VERSION}/" > /dev/null
 cd ..
 
 mkdir artifacts >/dev/null 2>&1
-cp release/Windows-zerowallet-v$APP_VERSION.zip ./artifacts/
+cp "release/Windows-zerowallet-v${APP_VERSION}.zip" ./artifacts/
 step_done "Packaging"
 
-[ ! -f artifacts/Windows-zerowallet-v$APP_VERSION.zip ] && err "Windows zip artifact not created"
+[ ! -f "artifacts/Windows-zerowallet-v${APP_VERSION}.zip" ] && err "Windows zip artifact not created"
 unzip -l "artifacts/Windows-zerowallet-v$APP_VERSION.zip" | wc -l | grep -q "11" || err "package contents incomplete"
 step_done "Package contents"
