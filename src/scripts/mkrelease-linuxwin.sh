@@ -1,41 +1,38 @@
 #!/bin/bash
+set -e -u -o pipefail
 # Linux + Windows release in one run. DEPRECATED: use mkrelease-linux and mkrelease-win separately.
 # Must run on Linux (host); Windows via MXE cross-build.
 [ "$(uname -s)" = "Linux" ] || { echo "mkrelease-linuxwin: ERROR: must run on Linux." >&2; exit 1; }
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ME="mkrelease-linuxwin"
-. "$SCRIPT_DIR/lib-log.sh"
+. "$(dirname "${BASH_SOURCE[0]}")/fbuild.sh"
+cd "$REPO_ROOT"
 
 # Parse args (env vars override). Zero outputs Linux and Windows to different dirs.
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    -z|--zero) ZERO_DIR="$2"; shift 2 ;;  # legacy: sets both
+    -z|--zero) ZERO_DIR="$2"; shift 2 ;;
     --zerolinux) ZERO_DIR_LINUX="$2"; shift 2 ;;
     --zerowin) ZERO_DIR_WIN="$2"; shift 2 ;;
     -v|--version) APP_VERSION="$2"; shift 2 ;;
     -p|--prev) PREV_VERSION="$2"; shift 2 ;;
-    -q|--qt) QT_STATIC="$2"; shift 2 ;;
+    -q|--qt) QT_PREFIX="$2"; shift 2 ;;
     -m|--mxe) MXE_PATH="$2"; shift 2 ;;
     *) shift ;;
   esac
 done
 
-# Default: ../Zero; if absent, ../ZeroLinux / ../ZeroWin. Binaries in src/
-for _base in "../Zero" "../ZeroLinux"; do [ -d "$_base" ] && break; done
-ZERO_DIR_LINUX="${ZERO_DIR_LINUX:-${ZERO_DIR:-$_base/src}}"
-for _base in "../Zero" "../ZeroWin"; do [ -d "$_base" ] && break; done
-ZERO_DIR_WIN="${ZERO_DIR_WIN:-${ZERO_DIR:-$_base/src}}"
+resolve_zero_dirs_linuxwin
+resolve_qt linux release
 
-[ -z "$QT_STATIC" ] && err "QT_STATIC not set. Use -q/--qt or set env."
+[ -z "$QT_PREFIX" ] && err "QT_PREFIX not set. Use -q/--qt or set env."
 [ -z "$APP_VERSION" ] && err "APP_VERSION not set. Use -v/--version or set env."
 [ -z "$PREV_VERSION" ] && err "PREV_VERSION not set. Use -p/--prev or set env."
 [ ! -f "$ZERO_DIR_LINUX/zerod" ] && err "zerod not found in $ZERO_DIR_LINUX. Build Zero for Linux first."
 [ ! -f "$ZERO_DIR_LINUX/zero-cli" ] && err "zero-cli not found in $ZERO_DIR_LINUX. Build Zero for Linux first."
 
-sed -i "s/${PREV_VERSION}/${APP_VERSION}/g" zero-qt-wallet.pro >/dev/null
-sed -i "s/${PREV_VERSION}/${APP_VERSION}/g" README.md >/dev/null
-step_done "Version files"
+check_version_mismatch
+apply_version_sed
 
 rm -rf bin/*
 rm -rf artifacts/*
@@ -45,7 +42,7 @@ step_done "Cleaning"
 section "Linux ($(lsb_release -rs 2>/dev/null || echo 'build'))"
 
 ./src/scripts/dotranslations.sh >/dev/null
-$QT_STATIC/bin/qmake zero-qt-wallet.pro -spec linux-clang CONFIG+=release >/dev/null
+$QMAKE zero-qt-wallet.pro -spec linux-clang CONFIG+=release >/dev/null
 step_done "Configuring"
 
 rm -rf bin/zero-qt-wallet* >/dev/null
@@ -107,13 +104,7 @@ step_done "Building deb"
 
 section "Windows"
 
-# MXE: ~/mxe, /opt/mxe (build-from-source only)
-if [ -z "$MXE_PATH" ]; then
-  for p in "$HOME/mxe/usr/bin" /opt/mxe/usr/bin; do
-    [ -x "$p/x86_64-w64-mingw32.static-qmake-qt5" ] && { MXE_PATH="$p"; break; }
-  done
-  MXE_PATH="${MXE_PATH:-$HOME/mxe/usr/bin}"
-fi
+resolve_qt win release
 if [ -z "$MXE_PATH" ] || [ ! -d "$MXE_PATH" ]; then
     warn "MXE_PATH not found. Default: \$HOME/mxe/usr/bin. Use -m/--mxe to override."
     notice "Skipping Windows build"
@@ -122,8 +113,6 @@ fi
 
 [ ! -f "$ZERO_DIR_WIN/zerod.exe" ] && err "zerod.exe not found in $ZERO_DIR_WIN. Build Zero for Windows first."
 [ ! -f "$ZERO_DIR_WIN/zero-cli.exe" ] && err "zero-cli.exe not found in $ZERO_DIR_WIN. Build Zero for Windows first."
-
-export PATH=$MXE_PATH:$PATH
 
 make clean >/dev/null
 rm -f zero-qt-wallet-mingw.pro
@@ -134,7 +123,7 @@ step_done "Configuring"
 res/libsodium/buildlibsodium-win.sh >/dev/null
 step_done "Building libsodium"
 
-x86_64-w64-mingw32.static-qmake-qt5 zero-qt-wallet-mingw.pro CONFIG+=release >/dev/null
+$QMAKE zero-qt-wallet-mingw.pro CONFIG+=release >/dev/null
 make -j${JOBS:-2} >/dev/null
 step_done "Building"
 

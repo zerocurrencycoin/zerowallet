@@ -1,32 +1,17 @@
 #!/bin/bash
 # Dev build for Linux: system Qt, CONFIG+=debug, no packaging.
 # Output: zerowallet in repo root.
-set -e
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+set -e -u -o pipefail
 ME="mkdev-linux"
-. "$SCRIPT_DIR/lib-log.sh"
+. "$(dirname "${BASH_SOURCE[0]}")/fbuild.sh"
 cd "$REPO_ROOT"
 
-# -L or -L=path: capture log. Default: logs/mkdev-linux.log
-LOG_FILE=""
-CONFIG="debug"
-while [[ $# -gt 0 ]]; do
-  case "$1" in
-    -L) LOG_FILE="${LOG_FILE:-$REPO_ROOT/logs/mkdev-linux.log}"; shift ;;
-    -L=*) LOG_FILE="${1#-L=}"; shift ;;
-    -j) JOBS="$2"; shift 2 ;;
-    -j*) JOBS="${1#-j}"; shift ;;
-    -r) CONFIG="release"; shift ;;
-    *) shift ;;
-  esac
-done
-[ -n "$LOG_FILE" ] && mkdir -p "$(dirname "$LOG_FILE")"
-
-log_capture() {
-  [ -n "$LOG_FILE" ] && tee -a "$LOG_FILE" || cat
-}
-
+parse_mkdev_args "logs/mkdev-linux.log" "$@"
+if [ -n "${MKDEV_CLEAN:-}" ]; then
+  rm -rf zerowallet bin
+  notice "Cleaned zerowallet, bin/"
+  exit 0
+fi
 notice "CONFIG=$CONFIG -j$JOBS"
 [ -n "$LOG_FILE" ] && notice "Log: $LOG_FILE"
 
@@ -37,7 +22,7 @@ for pkg in qtbase5-dev qtbase5-dev-tools libqt5websockets5-dev libqt5svg5-dev; d
   fi
 done
 
-QMAKE=$(command -v qmake || command -v qmake-qt5 || true)
+resolve_qt linux dev
 [ -z "$QMAKE" ] && err "qmake not found. Install qtbase5-dev-tools."
 
 notice "Configuring..."
@@ -49,10 +34,10 @@ notice "Building..."
 if make -j$JOBS 2>&1 | log_capture; then
   :
 else
-  [ -n "$LOG_FILE" ] && [ -f "$LOG_FILE" ] && analyze_build_log "$LOG_FILE"
-  err "build failed"
+  build_fail "build failed"
 fi
 
 [ -f zerowallet ] || err "zerowallet binary not produced"
 notice "Done. Run ./zerowallet"
 ls -la zerowallet
+[ -n "${RUN_AFTER_BUILD:-}" ] && { notice "Running ./zerowallet --help"; ./zerowallet --help || true; }

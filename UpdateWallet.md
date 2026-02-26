@@ -415,7 +415,7 @@ docker run -v $(pwd):/workspace zerowallet-builder bash -c "
 **Environment Variables**
 ```bash
 export MXE_PATH="/opt/mxe/usr/bin"
-export QT_STATIC="/opt/mxe/usr/x86_64-w64-mingw32.static"
+export QT_PREFIX="/opt/mxe/usr/x86_64-w64-mingw32.static"
 export ZERO_DIR="/path/to/zero/src"
 ```
 

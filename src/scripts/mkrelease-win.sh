@@ -1,8 +1,9 @@
 #!/bin/bash
+set -e -u -o pipefail
 # Parse args (env vars override)
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ME="mkrelease-win"
-. "$SCRIPT_DIR/lib-log.sh"
+. "$(dirname "${BASH_SOURCE[0]}")/fbuild.sh"
+cd "$REPO_ROOT"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -14,28 +15,16 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-# Default: ../Zero; if absent, ../ZeroWin. Binaries in src/
-if [ -z "$ZERO_DIR" ]; then
-  ZERO_BASE="../Zero"
-  [ -d "$ZERO_BASE" ] || ZERO_BASE="../ZeroWin"
-  ZERO_DIR="$ZERO_BASE/src"
-fi
-# MXE: ~/mxe, /opt/mxe (build-from-source only)
-if [ -z "$MXE_PATH" ]; then
-  for p in "$HOME/mxe/usr/bin" /opt/mxe/usr/bin; do
-    [ -x "$p/x86_64-w64-mingw32.static-qmake-qt5" ] && { MXE_PATH="$p"; break; }
-  done
-  MXE_PATH="${MXE_PATH:-$HOME/mxe/usr/bin}"
-fi
+resolve_zero_dir win
+resolve_qt win release
 
 [ -z "$APP_VERSION" ] && err "APP_VERSION not set. Use -v/--version or set env."
 [ -z "$PREV_VERSION" ] && err "PREV_VERSION not set. Use -p/--prev or set env."
 [ ! -f "$ZERO_DIR/zerod.exe" ] && err "zerod.exe not found in $ZERO_DIR. Build Zero for Windows first."
 [ ! -f "$ZERO_DIR/zero-cli.exe" ] && err "zero-cli.exe not found in $ZERO_DIR. Build Zero for Windows first."
 
-sed -i "s/${PREV_VERSION}/${APP_VERSION}/g" zero-qt-wallet.pro > /dev/null
-sed -i "s/${PREV_VERSION}/${APP_VERSION}/g" README.md > /dev/null
-step_done "Version files"
+check_version_mismatch
+apply_version_sed
 
 rm -rf bin/*
 rm -rf artifacts/*
@@ -64,7 +53,7 @@ step_done "Configuring"
 res/libsodium/buildlibsodium-win.sh >/dev/null
 step_done "Building libsodium"
 
-x86_64-w64-mingw32.static-qmake-qt5 zero-qt-wallet-mingw.pro CONFIG+=release >/dev/null
+$QMAKE zero-qt-wallet-mingw.pro CONFIG+=release >/dev/null
 make -j${JOBS:-2} >/dev/null
 step_done "Building"
 

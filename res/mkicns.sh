@@ -21,7 +21,7 @@ inkscape=$1
 svg_file=$2
 output_name=$3
 
-set -e
+set -e -u -o pipefail
 mkdir $output_name.iconset
 $inkscape -z -e "$PWD/$output_name.iconset/icon_16x16.png"      -w   16 -h   16 -y 0 "$PWD/$svg_file"
 $inkscape -z -e "$PWD/$output_name.iconset/icon_16x16@2x.png"   -w   32 -h   32 -y 0 "$PWD/$svg_file"
