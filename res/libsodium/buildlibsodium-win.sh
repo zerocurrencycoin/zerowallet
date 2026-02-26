@@ -23,8 +23,9 @@ fi
 
 notice "Building libsodium..."
 
+LIBSODIUM_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+. "$LIBSODIUM_DIR/libsodium-common.sh"
 cd res/libsodium
-. "$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)/res/libsodium/libsodium-common.sh"
 libsodium_download
 
 if [ ! -d win ]; then
