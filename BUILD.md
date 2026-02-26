@@ -266,3 +266,158 @@ If `src/version.h` does not contain `APP_VERSION`, mkrelease scripts warn (misma
 
 [Wine](https://www.winehq.org/) runs Windows binaries on Linux. After cross-building: `wine debug/zerowallet.exe --help` (or `release/zerowallet.exe`) to verify the binary. Install: `sudo apt install wine`. Wine translates Win32 API calls; useful for quick smoke tests without a Windows VM.
 
+---
+
+## Shared dependency cache (Postponed)
+
+**Status:** Design only; no implementation planned. Applies to libsodium, Boost, and Qt.
+
+### Part 1: libsodium
+
+#### Rationale
+
+Today, libsodium is built separately by:
+
+- **Zero** (via `depends/`) for zerod
+- **zerowallet** (via `res/libsodium/`) for the wallet
+
+Each build is per-repo, per-platform. Dev and release builds in zerowallet both trigger the same build; Zero and zerowallet never share. That leads to:
+
+- Duplicate builds (Zero + zerowallet, dev + release)
+- Extra CI time (~2–3 min per libsodium build)
+- Repeated downloads and compile work when switching between Zero and zerowallet
+
+A shared cache lets one build serve Zero, zerowallet, dev, and release, keyed by platform and version.
+
+#### Differentiation
+
+The cache must distinguish:
+
+| Dimension | Values | Example |
+|-----------|--------|---------|
+| **Platform / host** | Linux, macOS, Windows (MXE) | `x86_64-pc-linux-gnu`, `x86_64-apple-darwin22`, `x86_64-w64-mingw32.static` |
+| **Version** | libsodium release | `1.0.21` |
+
+Different hosts produce different `.a` files; different versions must not be mixed.
+
+#### Transparency via symlinks
+
+Build systems (qmake, Zero depends) expect libsodium at fixed paths:
+
+- zerowallet: `res/libsodium.a`, `res/liblibsodium.a`, etc.
+- Zero: `depends/$(HOST)/lib/libsodium.a`
+
+The cache should live elsewhere, but consumers should see the usual paths. Symlinks (or copies) in the repo can hide the real location.
+
+#### Approaches
+
+| Approach | Idea | Pros | Cons |
+|----------|------|------|------|
+| **External cache** | `$LIBSODIUM_CACHE/$VER/$HOST/`; build script checks, builds if missing, symlinks into `res/` | Single source of truth; Zero and zerowallet share | Zero depends not designed for external staging |
+| **Zero depends as source** | Build Zero first; zerowallet `ZERO_DEPENDS` copies from Zero | No new cache; already implemented for Windows | Requires Zero built first; zerowallet-only still builds locally |
+| **Symlinks from repo** | `res/libsodium.a` → symlink into cache | qmake unchanged | Symlinks in `res/`; Windows symlinks need admin/Developer Mode |
+| **Copy instead of symlink** | Same as above but copy | No symlink quirks | Duplicate bytes; cache invalidation manual |
+
+#### Recommended layout (for future use)
+
+```
+$LIBSODIUM_CACHE/
+└── {version}/
+    └── {host}/
+        ├── libsodium.a
+        ├── libsodiumd.a      # Windows debug (same as release for static)
+        ├── liblibsodium.a    # MinGW naming
+        └── liblibsodiumd.a
+```
+
+Host examples: Linux `x86_64-pc-linux-gnu`, macOS `x86_64-apple-darwin22` / `aarch64-apple-darwin22`, Windows `x86_64-w64-mingw32.static`. Env: `LIBSODIUM_CACHE` defaults to `~/.cache/zerowallet/libsodium` (or `$XDG_CACHE_HOME/zerowallet/libsodium`).
+
+#### Why postpone (libsodium)
+
+1. **Zero depends integration** – Zero’s depends system is self-contained. Teaching it to read/write an external cache would require changes to `depends/` and package rules.
+2. **Platform matrix** – Host triplets differ (Zero vs zerowallet, Linux vs macOS). Mapping must be correct for all combinations.
+3. **Windows symlinks** – Creating symlinks on Windows often needs elevated rights or Developer Mode; copies are simpler but lose sharing benefits.
+4. **Current workaround** – `ZERO_DEPENDS` already avoids duplicate builds when Zero is built first. That covers the main multi-repo case.
+5. **CI** – Setting `ZERO_DEPENDS` in workflows is a small change that saves time without a new cache layer.
+
+#### Future steps (libsodium, if implemented)
+
+1. Add `LIBSODIUM_CACHE` support to `buildlibsodium.sh` and `buildlibsodium-win.sh`.
+2. Implement “check cache → build if missing → symlink/copy into res/”.
+3. Extend Zero depends (or a wrapper) to use the same cache.
+4. Document `LIBSODIUM_CACHE` in this section.
+5. Add CI use of `ZERO_DEPENDS` as an immediate, low-risk improvement.
+
+---
+
+### Part 2: Boost
+
+**Scope:** Zero only. zerowallet does not use Boost.
+
+#### Current state
+
+- Zero builds Boost via `depends/` (e.g. `depends/x86_64-w64-mingw32/`).
+- One configuration per host (release).
+- No debug build; no sharing with zerowallet.
+
+#### Similar issue
+
+If Zero supported debug builds, depends would need separate trees (debug vs release) per host. No sharing between configs. Same pattern as libsodium: duplicate builds when iterating between debug and release.
+
+#### Cache layout (hypothetical)
+
+```
+$BOOST_CACHE/
+└── {version}/
+    └── {host}/
+        └── {debug|release}/
+            └── lib/ include/
+```
+
+#### Why postpone
+
+Zero's depends is release-only today. Debug support would require depends changes first. Lower priority than libsodium (Zero↔zerowallet sharing).
+
+---
+
+### Part 3: Qt
+
+**Scope:** zerowallet only. Zero does not use Qt.
+
+#### Current state
+
+- **Linux:** `build-qt-static.sh` builds one static Qt (release) into `qt5-static/`. Shared across dev and release app builds.
+- **Windows:** MXE builds static Qt (release). Same.
+- **macOS:** Homebrew Qt shared.
+- qmake puts app output in `debug/` or `release/`; Qt is not rebuilt when switching.
+
+#### Similar issue
+
+If both debug and release Qt were needed (e.g. debug Qt for stepping into framework code), two full Qt builds (~30–60 min each) with no shared cache. Today: single release Qt suffices.
+
+#### Cache layout (hypothetical)
+
+```
+$QT_CACHE/
+└── {version}/
+    └── {host}/
+        └── {debug|release}/
+            └── bin/ lib/ include/ ...
+```
+
+#### Why postpone
+
+Current setup builds Qt once per platform. Main gain would be sharing across machines (CI, dev boxes) or repos, not debug/release iteration.
+
+---
+
+### Part 4: Summary
+
+| Dependency | Used by | Configs today | Sharing issue |
+|------------|---------|---------------|---------------|
+| libsodium | Zero, zerowallet | One per host | Zero + zerowallet duplicate; no cache |
+| Boost | Zero | Release only | Would duplicate if debug added |
+| Qt | zerowallet | Release only | Would duplicate if debug Qt needed |
+
+**Common pattern:** External cache keyed by `{version}/{host}/{config}`; symlinks or copies hide location. All postponed.
+

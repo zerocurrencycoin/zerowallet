@@ -2,7 +2,9 @@
 # Dev build for macOS: Homebrew Qt, CONFIG+=debug, no packaging.
 # Output: zerowallet.app in repo root. Run: open zerowallet.app
 set -e -u -o pipefail
+# shellcheck disable=SC2034
 ME="mkdev-mac"
+# shellcheck disable=SC1091
 . "$(dirname "${BASH_SOURCE[0]}")/fbuild.sh"
 cd "$REPO_ROOT"
 
@@ -22,10 +24,10 @@ resolve_qt mac dev
 notice "Configuring..."
 make distclean 2>/dev/null || true
 rm -rf zerowallet.app ZeroWallet.app bin
-$QMAKE zero-qt-wallet.pro CONFIG+=$CONFIG CONFIG+=sdk_no_version_check 2>&1 | log_capture
+$QMAKE zero-qt-wallet.pro CONFIG+="$CONFIG" CONFIG+=sdk_no_version_check 2>&1 | log_capture
 
 notice "Building..."
-if make -j$JOBS 2>&1 | log_capture; then
+if make -j"$JOBS" 2>&1 | log_capture; then
   :
 else
   build_fail "build failed"

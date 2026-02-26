@@ -4,7 +4,9 @@ set -e -u -o pipefail
 # Matches Zero depends/packages/libsodium.mk: 1.0.21, same URLs.
 # Optional: ZERO_DEPENDS=/path/to/Zero/depends to copy from Zero's build (skip rebuild).
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)/src/scripts"
+# shellcheck disable=SC2034
 ME="buildlibsodium-win"
+# shellcheck disable=SC1091
 . "$SCRIPT_DIR/fbuild.sh"
 
 [ -f res/libsodium.a ] && rm res/libsodium.a

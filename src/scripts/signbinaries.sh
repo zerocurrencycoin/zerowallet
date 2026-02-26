@@ -1,7 +1,9 @@
 #!/bin/bash
 set -e -u -o pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck disable=SC2034
 ME="signbinaries"
+# shellcheck disable=SC1091
 . "$SCRIPT_DIR/fbuild.sh"
 
 # Parse args (env vars override). Same -v/--version as mkrelease scripts.
@@ -21,27 +23,27 @@ mkdir -p release/signatures
 cd artifacts
 
 # Remove previous signatures/hashes
-rm -f sha256sum-v$APP_VERSION.txt
-rm -f signatures-v$APP_VERSION.tar.gz
+rm -f "sha256sum-v${APP_VERSION}.txt"
+rm -f "signatures-v${APP_VERSION}.tar.gz"
 
 # sha256 the binaries (sha256sum on Linux, shasum -a 256 on macOS)
 if command -v sha256sum >/dev/null 2>&1; then
-  sha256sum *$APP_VERSION* > sha256sum-v$APP_VERSION.txt
+  sha256sum ./*"${APP_VERSION}"* > "sha256sum-v${APP_VERSION}.txt"
 elif command -v shasum >/dev/null 2>&1; then
-  shasum -a 256 *$APP_VERSION* > sha256sum-v$APP_VERSION.txt
+  shasum -a 256 ./*"${APP_VERSION}"* > "sha256sum-v${APP_VERSION}.txt"
 else
   err "Neither sha256sum nor shasum found. Install coreutils (Linux) or use macOS (shasum built-in)."
 fi
 
-for i in $( ls *zerowallet-v$APP_VERSION* sha256sum-v$APP_VERSION* ); do
+for i in ./*"${APP_VERSION}"*; do
+  [ -e "$i" ] || continue
   notice "Signing $i"
-  gpg --batch --output ../release/signatures/$i.sig --detach-sig $i
+  gpg --batch --output "../release/signatures/$(basename "$i").sig" --detach-sig "$i"
 done
 
-mv sha256sum-v$APP_VERSION.txt ../release/signatures/
+mv "sha256sum-v${APP_VERSION}.txt" ../release/signatures/
 cp ../res/SIGNATURES_README ../release/signatures/README
 
 cd ../release/signatures
-#tar -czf signatures-v$APP_VERSION.tar.gz *
-zip signatures-v$APP_VERSION.zip *
-mv signatures-v$APP_VERSION.zip ../../artifacts
+zip "signatures-v${APP_VERSION}.zip" ./*
+mv "signatures-v${APP_VERSION}.zip" ../../artifacts

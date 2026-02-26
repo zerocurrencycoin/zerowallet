@@ -2,7 +2,9 @@
 # Dev build for Windows: cross-build from Linux via MXE. No packaging.
 # Output: debug/zerowallet.exe (default) or release/zerowallet.exe (-r). Requires MXE with static Qt.
 set -e -u -o pipefail
+# shellcheck disable=SC2034
 ME="mkdev-win"
+# shellcheck disable=SC1091
 . "$(dirname "${BASH_SOURCE[0]}")/fbuild.sh"
 cd "$REPO_ROOT"
 
@@ -15,7 +17,7 @@ fi
 [ -n "$LOG_FILE" ] && : > "$LOG_FILE"
 resolve_qt win dev
 [ -d "$MXE_PATH" ] || err "MXE not found. Set MXE_PATH or install to ~/mxe. See BUILD.md Windows."
-command -v $QMAKE >/dev/null 2>&1 || err "MXE qmake not found. Build Qt in MXE: make qtbase qtwebsockets"
+command -v "$QMAKE" >/dev/null 2>&1 || err "MXE qmake not found. Build Qt in MXE: make qtbase qtwebsockets"
 
 notice "CONFIG=$CONFIG -j$JOBS (MXE cross-build)"
 [ -n "$LOG_FILE" ] && notice "Log: $LOG_FILE"
@@ -27,10 +29,10 @@ notice "Configuring..."
 make clean 2>/dev/null || true
 rm -f zero-qt-wallet-mingw.pro Makefile
 sed "s/precompile_header/$CONFIG/g" zero-qt-wallet.pro | sed '/PRECOMPILED_HEADER/d' > zero-qt-wallet-mingw.pro
-$QMAKE zero-qt-wallet-mingw.pro CONFIG+=$CONFIG 2>&1 | log_capture || err "qmake failed"
+$QMAKE zero-qt-wallet-mingw.pro CONFIG+="$CONFIG" 2>&1 | log_capture || err "qmake failed"
 
 notice "Building..."
-if make -j$JOBS 2>&1 | log_capture; then
+if make -j"$JOBS" 2>&1 | log_capture; then
   :
 else
   build_fail "build failed"

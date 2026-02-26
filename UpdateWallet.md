@@ -151,6 +151,17 @@ macOS injects items into the Edit menu ("Start Dictation", "Emoji & Symbols", "W
 
 **If not fixed:** Likely zerod or connection (RPC timeout, auth). Isolate with `zero-cli z_getnewaddress`.
 
+**Follow-up (for fix):**
+
+| Item | Detail |
+|------|--------|
+| Error path | `connection.cpp:782` `doRPCWithDefaultErrorHandling` → `showTxError` (dialog title says "Transaction Error" for non-tx) |
+| Fix location | `connection.cpp` – add `showRpcError()` or param for non-tx; `mainwindow.cpp:1642` `addNewZaddr` |
+| Verify | Receive tab → New Address (shielded) → success; with zerod stopped → clear error (not "Transaction Error") |
+| Tag | `v2.1.1` (or next patch) |
+| Commit msg | `Fix shielded address creation error handling (#1)` |
+| Release note | Fixes #1. Clearer error when z_getnewaddress fails (RPC/auth/Sapling). |
+
 ### #2 — Windows app keeps syncing for days, no information
 
 **Flow:** Sync from zerod (`getblockchaininfo`); wallet shows "Your node is still syncing", may hide balances.
@@ -158,6 +169,25 @@ macOS injects items into the Edit menu ("Start Dictation", "Emoji & Symbols", "W
 **If fixed:** Sync depends on zerod, network, disk. Test: fresh install → connect → wait. If stuck: zerod `-reindex`, peers, disk. Windows: antivirus, firewall, path.
 
 **Test:** Run zerod standalone; if it syncs, wallet follows. Compare Linux/macOS vs Windows.
+
+**Follow-up (for fix):**
+
+| Item | Detail |
+|------|--------|
+| Sync logic | `rpc.cpp:722` `getblockchaininfo` → `verificationprogress`, `blocks`, `estimatedheight`; syncing if `progress < 0.9999` |
+| UI | `mainwindow.ui:337` `lblSyncWarning`; `rpc.cpp:759` blockheight text |
+| Fix location | `rpc.cpp` sync callback; `mainwindow.ui` for labels/tooltips |
+| Root cause | zerod sync (peers/disk/network); wallet reflects zerod only |
+| Verify | Fresh install → connect → sync shows block progress; long sync shows guidance |
+| Tag | `v2.1.1` (or same as #1 if both fixed) |
+| Commit msg | `Improve sync feedback and troubleshooting (#2)` |
+| Release note | Fixes #2. Better sync feedback; guidance for peers, disk, antivirus. |
+
+### Suggested maintainer comments (for GitHub)
+
+**#1:** Since `zero-cli z_getnewaddress` works, the issue is likely GUI RPC connection. Check: Settings → host/port match zerod (default 127.0.0.1:8232); rpcuser/rpcpassword if set; zerod synced, Sapling active (mainnet block > 492850). Debug: enable zerowallet logging or zerod `-debug=rpc`.
+
+**#2:** Wallet gets sync from zerod. If stuck for days, zerod is slow/stuck. Check: run zerod standalone; `zero-cli getconnectioncount` (want 8+ peers); antivirus/firewall; disk health; `zerod -reindex` if stuck (backup wallet.zero first). We'll improve sync feedback.
 
 ---
 
