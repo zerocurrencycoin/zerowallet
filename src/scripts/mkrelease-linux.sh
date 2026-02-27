@@ -60,9 +60,7 @@ cp "bin/linux-zerowallet-v${APP_VERSION}.tar.gz" "./artifacts/linux-zerowallet-v
 step_done "Packaging"
 
 [ ! -f "artifacts/linux-zerowallet-v${APP_VERSION}.tar.gz" ] && err "tar.gz artifact not created"
-for f in zerowallet zerod zero-cli; do
-  tar tf "artifacts/linux-zerowallet-v${APP_VERSION}.tar.gz" | grep -qE "(^|/)${f}(/|$)" || err "package missing $f"
-done
+"$SCRIPT_DIR/package-verify.sh" --linux "artifacts/linux-zerowallet-v${APP_VERSION}.tar.gz"
 step_done "Package contents"
 
 debdir="bin/deb/zerowallet-v${APP_VERSION}"

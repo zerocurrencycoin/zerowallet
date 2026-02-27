@@ -11,12 +11,9 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 JOBS="$(nproc 2>/dev/null || (sysctl -n hw.ncpu 2>/dev/null) || echo 2)"
 
-# Logging
-err()   { echo "${ME:-script}: ERROR: $*" >&2; exit 1; }
-warn()  { echo "${ME:-script}: WARN: $*" >&2; }
-info()  { echo "${ME:-script}: $*"; }
-notice() { echo "${ME:-script}: $*"; }
-step_done() { printf "%s: %-24s [OK]\n" "${ME:-script}" "$1"; }
+# shellcheck disable=SC1091
+. "$SCRIPT_DIR/fmessage.sh"
+
 section() { echo ""; notice "[$1]"; }
 
 # Build log analysis (call when build fails and LOG_FILE is set)
@@ -143,8 +140,10 @@ show_mkrelease_help() {
 }
 
 # Run dotranslations.sh. Sets DOTRANSLATIONS_SKIP if SKIP_TRANSLATIONS. Call from repo root after resolve_qt.
+# Exports QT_PREFIX so dotranslations.sh (child process) can use lrelease.
 run_dotranslations() {
   [ -n "${SKIP_TRANSLATIONS:-}" ] && export DOTRANSLATIONS_SKIP=1
+  [ -n "${QT_PREFIX:-}" ] && export QT_PREFIX
   "$SCRIPT_DIR/dotranslations.sh"
 }
 

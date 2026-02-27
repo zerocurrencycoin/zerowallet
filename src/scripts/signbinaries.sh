@@ -1,11 +1,10 @@
 #!/bin/bash
 # Copyright 2026 Zero Developers
 set -e -u -o pipefail
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck disable=SC2034
 ME="signbinaries"
 # shellcheck disable=SC1091
-. "$SCRIPT_DIR/fbuild.sh"
+. "$(dirname "${BASH_SOURCE[0]}")/fbuild.sh"
 cd "$REPO_ROOT"
 
 # Parse args (env vars override). Same -v/--version as mkrelease scripts.

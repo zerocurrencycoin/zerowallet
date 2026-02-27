@@ -6,6 +6,10 @@
 #   -c, --check:   verify MXE + qmake ready
 # System-wide: MXE_ROOT=/opt/mxe ./install_mxe.sh
 set -e -u -o pipefail
+# shellcheck disable=SC2034
+ME="install_mxe"
+# shellcheck disable=SC1091
+. "$(dirname "${BASH_SOURCE[0]}")/fmessage.sh"
 QMAKE="x86_64-w64-mingw32.static-qmake-qt5"
 MXE_ROOT="${MXE_ROOT:-$HOME/mxe}"
 MXE_PATH="${MXE_PATH:-$MXE_ROOT/usr/bin}"
@@ -17,18 +21,17 @@ case "${1:---install}" in
   -i|--install)
     "$0" --deps
     if [ ! -d "$MXE_ROOT" ]; then
-      echo "Cloning MXE to $MXE_ROOT..."
+      notice "Cloning MXE to $MXE_ROOT..."
       git clone https://github.com/mxe/mxe.git "$MXE_ROOT"
     fi
-    echo "Building MXE qtbase qtwebsockets (this may take over an hour)..."
+    notice "Building MXE qtbase qtwebsockets (this may take over an hour)..."
     cd "$MXE_ROOT"
     make MXE_TARGETS='x86_64-w64-mingw32.static' qtbase qtwebsockets
-    echo "Done. MXE at $MXE_PATH"
+    notice "Done. MXE at $MXE_PATH"
     ;;
   -c|--check)
-    [ -x "$MXE_PATH/$QMAKE" ] && { echo "OK: MXE at $MXE_PATH"; exit 0; }
-    echo "MXE not found. Run ./install_mxe.sh --install" >&2
-    exit 1
+    [ -x "$MXE_PATH/$QMAKE" ] && { notice "OK: MXE at $MXE_PATH"; exit 0; }
+    err "MXE not found. Run ./install_mxe.sh --install"
     ;;
   *)
     echo "Usage: ./install_mxe.sh [-i|--install|-d|--deps|-c|--check]" >&2
