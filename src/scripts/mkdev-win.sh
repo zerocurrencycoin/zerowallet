@@ -1,5 +1,6 @@
 #!/bin/bash
-# Dev build for Windows: cross-build from Linux via MXE. No packaging.
+# Copyright 2026 Zero Developers
+# Dev build for Windows *target*, running on Linux (MXE cross-compile). No packaging.
 # Output: debug/zerowallet.exe (default) or release/zerowallet.exe (-r). Requires MXE with static Qt.
 set -e -u -o pipefail
 # shellcheck disable=SC2034
@@ -9,25 +10,24 @@ ME="mkdev-win"
 cd "$REPO_ROOT"
 
 parse_mkdev_args "logs/mkdev-win.log" "$@"
-if [ -n "${MKDEV_CLEAN:-}" ]; then
-  rm -rf debug release zero-qt-wallet-mingw.pro Makefile
-  notice "Cleaned debug/, release/, mingw files"
-  exit 0
-fi
 [ -n "$LOG_FILE" ] && : > "$LOG_FILE"
 resolve_qt win dev
-[ -d "$MXE_PATH" ] || err "MXE not found. Set MXE_PATH or install to ~/mxe. See BUILD.md Windows."
+[ -d "${MXE_PATH:-}" ] || err "MXE not found. Set MXE_PATH or install to ~/mxe. See BUILD.md Windows."
 command -v "$QMAKE" >/dev/null 2>&1 || err "MXE qmake not found. Build Qt in MXE: make qtbase qtwebsockets"
 
-notice "CONFIG=$CONFIG -j$JOBS (MXE cross-build)"
+notice "CONFIG=$CONFIG -j$JOBS (Windows target, MXE cross-build on Linux)"
 [ -n "$LOG_FILE" ] && notice "Log: $LOG_FILE"
 
-notice "Building libsodium..."
-res/libsodium/buildlibsodium-win.sh 2>&1 | log_capture || err "libsodium build failed"
-
 notice "Configuring..."
-make clean 2>/dev/null || true
-rm -f zero-qt-wallet-mingw.pro Makefile
+if [ -n "${MKDEV_CLEAN:-}" ]; then
+  make clean 2>/dev/null || true
+  rm -f zero-qt-wallet-mingw.pro Makefile
+  rm -rf debug release
+  notice "Cleaned (clean)"
+fi
+
+notice "Building libsodium (Windows target)..."
+res/libsodium/buildlibsodium-win.sh 2>&1 | log_capture || err "libsodium build failed"
 sed "s/precompile_header/$CONFIG/g" zero-qt-wallet.pro | sed '/PRECOMPILED_HEADER/d' > zero-qt-wallet-mingw.pro
 $QMAKE zero-qt-wallet-mingw.pro CONFIG+="$CONFIG" 2>&1 | log_capture || err "qmake failed"
 

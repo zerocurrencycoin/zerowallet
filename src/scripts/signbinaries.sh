@@ -1,10 +1,12 @@
 #!/bin/bash
+# Copyright 2026 Zero Developers
 set -e -u -o pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck disable=SC2034
 ME="signbinaries"
 # shellcheck disable=SC1091
 . "$SCRIPT_DIR/fbuild.sh"
+cd "$REPO_ROOT"
 
 # Parse args (env vars override). Same -v/--version as mkrelease scripts.
 while [[ $# -gt 0 ]]; do
@@ -14,11 +16,12 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-[ -z "$APP_VERSION" ] && err "APP_VERSION not set. Use -v/--version or set env."
+[ -z "${APP_VERSION:-}" ] && err "APP_VERSION not set. Use -v/--version or set env."
 
 # Store the hash and signatures here
 rm -rf release/signatures
 mkdir -p release/signatures
+mkdir -p artifacts
 
 cd artifacts
 

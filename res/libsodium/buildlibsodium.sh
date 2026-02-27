@@ -1,25 +1,18 @@
 #!/bin/bash
-cd "$(dirname "$0")/../.."
+# Copyright 2026 Zero Developers
 set -e -u -o pipefail
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)/src/scripts"
+# Build libsodium for Unix (Linux, macOS). Run from repo root.
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 # shellcheck disable=SC2034
 ME="buildlibsodium"
 # shellcheck disable=SC1091
-. "$SCRIPT_DIR/fbuild.sh"
-. "res/libsodium/libsodium-common.sh"
+. "$REPO_ROOT/res/libsodium/fbuild-libsodium.sh"
+cd "$REPO_ROOT"
 
-[ -f res/libsodium.a ] && { rm res/libsodium.a; rm -rf res/libsodium/libsodium-${LIBSODIUM_VER}; }
-
+[ -f res/libsodium.a ] && rm res/libsodium.a
 notice "Building libsodium..."
 
-cd res/libsodium
-libsodium_download
-
-if [ ! -d "libsodium-${LIBSODIUM_VER}" ]; then
-    tar xf "$LIBSODIUM_TAR"
-fi
-
-cd "libsodium-${LIBSODIUM_VER}"
+sodium_extract
 LIBS="" ./configure > /dev/null
 make clean > /dev/null 2>&1
 if [[ "$OSTYPE" == "darwin"* ]]; then
@@ -28,11 +21,4 @@ else
     make > /dev/null 2>&1
 fi
 cd ..
-
-if [ -f "libsodium-${LIBSODIUM_VER}/src/libsodium/.libs/libsodium.a" ]; then
-    cp "libsodium-${LIBSODIUM_VER}/src/libsodium/.libs/libsodium.a" ../
-elif [ -f "libsodium-${LIBSODIUM_VER}/.libs/libsodium.a" ]; then
-    cp "libsodium-${LIBSODIUM_VER}/.libs/libsodium.a" ../
-else
-    err "libsodium.a not found after build"
-fi
+sodium_copy unix

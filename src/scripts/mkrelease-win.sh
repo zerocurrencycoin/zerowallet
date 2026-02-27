@@ -1,49 +1,34 @@
 #!/bin/bash
+# Copyright 2026 Zero Developers
+# Release build for Windows *target*, running on Linux (MXE cross-compile).
 set -e -u -o pipefail
-# Parse args (env vars override)
 # shellcheck disable=SC2034
 ME="mkrelease-win"
 # shellcheck disable=SC1091
 . "$(dirname "${BASH_SOURCE[0]}")/fbuild.sh"
 cd "$REPO_ROOT"
 
-while [[ $# -gt 0 ]]; do
-  case "$1" in
-    -z|--zero) ZERO_DIR="$2"; shift 2 ;;
-    -v|--version) APP_VERSION="$2"; shift 2 ;;
-    -p|--prev) PREV_VERSION="$2"; shift 2 ;;
-    -m|--mxe) MXE_PATH="$2"; shift 2 ;;
-    *) shift ;;
-  esac
-done
-
+parse_mkrelease_args "logs/mkrelease-win.log" "$@"
+[ -n "$LOG_FILE" ] && exec > >(tee -a "$LOG_FILE") 2>&1
 resolve_zero_dir win
 resolve_qt win release
 resolve_version
 check_version_mismatch
 
+apply_version_sed
+
 [ ! -f "$ZERO_DIR/zerod.exe" ] && err "zerod.exe not found in $ZERO_DIR. Build Zero for Windows first."
 [ ! -f "$ZERO_DIR/zero-cli.exe" ] && err "zero-cli.exe not found in $ZERO_DIR. Build Zero for Windows first."
-
-apply_version_sed
 
 rm -rf bin/*
 rm -rf artifacts/*
 make distclean >/dev/null 2>&1 || true
 step_done "Cleaning"
 
-./src/scripts/dotranslations.sh >/dev/null 2>/dev/null || true
-step_done "Configuring"
+run_dotranslations >/dev/null
+section "Windows target (Linux host)"
 
-section "Windows"
-
-if [ -z "${MXE_PATH:-}" ] || [ ! -d "$MXE_PATH" ]; then
-    warn "MXE_PATH not found. Default: \$HOME/mxe/usr/bin. Use -m/--mxe to override."
-    notice "Skipping Windows build"
-    exit 0
-fi
-
-export PATH=$MXE_PATH:$PATH
+[ -d "${MXE_PATH:-}" ] || err "MXE_PATH not found or not a directory. Set -m/--mxe or MXE_PATH. See BUILD.md Windows."
 
 rm -f zero-qt-wallet-mingw.pro
 rm -rf release/
@@ -58,7 +43,7 @@ make -j"${JOBS:-2}" >/dev/null
 step_done "Building"
 
 PKGDIR="release/zerowallet-v${APP_VERSION}"
-mkdir "$PKGDIR" >/dev/null 2>&1
+mkdir -p "$PKGDIR"
 cp release/zerowallet.exe             "$PKGDIR/" >/dev/null
 cp "$ZERO_DIR/zerod.exe"             "$PKGDIR/" >/dev/null
 cp "$ZERO_DIR/zero-cli.exe"          "$PKGDIR/" >/dev/null

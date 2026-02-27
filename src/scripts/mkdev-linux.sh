@@ -1,4 +1,5 @@
 #!/bin/bash
+# Copyright 2026 Zero Developers
 # Dev build for Linux: system Qt, CONFIG+=debug, no packaging.
 # Output: zerowallet in repo root.
 set -e -u -o pipefail
@@ -9,11 +10,6 @@ ME="mkdev-linux"
 cd "$REPO_ROOT"
 
 parse_mkdev_args "logs/mkdev-linux.log" "$@"
-if [ -n "${MKDEV_CLEAN:-}" ]; then
-  rm -rf zerowallet bin
-  notice "Cleaned zerowallet, bin/"
-  exit 0
-fi
 notice "CONFIG=$CONFIG -j$JOBS"
 [ -n "$LOG_FILE" ] && notice "Log: $LOG_FILE"
 
@@ -25,11 +21,14 @@ for pkg in qtbase5-dev qtbase5-dev-tools libqt5websockets5-dev libqt5svg5-dev; d
 done
 
 resolve_qt linux dev
-[ -z "$QMAKE" ] && err "qmake not found. Install qtbase5-dev-tools."
+[ -z "${QMAKE:-}" ] && err "qmake not found. Install qtbase5-dev-tools."
 
 notice "Configuring..."
-make distclean 2>/dev/null || true
-rm -rf bin
+if [ -n "${MKDEV_CLEAN:-}" ]; then
+  make distclean 2>/dev/null || true
+  rm -rf bin
+  notice "Cleaned (distclean)"
+fi
 $QMAKE zero-qt-wallet.pro CONFIG+="$CONFIG" 2>&1 | log_capture
 
 notice "Building..."

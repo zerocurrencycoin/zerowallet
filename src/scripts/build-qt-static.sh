@@ -1,4 +1,5 @@
 #!/bin/bash
+# Copyright 2026 Zero Developers
 # Build static Qt 5.15.18 for zerowallet Linux release. One-time, ~30-60 min.
 # Output: qt5-static/ in zerowallet repo root.
 set -e -u -o pipefail
@@ -7,7 +8,8 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ME="build-qt-static"
 # shellcheck disable=SC1091
 . "$SCRIPT_DIR/fbuild.sh"
-REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+cd "$REPO_ROOT"
+
 QT_PREFIX="$REPO_ROOT/qt5-static"
 # shellcheck disable=SC2034
 QT_SRC="$REPO_ROOT/qt5-static/qt-everywhere-opensource-src-5.15.18"
