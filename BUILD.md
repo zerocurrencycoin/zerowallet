@@ -1,6 +1,14 @@
 # Build and Release Guide
 
-Build and release workflow for zerowallet. Supports local builds, with [GitHub Actions](.github/workflows/) on n the roadmap. Platforms: Linux, macOS, Windows.
+Build and release workflow for zerowallet. Supports local builds, with [GitHub Actions](.github/workflows/) on the roadmap. Platforms: Linux, macOS, Windows.
+
+## Status
+
+| Platform | Dev | Release | Notes |
+|----------|-----|---------|-------|
+| Linux | ✓ | ✓ | Static Qt via `build-qt-static.sh`; GCC 13+ needs [patch](#gcc-13-linux-static-qt) |
+| macOS | ✓ | ✓ | Homebrew Qt |
+| Windows | ✓ | ✓ | MXE cross-build from Linux; host Qt for lrelease from `qt5-static/` |
 
 ## Quick Start
 
@@ -10,7 +18,7 @@ Build and release workflow for zerowallet. Supports local builds, with [GitHub A
 - **macOS:** `brew install create-dmg qt@5`
 - **Windows:** Cross-build from Linux; see [Windows](#windows) below.
 
-Build zerod in the Zero repo root, then run the platform mkrelease script. See [ZERO_DIR](#zero_dir) and [Platform Notes](#platform-notes).
+Build zerod in the Zero repo root, then run the platform mkrelease script. See [ZERO_DIR](#zero_dir), [Platform Notes](#platform-notes), and [Test sequence](#test-sequence).
 
 ---
 
@@ -36,6 +44,17 @@ One-time install per platform. Custom path via `-q` or `QT_PREFIX`, only when ne
 | **macOS** | Homebrew `qt@5` | `brew install qt@5`. Default: `$(brew --prefix qt@5)`. |
 | **Windows** | MXE (cross-build) | See [Windows](#windows) below. |
 
+#### GCC 13+ (Linux static Qt)
+
+Qt 5.15.18's bundled mapbox-gl-native (qtlocation) fails with GCC 13+ due to missing `#include <cstdint>` in three files. We provide `res/patches/qt-gcc13.diff`; `build-qt-static.sh` applies it after extract, before configure. On patch failure, the script errors with script path, patch path, and this section.
+
+**Files modified:** `qtlocation/src/3rdparty/mapbox-gl-native/` — geometry.hpp, string.hpp, stencil_mode.hpp.
+
+**References (publicly identified):**
+- [Gentoo #885431](https://bugs.gentoo.org/show_bug.cgi?id=885431)
+- [Debian gcc_13.diff](https://sources.debian.org/src/qtlocation-opensource-src/5.15.17+dfsg-3/debian/patches/gcc_13.diff)
+- [mapbox-gl-native PR #16669](https://github.com/mapbox/mapbox-gl-native/pull/16669)
+
 ---
 
 ## Script Reference
@@ -53,8 +72,7 @@ One-time install per platform. Custom path via `-q` or `QT_PREFIX`, only when ne
 | `mkrelease-linux.sh` | Linux release. Output: `artifacts/linux-zerowallet-vX.Y.Z.tar.gz`, `.deb`. See [mkrelease options](#script-argument-lists). |
 | `mkrelease-mac.sh` | macOS release. Output: `artifacts/macOS-zerowallet-vX.Y.Z.dmg`. See [mkrelease options](#script-argument-lists). |
 | `mkrelease-win.sh` | Linux→Win release (MXE). Output: `artifacts/Windows-zerowallet-vX.Y.Z.zip`. See [mkrelease options](#script-argument-lists). |
-| `mkrelease-linuxwin.sh` | **RETIRED.** Exits with message; run mkrelease-linux.sh and mkrelease-win.sh separately. |
-| `build-qt-static.sh` | Linux: static Qt in `qt5-static/` (one-time). No args; uses `QT_PREFIX` env. |
+| `build-qt-static.sh` | Linux: static Qt in `qt5-static/` (one-time). Skips if `qt5-static/bin/qmake` exists. No args; uses `QT_PREFIX` env. |
 | `dotranslations.sh` | Compile .ts→.qm (lrelease), merge Qt base (lconvert). Called by mkrelease; `DOTRANSLATIONS_SKIP=1` or mkrelease `-t` to skip. |
 | `install_mxe.sh` | MXE: `--install` (default), `--deps`, `--check`. See [install_mxe options](#script-argument-lists). |
 | `signbinaries.sh` | GPG signatures and sha256sums. See [signbinaries options](#script-argument-lists). |
@@ -86,7 +104,6 @@ One-time install per platform. Custom path via `-q` or `QT_PREFIX`, only when ne
 | `mkrelease-linux.sh` | Linux | `artifacts/*.tar.gz`, `artifacts/*.deb` |
 | `mkrelease-mac.sh` | macOS | `artifacts/*.dmg` |
 | `mkrelease-win.sh` | Windows | `artifacts/*.zip` |
-| `mkrelease-linuxwin.sh` | — | RETIRED (stub) |
 | `build-qt-static.sh` | Linux | `qt5-static/` |
 | `signbinaries.sh` | any | GPG signatures |
 
@@ -136,10 +153,9 @@ One-time install per platform. Custom path via `-q` or `QT_PREFIX`, only when ne
 | Flag | Env | Default | Description |
 |------|-----|---------|-------------|
 | `-z`, `--zero` | `ZERO_DIR` | `../Zero/src` or `../ZeroLinux/src`/`../ZeroWin/src` if absent | Directory with zerod binaries; see [ZERO_DIR](#zero_dir) below |
-| `--zerolinux`, `--zerowin` | `ZERO_DIR_LINUX`, `ZERO_DIR_WIN` | — | (retired with mkrelease-linuxwin) |
 | `-v`, `--version` | `APP_VERSION` | from `src/version.h` | Release version. See [APP_VERSION](#app_version) below. |
 | `-p`, `--prev` | `PREV_VERSION` | patch−1 of APP_VERSION | Previous version for sed. See [PREV](#prev) below. |
-| `-q`, `--qt` | `QT_PREFIX` | `./qt5-static/` (repo root) | Qt install prefix. Precedence: command line > env > default. Linux dev: default to system qmake if unset. mkrelease-win: host Qt for dotranslations. |
+| `-q`, `--qt` | `QT_PREFIX` | `./qt5-static/` (repo root) | Qt install prefix. Precedence: command line > env > default. Linux dev: default to system qmake if unset. mkrelease-win: host Qt for dotranslations. Use our default (`./qt5-static/`), not system paths. |
 | `-m`, `--mxe` | `MXE_PATH` | auto-detect | MXE `usr/bin` path (Windows only). Precedence: **command line** > **env** > both tools in PATH > probe. Probe failure: err and exit. `-m` expects bin dir. |
 | `-t`, `--tran` | `DOTRANSLATIONS_SKIP` | — | Turn translations off; skip lrelease. Use prior .qm if fresh. (mkrelease only) |
 
@@ -168,6 +184,84 @@ Used by `sed` to replace the previous version in `zero-qt-wallet.pro`, `README.m
 
 mkdev scripts support `-L` or `-L=path` to capture build output. Default: `logs/mkdev-<platform>.log`. On build failure, `build_fail` / `analyze_build_log` prints errors and warnings from the log. Shared: `src/scripts/fbuild.sh`.
 
+### Qt prefix (-q) and system paths
+
+Default `./qt5-static/` uses a single-prefix layout (`bin/`, `translations/`, `lib/` under one tree). System Qt (e.g. Debian `qtbase5-dev`) uses a split layout: binaries in `/usr/bin/`, translations in `/usr/share/qt5/translations/`. Scripts expect `$QT_PREFIX/bin/lrelease` and `$QT_PREFIX/translations/qtbase_*.qm`.
+
+| Script | `-q /usr` works? | Reason |
+|--------|------------------|--------|
+| mkrelease-win | ✓ | Host Qt only for lrelease; `/usr/bin/lrelease` exists. Qt base merge skipped (no `/usr/translations/`). |
+| mkdev-linux | ✓ | Dev build; dynamic linking OK. |
+| mkrelease-linux | ✗ | Release requires static Qt; `ldd` check fails on dynamic build. |
+
+Use `./qt5-static/` (our default) for mkrelease-linux and when Qt base translation merge is needed.
+
+---
+
+## Test sequence
+
+**Setup:** Linux host. Current dir = zerowallet repo. For Windows target: `../ZeroWin/src` (zerod.exe, zero-cli.exe). Wine for Phase 5 smoke test: `sudo apt install wine`.
+
+### Phase 1: Static (no deps, ~30 s)
+
+| Step | Command |
+|------|---------|
+| 1.1 | `shellcheck -s bash src/scripts/*.sh res/libsodium/*.sh` |
+| 1.2 | `./src/scripts/mkdev-linux.sh -h` |
+| 1.3 | `./src/scripts/mkrelease-linux.sh -h` |
+| 1.4 | `./src/scripts/install_mxe.sh -c` |
+| 1.5 | `./src/scripts/package-verify.sh -t` |
+
+### Phase 2: Option parsing
+
+| Step | Command |
+|------|---------|
+| 2.1 | `./src/scripts/mkdev-linux.sh -j 2 -L -c -r -h` |
+| 2.2 | `./src/scripts/mkrelease-linux.sh -z ../ZeroWin/src -h` |
+
+### Phase 3: Linux dev build
+
+| Step | Command |
+|------|---------|
+| 3.1 | `./src/scripts/mkdev-linux.sh` |
+| 3.2 | `./zerowallet --help` |
+| 3.3 | `./src/scripts/mkdev-linux.sh -c` (clean + rebuild) |
+| 3.4 | `./src/scripts/mkdev-linux.sh -L` (with log capture) |
+
+### Phase 4: Windows dev (MXE required)
+
+| Step | Command |
+|------|---------|
+| 4.1 | `./src/scripts/mkdev-win.sh -h` |
+| 4.2 | `./src/scripts/mkdev-win.sh` |
+
+### Phase 5: Release (full deps)
+
+| Step | Command |
+|------|---------|
+| 5.1 | `./src/scripts/build-qt-static.sh` (one-time; skips if `qt5-static/bin/qmake` exists) |
+| 5.2 | `./src/scripts/mkrelease-linux.sh -z ../Zero/src` (Linux release; zerod in ../Zero) |
+| 5.3 | `./src/scripts/mkrelease-win.sh -z ../ZeroWin/src` (Windows release) |
+| 5.4 | `wine release/zerowallet.exe --help` (Wine smoke test on Linux) |
+| 5.5 | `./src/scripts/package-verify.sh -v X.Y.Z` |
+| 5.6 | `./src/scripts/signbinaries.sh -v X.Y.Z` |
+
+### Phase 6: macOS (on macOS only)
+
+| Step | Command |
+|------|---------|
+| 6.1 | `./src/scripts/mkdev-mac.sh -h` |
+| 6.2 | `./src/scripts/mkdev-mac.sh` |
+| 6.3 | `./src/scripts/mkrelease-mac.sh -v X.Y.Z` |
+
+### One-liner (Phase 1+2)
+
+```bash
+shellcheck -s bash src/scripts/*.sh res/libsodium/*.sh && \
+./src/scripts/mkdev-linux.sh -h && ./src/scripts/mkrelease-linux.sh -h && \
+./src/scripts/install_mxe.sh -c && ./src/scripts/package-verify.sh -t
+```
+
 ---
 
 ## Platform Notes
@@ -178,7 +272,9 @@ mkdev scripts support `-L` or `-L=path` to capture build output. Default: `logs/
 
 **Release build (local):**
 
-1. Build static Qt (one-time, ~30–60 min): `./src/scripts/build-qt-static.sh`. Output: `qt5-static/` in repo root.
+1. Build static Qt (one-time, ~30–60 min): `./src/scripts/build-qt-static.sh`. Output: `qt5-static/` in repo root. **Skips rebuild:** if `qt5-static/bin/qmake` exists, the script exits immediately. Keep `qt5-static/` to avoid re-running the long build.
+
+   **GCC 13+:** If the build fails at qtlocation with `FeatureType` or `uint8_t` errors, see [GCC 13+ (Linux static Qt)](#gcc-13-linux-static-qt).
 2. Build zerod: `cd ../Zero && ./zcutil/build.sh -j$(nproc)`.
 3. Run mkrelease (defaults: `-v` from `src/version.h`, `-p` = patch−1, `-q` = `./qt5-static/` as QT_PREFIX):
 
@@ -187,8 +283,6 @@ mkdev scripts support `-L` or `-L=path` to capture build output. Default: `logs/
 # or directly:
 ./src/scripts/mkrelease-linux.sh
 ```
-
-**mkrelease-linuxwin** (RETIRED): Script exits with a message. Run `mkrelease-linux.sh` and `mkrelease-win.sh` separately.
 
 ### macOS
 
@@ -265,7 +359,9 @@ xcrun stapler staple artifacts/macOS-zerowallet-vX.Y.Z.dmg
 
 **Dev build (cross from Linux):** `./src/scripts/mkdev-win.sh`. Requires [MXE](#mxe) with qtbase, qtwebsockets. Options: `-L` `-m PATH` `-r` release config. Default: CONFIG+=debug (like mkdev-linux/mac). Output: `debug/zerowallet.exe` or `release/zerowallet.exe` (-r).
 
-**Release:** Cross-build from Linux or WSL. Build zerod: `cd ../Zero && ./zcutil/build-win.sh`. Minimal: `./src/scripts/mkrelease-win.sh`. Override with `-z`, `-v`, `-p`, `-m` as needed.
+**Release:** Cross-build from Linux or WSL. Build zerod for Windows: `cd ../ZeroWin && ./zcutil/build-win.sh`. Minimal: `./src/scripts/mkrelease-win.sh -z ../ZeroWin/src`. Host Qt for lrelease: default `./qt5-static/`; override with `-q ./qt5-static` when needed (use our default, not system paths). Override with `-z`, `-v`, `-p`, `-m`, `-q` as needed.
+
+**Test setup (Linux host, Windows target):** Current dir = zerowallet repo. Node binaries: `../ZeroWin/src` (zerod.exe, zero-cli.exe). Test with Wine: `wine debug/zerowallet.exe --help` or `wine release/zerowallet.exe --help`.
 
 #### MXE
 

@@ -89,11 +89,13 @@ Run `shellcheck -s bash src/scripts/*.sh`. Use directives when intentional:
 
 ## zerowallet Build Infrastructure
 
-### fbuild.sh
+### fbuild.sh and fmessage.sh
+
+`fmessage.sh` provides messaging only (err, warn, notice, step_done). `fbuild.sh` sources it and adds build context (REPO_ROOT, resolve_qt, etc.). Scripts needing only messaging (e.g. install_mxe, wrappers) source fmessage.sh; scripts needing build context source fbuild.
 
 Use `fbuild.sh` as the shared build library. It provides:
 
-- **Logging:** `err`, `warn`, `info`, `notice`, `step_done`, `section`
+- **Logging:** `err`, `warn`, `info`, `notice`, `step_done`, `section`. With `-L`/`--log`, logs **append** (mkdev: log_capture/tee -a; mkrelease: exec > tee -a). Do not truncate at start.
 - **Build:** `log_capture`, `build_fail`, `analyze_build_log`
 - **Args:** `parse_mkdev_args` (mkdev scripts)
 - **Resolution:** `resolve_zero_dir`, `resolve_qt`, `detect_mxe`
@@ -154,6 +156,8 @@ for f in zerowallet.exe zerod.exe zero-cli.exe; do
   unzip -l "artifacts/Windows-zerowallet-v$APP_VERSION.zip" | grep -q "$f" || err "package missing $f"
 done
 ```
+
+**mkrelease scripts:** Call `package-verify.sh --linux`, `--windows`, or `--mac` instead of duplicating inline verify loops.
 
 **Verify:** `./src/scripts/package-verify.sh` with:
 

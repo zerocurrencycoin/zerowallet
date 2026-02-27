@@ -63,8 +63,5 @@ cp "release/Windows-zerowallet-v${APP_VERSION}.zip" ./artifacts/
 step_done "Packaging"
 
 [ ! -f "artifacts/Windows-zerowallet-v${APP_VERSION}.zip" ] && err "Windows zip artifact not created"
-# Verify zip contains zerowallet.exe, zerod.exe, zero-cli.exe (wallet expects zerod next to zerowallet)
-for f in zerowallet.exe zerod.exe zero-cli.exe; do
-  unzip -l "artifacts/Windows-zerowallet-v$APP_VERSION.zip" | grep -q "$f" || err "package missing $f"
-done
+"$SCRIPT_DIR/package-verify.sh" --windows "artifacts/Windows-zerowallet-v${APP_VERSION}.zip"
 step_done "Package contents"

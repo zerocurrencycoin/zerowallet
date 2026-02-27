@@ -27,6 +27,8 @@ zero-qt-wallet.vcxproj*
 zerowallet.vcxproj*
 zero-qt-wallet.sln
 zerowallet.pro.user
+*.qm
+res/*.qm
 Makefile
 Makefile.*
 qrc_application.cpp

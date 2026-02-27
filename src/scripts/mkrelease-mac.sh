@@ -51,6 +51,10 @@ step_done "Signing"
 create-dmg --volname "ZeroWallet-v${APP_VERSION}" --volicon "res/logo.icns" --window-pos 200 120 --icon "ZeroWallet.app" 200 190 --app-drop-link 600 185 --hide-extension "ZeroWallet.app" --window-size 800 400 --hdiutil-quiet --background res/dmgbg.png "artifacts/macOS-zerowallet-v${APP_VERSION}.dmg" ZeroWallet.app >/dev/null 2>&1
 
 [ ! -f "artifacts/macOS-zerowallet-v${APP_VERSION}.dmg" ] && err "DMG not created"
+if [ "$(uname -s)" = "Darwin" ]; then
+  "$SCRIPT_DIR/package-verify.sh" --mac "artifacts/macOS-zerowallet-v${APP_VERSION}.dmg"
+fi
+step_done "Package contents"
 rm -rf artifacts/ZeroWallet.app
 mv ZeroWallet.app artifacts/
 step_done "Building dmg"

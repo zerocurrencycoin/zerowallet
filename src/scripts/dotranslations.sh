@@ -4,11 +4,10 @@
 # .qm files are platform-independent; used by all mkrelease builds.
 # Rebuild by default. Use -t/--tran (mkrelease) or DOTRANSLATIONS_SKIP=1 to turn translations off.
 set -e -u -o pipefail
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck disable=SC2034
 ME="dotranslations"
 # shellcheck disable=SC1091
-. "$SCRIPT_DIR/fbuild.sh"
+. "$(dirname "${BASH_SOURCE[0]}")/fbuild.sh"
 cd "$REPO_ROOT"
 
 [ -z "${QT_PREFIX:-}" ] && err "QT_PREFIX not set. Set -q/--qt or QT_PREFIX, or run from mkrelease script."

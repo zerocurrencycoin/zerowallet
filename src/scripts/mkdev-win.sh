@@ -10,7 +10,6 @@ ME="mkdev-win"
 cd "$REPO_ROOT"
 
 parse_mkdev_args "logs/mkdev-win.log" "$@"
-[ -n "$LOG_FILE" ] && : > "$LOG_FILE"
 resolve_qt win dev
 [ -d "${MXE_PATH:-}" ] || err "MXE not found. Set MXE_PATH or install to ~/mxe. See BUILD.md Windows."
 command -v "$QMAKE" >/dev/null 2>&1 || err "MXE qmake not found. Build Qt in MXE: make qtbase qtwebsockets"

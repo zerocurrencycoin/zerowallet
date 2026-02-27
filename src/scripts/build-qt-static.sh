@@ -3,11 +3,10 @@
 # Build static Qt 5.15.18 for zerowallet Linux release. One-time, ~30-60 min.
 # Output: qt5-static/ in zerowallet repo root.
 set -e -u -o pipefail
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck disable=SC2034
 ME="build-qt-static"
 # shellcheck disable=SC1091
-. "$SCRIPT_DIR/fbuild.sh"
+. "$(dirname "${BASH_SOURCE[0]}")/fbuild.sh"
 cd "$REPO_ROOT"
 
 QT_PREFIX="$REPO_ROOT/qt5-static"
@@ -34,6 +33,11 @@ if [ ! -d qt-everywhere-opensource-src-5.15.18 ]; then
 fi
 
 cd qt-everywhere-opensource-src-5.15.18
+PATCH_FILE="$REPO_ROOT/res/patches/qt-gcc13.diff"
+if [ -f "$PATCH_FILE" ]; then
+  notice "Applying GCC 13+ patch..."
+  (cd qtlocation && patch -p1 < "$PATCH_FILE") || err "GCC 13 patch failed. Script: $SCRIPT_DIR/build-qt-static.sh. Patch: $PATCH_FILE. See BUILD.md § GCC 13+ (Linux static Qt)."
+fi
 notice "Configuring (prefix=$QT_PREFIX)..."
 ./configure -opensource -confirm-license -static -release \
     -prefix "$QT_PREFIX" \
