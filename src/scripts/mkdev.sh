@@ -1,6 +1,8 @@
 #!/bin/bash
+# Copyright 2026 Zero Developers
+set -e -u -o pipefail
 # Wrapper: run mkdev-<platform>.sh. Pass all args through.
-# Linux -> mkdev-linux, macOS -> mkdev-mac, else -> mkdev-win (cross-build from Linux)
+# Linux -> mkdev-linux, macOS -> mkdev-mac, else -> mkdev-win (Windows target, cross-build from Linux)
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 case "$(uname -s)" in
   Linux)  exec "$SCRIPT_DIR/mkdev-linux.sh" "$@" ;;

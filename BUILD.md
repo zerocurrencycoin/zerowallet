@@ -20,7 +20,7 @@ Build zerod in the Zero repo root, then run the platform mkrelease script. See [
 |-----------|------------------|-------|
 | Qt | 5.15.18 or later | See [Qt](#qt). |
 | zerod | - | Built from [Zero](https://github.com/zerocurrencycoin/zero); Binaries in `ZERO_DIR` |
-| libsodium | 1.0.21 | Vendored in `res/` |
+| libsodium | 1.0.21 | Built into `res/`; we maintain build scripts (see [libsodium](#libsodium-requirements-and-per-platform-review)) |
 | nlohmann/json | 3.6.1 | Vendored in `src/3rdparty/` |
 | SingleApplication | v3.5.4 Vendored | `singleapplication/`; single-instance |
 
@@ -46,20 +46,32 @@ One-time install per platform. Custom path via `-q` or `QT_PREFIX`, only when ne
 |------|---------|
 | `fbuild.sh` | Shared build helpers: paths, logging, log_capture, build_fail, resolve_zero_dir, detect_mxe, resolve_qt, version helpers, parse_mkdev_args |
 | `mkdev.sh` | Wrapper: runs mkdev-linux, mkdev-mac, or mkdev-win per platform |
-| `mkdev-linux.sh` | Linux dev build. Output: `zerowallet`. `-h` `-r` `-j N` `-L` `-q` `--run` `--clean` |
-| `mkdev-mac.sh` | macOS dev build. Output: `zerowallet.app`. `-h` `-r` `-j N` `-L` `-q` `--run` `--clean` |
-| `mkdev-win.sh` | Linux→Win dev (MXE). Output: `debug/` or `release/zerowallet.exe` (-r). `-h` `-L` `-m` `-r` `--run` `--clean` |
+| `mkdev-linux.sh` | Linux dev build. Output: `zerowallet`. See [mkdev options](#script-argument-lists). |
+| `mkdev-mac.sh` | macOS dev build. Output: `zerowallet.app`. See [mkdev options](#script-argument-lists). |
+| `mkdev-win.sh` | Linux→Win dev (MXE). Output: `debug/` or `release/zerowallet.exe`. See [mkdev options](#script-argument-lists). |
 | `mkrelease.sh` | Wrapper: runs mkrelease-linux, mkrelease-mac, or mkrelease-win per platform |
-| `mkrelease-linux.sh` | Linux release. Output: `artifacts/linux-zerowallet-vX.Y.Z.tar.gz`, `.deb` |
-| `mkrelease-mac.sh` | macOS release. Output: `artifacts/macOS-zerowallet-vX.Y.Z.dmg` |
-| `mkrelease-win.sh` | Linux→Win release (MXE). Output: `artifacts/Windows-zerowallet-vX.Y.Z.zip` |
-| `mkrelease-linuxwin.sh` | Linux host only: Linux + Windows in one run. **Deprecated:** use mkrelease-linux and mkrelease-win separately. |
-| `build-qt-static.sh` | Linux: static Qt in `qt5-static/` (one-time) |
-| `dotranslations.sh` | Qt lrelease for translations (requires QT_PREFIX) |
-| `install_mxe.sh` | MXE: default = full install; `--deps` apt only; `--check` verify. System-wide: `MXE_ROOT=/opt/mxe` |
-| `signbinaries.sh` | GPG signatures and sha256sums. `-v X.Y.Z` |
+| `mkrelease-linux.sh` | Linux release. Output: `artifacts/linux-zerowallet-vX.Y.Z.tar.gz`, `.deb`. See [mkrelease options](#script-argument-lists). |
+| `mkrelease-mac.sh` | macOS release. Output: `artifacts/macOS-zerowallet-vX.Y.Z.dmg`. See [mkrelease options](#script-argument-lists). |
+| `mkrelease-win.sh` | Linux→Win release (MXE). Output: `artifacts/Windows-zerowallet-vX.Y.Z.zip`. See [mkrelease options](#script-argument-lists). |
+| `mkrelease-linuxwin.sh` | **RETIRED.** Exits with message; run mkrelease-linux.sh and mkrelease-win.sh separately. |
+| `build-qt-static.sh` | Linux: static Qt in `qt5-static/` (one-time). No args; uses `QT_PREFIX` env. |
+| `dotranslations.sh` | Compile .ts→.qm (lrelease), merge Qt base (lconvert). Called by mkrelease; `DOTRANSLATIONS_SKIP=1` or mkrelease `-t` to skip. |
+| `install_mxe.sh` | MXE: `--install` (default), `--deps`, `--check`. See [install_mxe options](#script-argument-lists). |
+| `signbinaries.sh` | GPG signatures and sha256sums. See [signbinaries options](#script-argument-lists). |
+| `package-verify.sh` | Verify release packages. See [package-verify options](#script-argument-lists). |
 | `control` | Debian package control template |
 | `desktopentry` | Desktop entry for Linux .deb |
+
+
+### res/ scripts
+
+| File | Purpose |
+|------|---------|
+| `res/mkicns-mac.sh` | Build macOS .icns from SVG. `[INKSCAPE] [SVG_PATH] [OUT_BASE]`; defaults: inkscape, logo.svg, logo |
+| `res/mkico.sh` | Build Windows .ico from SVG. `[SVG_PATH] [ICO_OUT]`; defaults: logo.svg, icon.ico |
+| `res/libsodium/fbuild-libsodium.sh` | Shared libsodium config; sources fbuild.sh |
+| `res/libsodium/buildlibsodium.sh` | Unix (Linux, macOS) libsodium build |
+| `res/libsodium/buildlibsodium-win.sh` | Windows target libsodium build (runs on Linux, MXE) |
 
 
 ### Script summary
@@ -74,20 +86,62 @@ One-time install per platform. Custom path via `-q` or `QT_PREFIX`, only when ne
 | `mkrelease-linux.sh` | Linux | `artifacts/*.tar.gz`, `artifacts/*.deb` |
 | `mkrelease-mac.sh` | macOS | `artifacts/*.dmg` |
 | `mkrelease-win.sh` | Windows | `artifacts/*.zip` |
-| `mkrelease-linuxwin.sh` | Linux+Win | Both (deprecated) |
+| `mkrelease-linuxwin.sh` | — | RETIRED (stub) |
 | `build-qt-static.sh` | Linux | `qt5-static/` |
 | `signbinaries.sh` | any | GPG signatures |
+
+### Script argument lists
+
+**Both mkdev and mkrelease** (alphabetically):
+
+| Option | Description |
+|--------|--------------|
+| `-h`, `--help` | Show help |
+| `-j N`, `--jobs N` | Parallel jobs |
+| `-L`, `-L=PATH`, `--log`, `--log=PATH` | Capture log (default: `logs/mkdev-<platform>.log` or `logs/mkrelease-<platform>.log`) |
+| `-m`, `--mxe PATH` | MXE usr/bin (Windows target, Linux host) |
+| `-q`, `--qt PATH` | Qt prefix |
+
+**mkdev only** (alphabetically):
+
+| Option | Description |
+|--------|--------------|
+| `-c`, `--clean` | Force clean/distclean before build (default: incremental) |
+| `-r`, `--release` | CONFIG+=release (default: debug) |
+| `-R`, `--run` | Launch binary after build |
+
+**mkrelease only** (alphabetically):
+
+| Option | Description |
+|--------|--------------|
+| `-p`, `--prev V` | PREV_VERSION (default: from version.h or git) |
+| `-t`, `--tran` | Skip translations |
+| `-v`, `--version V` | APP_VERSION (X.Y.Z) |
+| `-z`, `--zero PATH` | Zero src dir (zerod, zero-cli) |
+
+**Other scripts** (alphabetically by script):
+
+| Script | Options |
+|--------|---------|
+| `install_mxe.sh` | `-c`, `--check`; `-d`, `--deps`; `-i`, `--install` (default) |
+| `package-verify.sh` | `-l`, `--linux PATH`; `-m`, `--mac PATH`; `-t`, `--test`; `-v`, `--version V`; `-w`, `--windows PATH` |
+| `res/mkicns-mac.sh` | `[INKSCAPE] [SVG_PATH] [OUT_BASE]` (positional; defaults: inkscape, logo.svg, logo) |
+| `res/mkico.sh` | `[SVG_PATH] [ICO_OUT]` (positional; defaults: logo.svg, icon.ico) |
+| `signbinaries.sh` | `-v`, `--version V` |
+
+---
 
 ### Unified Arguments
 
 | Flag | Env | Default | Description |
 |------|-----|---------|-------------|
 | `-z`, `--zero` | `ZERO_DIR` | `../Zero/src` or `../ZeroLinux/src`/`../ZeroWin/src` if absent | Directory with zerod binaries; see [ZERO_DIR](#zero_dir) below |
-| `--zerolinux`, `--zerowin` | `ZERO_DIR_LINUX`, `ZERO_DIR_WIN` | — | (mkrelease-linuxwin only) Override Linux/Windows zerod dirs |
+| `--zerolinux`, `--zerowin` | `ZERO_DIR_LINUX`, `ZERO_DIR_WIN` | — | (retired with mkrelease-linuxwin) |
 | `-v`, `--version` | `APP_VERSION` | from `src/version.h` | Release version. See [APP_VERSION](#app_version) below. |
 | `-p`, `--prev` | `PREV_VERSION` | patch−1 of APP_VERSION | Previous version for sed. See [PREV](#prev) below. |
-| `-q`, `--qt` | `QT_PREFIX` | `./qt5-static/` (repo root) | Qt install prefix |
-| `-m`, `--mxe` | `MXE_PATH` | auto-detect | MXE `usr/bin` path (Windows only). `-m` expects bin dir. `MXE_ROOT` for install path (e.g. `/opt/mxe`). |
+| `-q`, `--qt` | `QT_PREFIX` | `./qt5-static/` (repo root) | Qt install prefix. Precedence: command line > env > default. Linux dev: default to system qmake if unset. mkrelease-win: host Qt for dotranslations. |
+| `-m`, `--mxe` | `MXE_PATH` | auto-detect | MXE `usr/bin` path (Windows only). Precedence: **command line** > **env** > both tools in PATH > probe. Probe failure: err and exit. `-m` expects bin dir. |
+| `-t`, `--tran` | `DOTRANSLATIONS_SKIP` | — | Turn translations off; skip lrelease. Use prior .qm if fresh. (mkrelease only) |
 
 ### APP_VERSION / PREV_VERSION
 
@@ -100,7 +154,7 @@ Both from `src/version.h` and git tag (supports `vN.N.N` or `N.N.N`). Logic:
 
 ### ZERO_DIR
 
-Directory containing built `zerod` and `zero-cli` (or `.exe` on Windows). A given repo builds either Linux or Windows, not both; do not build different platforms in the same directory. Default `../Zero`; if absent, Linux scripts use `../ZeroLinux`, Windows scripts use `../ZeroWin`. Binaries in `src/` subdir. Override with `-z` or `ZERO_DIR`. For mkrelease-linuxwin use `--zerolinux` and `--zerowin`. Stripping: Linux and Windows scripts strip binaries before packaging; macOS not stripped.
+Directory containing built `zerod` and `zero-cli` (or `.exe` on Windows). A given repo builds either Linux or Windows, not both; do not build different platforms in the same directory. Default `../Zero`; if absent, Linux scripts use `../ZeroLinux`, Windows scripts use `../ZeroWin`. Binaries in `src/` subdir. Override with `-z` or `ZERO_DIR`. Stripping: Linux and Windows scripts strip binaries before packaging; macOS not stripped.
 
 ### PREV
 
@@ -134,7 +188,7 @@ mkdev scripts support `-L` or `-L=path` to capture build output. Default: `logs/
 ./src/scripts/mkrelease-linux.sh
 ```
 
-**mkrelease-linuxwin** (deprecated): Builds Linux and Windows in one run. Confusing: requires two Zero builds in separate dirs, inlines both phases instead of calling mkrelease-linux and mkrelease-win, and mixes platform-specific logic. Run `mkrelease-linux.sh` and `mkrelease-win.sh` separately.
+**mkrelease-linuxwin** (RETIRED): Script exits with a message. Run `mkrelease-linux.sh` and `mkrelease-win.sh` separately.
 
 ### macOS
 
@@ -215,7 +269,7 @@ xcrun stapler staple artifacts/macOS-zerowallet-vX.Y.Z.dmg
 
 #### MXE
 
-MXE (M Cross Environment) for MinGW + static Qt. Build from source only; we do not use prebuilt packages with stale dist support. Scripts auto-detect MXE in (first match): `$HOME/mxe/usr/bin`, `/opt/mxe/usr/bin`. Override with `-m` or `MXE_PATH`. Design: `MXE_ROOT=~/mxe`, `MXE_PATH=$MXE_ROOT/usr/bin`; `-m` expects `usr/bin` path.
+MXE (M Cross Environment) for MinGW + static Qt. Build from source only; we do not use prebuilt packages with stale dist support. **MXE precedence:** command line (`-m`/`--mxe`) > environment (`MXE_PATH`) > both tools in PATH > probe (`$HOME/mxe/usr/bin`, `/opt/mxe/usr/bin`). Detection requires both `x86_64-w64-mingw32.static-gcc` (libsodium, wallet) and `x86_64-w64-mingw32.static-qmake-qt5` (wallet). Both `mkdev-win.sh` and `mkrelease-win.sh` use this strategy. Design: `MXE_ROOT=~/mxe`, `MXE_PATH=$MXE_ROOT/usr/bin`; `-m` expects `usr/bin` path.
 
 | Path | Source |
 |------|--------|
@@ -258,13 +312,140 @@ If `src/version.h` does not contain `APP_VERSION`, mkrelease scripts warn (misma
 
 ### mkdev options
 
-`-h` / `--help` shows usage. `--run` after build: Linux/macOS launch binary; Windows runs `wine ... --help` if wine installed (smoke test). `--clean` removes platform-specific build outputs and exits (Linux: zerowallet, bin/; macOS: zerowallet.app, ZeroWallet.app; Windows: debug/, release/, mingw files).
+`-h` / `--help` shows usage. `--run` after build: Linux/macOS launch binary; Windows runs `wine ... --help` if wine installed (smoke test). `-c`/`--clean` forces clean/distclean before build (default: incremental; no exit).
+
+### clean vs distclean
+
+| Target | Effect |
+|--------|--------|
+| `make clean` | Removes object files and executables; keeps Makefile |
+| `make distclean` | Also removes Makefile, .qmake.stash; requires `qmake` before next build |
+
+**mkdev:** Linux/mac use `distclean` when `-c`; Windows uses `make clean` plus manual removal of `debug/`, `release/`, `zero-qt-wallet-mingw.pro`, `Makefile` (mingw layout differs). **mkrelease:** Always does full clean (distclean + rm artifacts) before build.
 
 ---
 
 ## Wine (Windows testing on Linux)
 
 [Wine](https://www.winehq.org/) runs Windows binaries on Linux. After cross-building: `wine debug/zerowallet.exe --help` (or `release/zerowallet.exe`) to verify the binary. Install: `sudo apt install wine`. Wine translates Win32 API calls; useful for quick smoke tests without a Windows VM.
+
+---
+
+## libsodium: Requirements and per-platform review
+
+**Vendored:** We do not commit libsodium source; we download at build time and produce static `.a` in `res/`. We create and maintain the build scripts. Directory structure:
+
+```
+res/
+├── libsodium.a          # Unix (Linux, macOS)
+├── libsodiumd.a         # Windows debug (copy of libsodium.a)
+├── liblibsodium.a       # MinGW linker naming
+├── liblibsodiumd.a      # MinGW debug
+└── libsodium/
+    ├── buildlibsodium.sh      # Unix (Linux, macOS)
+    ├── buildlibsodium-win.sh  # Windows target (runs on Linux, MXE)
+    └── libsodium-${VER}/     # extracted source (Unix and Windows)
+```
+
+### Requirements
+
+- **Version:** 1.0.21 (matches Zero depends)
+- **Output:** Static `.a` in `res/` (all platforms)
+- **Consumers:** qmake links wallet; Zero builds zerod separately
+- **Paths:** All under `res/` from repo root. Unix: `res/libsodium.a`. Windows target (build on Linux): same base `libsodium.a` plus `libsodiumd.a`, `liblibsodium.a`, `liblibsodiumd.a` (MinGW linker naming; symlinks to same file)
+
+### Per-platform circumstances
+
+**Linux, macOS:** `res/libsodium/buildlibsodium.sh`
+
+- Invoked by: qmake (libsodium target), mkdev-linux/mac, mkrelease-linux/mac
+- Outputs: libsodium.a
+
+**Windows target (runs on Linux):** `res/libsodium/buildlibsodium-win.sh`
+
+- Cross-compile from Linux via MXE; produces MinGW static libs for Windows
+- Invoked by: mkdev-win, mkrelease-win (not qmake)
+- Outputs: libsodium.a, libsodiumd.a, liblibsodium.a, liblibsodiumd.a
+
+### Current trouble
+
+- **Two scripts:** buildlibsodium.sh (Unix) vs buildlibsodium-win.sh (Windows). Different layout, different artifact names.
+- **qmake mismatch:** .pro references buildlibsodium.sh; Windows builds run buildlibsodium-win.sh manually before qmake.
+- **Source layout:** Both use `res/libsodium/libsodium-${VER}/`.
+- **ZERO_DEPENDS:** Dropped (agreed). Download and build each time.
+
+### Derived solution (current)
+
+**1. Keep separate scripts** — `buildlibsodium.sh` (Unix) and `buildlibsodium-win.sh` (Windows target, runs on Linux)
+
+- Different toolchains: native vs MXE
+- Different artifact names: libsodium.a vs liblibsodium.a
+- Merging would add platform conditionals and complexity
+
+**2. Keep fbuild-libsodium.sh** — shared version/URL (renamed from libsodium-common.sh)
+
+- Single source of truth; both scripts source it
+- Avoids version drift
+- **fbuild overlap:** fbuild-libsodium.sh sources fbuild.sh (provides err, notice). Build scripts source only fbuild-libsodium.sh. Overlap is minimal (err only). Pushing libsodium logic into fbuild would pollute it with libsodium specifics. Keep separate.
+
+**3. ZERO_DEPENDS** — limited; full solution deferred
+
+- **Current scope:** Only when Zero is built *first*; copy from Zero's depends. One-way. Does not handle: zerowallet built first, or future rebuilds of either.
+- **Full solution (deferred):** Dependency cache — either build order, rebuilds of Zero or zerowallet, shared across both. See § Shared dependency cache.
+- Windows implemented; Unix would need host triplet mapping; low priority
+
+**4. Document script roles**
+
+- buildlibsodium-win.sh for Windows; buildlibsodium.sh for Linux/macOS
+- qmake libsodium target runs buildlibsodium.sh (Unix only)
+- mkrelease-win/mkdev-win invoke buildlibsodium-win.sh explicitly
+
+**5. No change to qmake**
+
+- .pro expects libsodium.a for Unix; Windows build scripts pre-populate liblibsodium.a before qmake
+- Changing .pro to platform-specific commands adds fragility for little gain
+
+### Pro/con: ZERO_DEPENDS, separate scripts, common script
+
+| Topic | Pro | Con |
+|-------|-----|-----|
+| **ZERO_DEPENDS** | Saves ~2–3 min when Zero built first; CI-friendly | One-way only (Zero first); no rebuild handling; Windows only; host triplet hardcoded |
+| **Keep separate build scripts** | Different toolchains justify it; clear platform ownership | Two scripts to maintain; qmake references Unix script only |
+| **Push more into fbuild-libsodium.sh** | Single source for version, URL, download; less drift | fbuild-libsodium already minimal; build logic (configure, make, copy) is platform-specific; merging would add conditionals |
+
+**Agreed:** Drop ZERO_DEPENDS; minimize buildlibsodium differences; keep fbuild-libsodium.sh for shared logic.
+
+### Simplify: drop ZERO_DEPENDS, download and build each time?
+
+| Approach | Pro | Con |
+|----------|-----|-----|
+| **Keep ZERO_DEPENDS** | Saves ~2–3 min when Zero built first | One-way only; no rebuild handling; Windows-only; extra complexity |
+| **Drop it; build each time** | Simpler; no cross-repo coupling; works in any order | ~2–3 min per libsodium build; duplicate when Zero + zerowallet both built |
+
+**Assessment:** For per-platform repos (zerowalletlinux, zerowalletwin) that build independently, "download and build each time" is simpler and sufficient. ZERO_DEPENDS mainly helps CI that builds Zero then zerowallet in sequence. If we eliminate it, we remove the only cross-repo dependency.
+
+### Without ZERO_DEPENDS: how different would the two scripts be?
+
+If we push all shared logic into fbuild-libsodium.sh (download, extract, configure, make, copy), the remaining platform differences:
+
+| Aspect | Unix | Windows |
+|--------|------|---------|
+| Extract dir | `libsodium-${VER}/` | `libsodium-${VER}/` |
+| Configure | `./configure` | `--host=x86_64-w64-mingw32 CC=... CXX=...` (Windows target, Linux host) |
+| Make | `make` (maybe darwin CFLAGS) | `make` |
+| Artifacts | Copy `libsodium.a` → `res/` | Copy `libsodium.a` → `res/`, symlink to libsodiumd.a, liblibsodium.a, liblibsodiumd.a |
+
+**Result:** ~15–20 lines of platform-specific logic. Could become one script with `case $(uname -s)` / `$HOST` or two thin wrappers calling shared functions. The toolchain (native vs MXE) and artifact naming (MinGW) are the real differences; the build flow is the same.
+
+### Agreed design
+
+- **REPO_ROOT / script paths:** Each script type resolves paths for its location. `src/scripts` scripts use `SCRIPT_DIR` and `REPO_ROOT` from fbuild. `res/libsodium` scripts derive `REPO_ROOT` from their location and source `$REPO_ROOT/res/libsodium/fbuild-libsodium.sh` (which sources fbuild.sh).
+- **No _DEPENDS:** Drop ZERO_DEPENDS. Download and build each time. Simpler; no cross-repo coupling.
+- **Minimal buildlibsodium differences:** Push shared logic into fbuild-libsodium.sh. Keep two thin scripts (Unix, Windows) with only toolchain and artifact-naming differences.
+
+### Repo root and script locations
+
+**Current:** Scripts in `res/libsodium/` source `$REPO_ROOT/res/libsodium/fbuild-libsodium.sh` (which sources fbuild.sh). Scripts in `src/scripts/` use `SCRIPT_DIR` and `REPO_ROOT` from fbuild.
 
 ---
 
@@ -339,6 +520,10 @@ Host examples: Linux `x86_64-pc-linux-gnu`, macOS `x86_64-apple-darwin22` / `aar
 3. **Windows symlinks** – Creating symlinks on Windows often needs elevated rights or Developer Mode; copies are simpler but lose sharing benefits.
 4. **Current workaround** – `ZERO_DEPENDS` already avoids duplicate builds when Zero is built first. That covers the main multi-repo case.
 5. **CI** – Setting `ZERO_DEPENDS` in workflows is a small change that saves time without a new cache layer.
+
+#### ZERO_DEPENDS (dropped)
+
+Previously: copy from Zero's depends when Zero built first. Dropped per agreed design. Download and build each time.
 
 #### Future steps (libsodium, if implemented)
 

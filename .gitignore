@@ -15,7 +15,6 @@ res/libsodiumd.a
 res/liblibsodium.a
 res/liblibsodiumd.a
 res/libsodium/libsodium*
-res/libsodium/win/
 src/ui_*.h
 *.autosave
 src/precompiled.h.cpp
