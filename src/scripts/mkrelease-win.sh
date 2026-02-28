@@ -17,8 +17,7 @@ check_version_mismatch
 
 apply_version_sed
 
-[ ! -f "$ZERO_DIR/zerod.exe" ] && err "zerod.exe not found in $ZERO_DIR. Build Zero for Windows first."
-[ ! -f "$ZERO_DIR/zero-cli.exe" ] && err "zero-cli.exe not found in $ZERO_DIR. Build Zero for Windows first."
+check_zero_binaries win
 
 rm -rf bin/*
 rm -rf artifacts/*

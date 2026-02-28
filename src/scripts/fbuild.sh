@@ -185,6 +185,15 @@ resolve_qt() {
   esac
 }
 
+# Check zerod and zero-cli exist in ZERO_DIR. $1: platform (linux|mac|win). Err if missing.
+check_zero_binaries() {
+  local plat="${1:-linux}" suf=""
+  [ "$plat" = "win" ] && suf=".exe"
+  [ -f "$ZERO_DIR/zerod$suf" ] || err "zerod$suf not found in $ZERO_DIR. Build Zero first."
+  [ "$plat" = "mac" ] && return 0
+  [ -f "$ZERO_DIR/zero-cli$suf" ] || err "zero-cli$suf not found in $ZERO_DIR. Build Zero first."
+}
+
 # Resolve ZERO_DIR. $1: platform (linux|mac|win). Uses ZERO_BASE: ../Zero, else ../ZeroLinux or ../ZeroWin.
 resolve_zero_dir() {
   local plat="${1:-linux}"

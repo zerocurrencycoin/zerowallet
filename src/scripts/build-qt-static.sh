@@ -2,12 +2,28 @@
 # Copyright 2026 Zero Developers
 # Build static Qt 5.15.18 for zerowallet Linux release. One-time, ~30-60 min.
 # Output: qt5-static/ in zerowallet repo root.
+# Options: -L, -L=PATH, --log=PATH  capture build log (default: logs/build-qt-static.log)
 set -e -u -o pipefail
 # shellcheck disable=SC2034
 ME="build-qt-static"
 # shellcheck disable=SC1091
 . "$(dirname "${BASH_SOURCE[0]}")/fbuild.sh"
 cd "$REPO_ROOT"
+
+LOG_FILE=""
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    -L) LOG_FILE="${LOG_FILE:-$REPO_ROOT/logs/build-qt-static.log}"; shift ;;
+    -L=*) LOG_FILE="${1#-L=}"; shift ;;
+    --log)
+      if [ -n "${2:-}" ] && [[ "$2" != -* ]]; then LOG_FILE="$2"; shift 2
+      else LOG_FILE="${LOG_FILE:-$REPO_ROOT/logs/build-qt-static.log}"; shift; fi
+      ;;
+    --log=*) LOG_FILE="${1#--log=}"; shift ;;
+    *) break ;;
+  esac
+done
+[ -n "$LOG_FILE" ] && mkdir -p "$(dirname "$LOG_FILE")" && exec > >(tee -a "$LOG_FILE") 2>&1
 
 QT_PREFIX="$REPO_ROOT/qt5-static"
 # shellcheck disable=SC2034
