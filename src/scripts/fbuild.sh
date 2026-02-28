@@ -231,8 +231,8 @@ mxe_has_both() {
 detect_mxe() {
   [ -n "${MXE_PATH:-}" ] && return 0
   local gcc_path qmake_path d
-  gcc_path=$(command -v x86_64-w64-mingw32.static-gcc 2>/dev/null)
-  qmake_path=$(command -v x86_64-w64-mingw32.static-qmake-qt5 2>/dev/null)
+  gcc_path=$(command -v x86_64-w64-mingw32.static-gcc 2>/dev/null) || true
+  qmake_path=$(command -v x86_64-w64-mingw32.static-qmake-qt5 2>/dev/null) || true
   if [ -n "$gcc_path" ]; then
     d="$(dirname "$gcc_path")"
     mxe_has_both "$d" && { MXE_PATH="$d"; return 0; }
