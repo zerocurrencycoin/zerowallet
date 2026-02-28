@@ -30,10 +30,11 @@ verify_tar() {
   check_file "$archive" "tar archive"
   [[ "$archive" == *.tar.gz ]] || [[ "$archive" == *.tgz ]] || err "tar: expected .tar.gz or .tgz: $archive"
   tar tf "$archive" >/dev/null 2>&1 || err "tar: invalid or unreadable: $archive"
-  local f
+  local list f
+  list="$(tar tf "$archive")"
   # Expected: zerowallet, zerod, zero-cli (structure as of 2026-02)
   for f in zerowallet zerod zero-cli; do
-    tar tf "$archive" | grep -qE "(^|/)${f}(/|$)" || err "tar: missing required file $f in $archive"
+    echo "$list" | grep -qE "(^|/)${f}(/|$)" || err "tar: missing required file $f in $archive"
   done
   echo "OK: tar $archive"
 }

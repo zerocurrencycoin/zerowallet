@@ -72,7 +72,7 @@ Qt 5.15.18's bundled mapbox-gl-native (qtlocation) fails with GCC 13+ due to mis
 | `mkrelease-linux.sh` | Linux release. Output: `artifacts/linux-zerowallet-vX.Y.Z.tar.gz`, `.deb`. See [mkrelease options](#script-argument-lists). |
 | `mkrelease-mac.sh` | macOS release. Output: `artifacts/macOS-zerowallet-vX.Y.Z.dmg`. See [mkrelease options](#script-argument-lists). |
 | `mkrelease-win.sh` | Linux→Win release (MXE). Output: `artifacts/Windows-zerowallet-vX.Y.Z.zip`. See [mkrelease options](#script-argument-lists). |
-| `build-qt-static.sh` | Linux: static Qt in `qt5-static/` (one-time). Skips if `qt5-static/bin/qmake` exists. No args; uses `QT_PREFIX` env. |
+| `build-qt-static.sh` | Linux: static Qt in `qt5-static/` (one-time). Skips if `qt5-static/bin/qmake` exists. `-L` to capture log to `logs/build-qt-static.log`. |
 | `dotranslations.sh` | Compile .ts→.qm (lrelease), merge Qt base (lconvert). Called by mkrelease; `DOTRANSLATIONS_SKIP=1` or mkrelease `-t` to skip. |
 | `install_mxe.sh` | MXE: `--install` (default), `--deps`, `--check`. See [install_mxe options](#script-argument-lists). |
 | `signbinaries.sh` | GPG signatures and sha256sums. See [signbinaries options](#script-argument-lists). |
@@ -140,6 +140,7 @@ Qt 5.15.18's bundled mapbox-gl-native (qtlocation) fails with GCC 13+ due to mis
 
 | Script | Options |
 |--------|---------|
+| `build-qt-static.sh` | `-L`, `-L=PATH`, `--log`, `--log=PATH` — capture build log (default: `logs/build-qt-static.log`) |
 | `install_mxe.sh` | `-c`, `--check`; `-d`, `--deps`; `-i`, `--install` (default) |
 | `package-verify.sh` | `-l`, `--linux PATH`; `-m`, `--mac PATH`; `-t`, `--test`; `-v`, `--version V`; `-w`, `--windows PATH` |
 | `res/mkicns-mac.sh` | `[INKSCAPE] [SVG_PATH] [OUT_BASE]` (positional; defaults: inkscape, logo.svg, logo) |
@@ -239,7 +240,7 @@ Use `./qt5-static/` (our default) for mkrelease-linux and when Qt base translati
 
 | Step | Command |
 |------|---------|
-| 5.1 | `./src/scripts/build-qt-static.sh` (one-time; skips if `qt5-static/bin/qmake` exists) |
+| 5.1 | `./src/scripts/build-qt-static.sh -L` (one-time; skips if `qt5-static/bin/qmake` exists; log: `logs/build-qt-static.log`) |
 | 5.2 | `./src/scripts/mkrelease-linux.sh -z ../Zero/src` (Linux release; zerod in ../Zero) |
 | 5.3 | `./src/scripts/mkrelease-win.sh -z ../ZeroWin/src` (Windows release) |
 | 5.4 | `wine release/zerowallet.exe --help` (Wine smoke test on Linux) |

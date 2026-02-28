@@ -18,7 +18,7 @@ check_version_mismatch
 apply_version_sed
 
 [ -z "${QT_PREFIX:-}" ] && err "QT_PREFIX not set. Use -q/--qt or 'brew install qt@5'. Default: brew --prefix qt@5"
-[ ! -f "$ZERO_DIR/zerod" ] && err "zerod not found in $ZERO_DIR. Build Zero first."
+check_zero_binaries mac
 
 export PATH="${PATH}:/usr/local/bin"
 

@@ -18,18 +18,17 @@ resolve_version
 check_version_mismatch
 apply_version_sed
 
-[ ! -f "$ZERO_DIR/zerod" ] && err "zerod not found in $ZERO_DIR. Build Zero first."
-[ ! -f "$ZERO_DIR/zero-cli" ] && err "zero-cli not found in $ZERO_DIR. Build Zero first."
+check_zero_binaries linux
 
 rm -rf bin/*
 rm -rf artifacts/*
-make distclean >/dev/null 2>&1
+make distclean >/dev/null 2>&1 || true
 step_done "Cleaning"
 
 section "Linux ($(lsb_release -rs 2>/dev/null || echo 'build'))"
 
 run_dotranslations >/dev/null
-$QMAKE zero-qt-wallet.pro -spec linux-clang CONFIG+=release > /dev/null
+$QMAKE zero-qt-wallet.pro -spec linux-g++ CONFIG+=release > /dev/null
 step_done "Configuring"
 
 rm -rf bin/zero-qt-wallet* > /dev/null

@@ -32,6 +32,37 @@ sodium_extract() {
     cd "libsodium-${LIBSODIUM_VER}" || exit 1
 }
 
+# Configure and build libsodium. Call from libsodium-${VER}/. Arg: "unix" or "win".
+sodium_configure_make() {
+  local target="${1:-unix}"
+  if [ "$target" = "win" ]; then
+    CC="$(command -v x86_64-w64-mingw32.static-gcc 2>/dev/null)"
+    [ -n "${CC:-}" ] || err "x86_64-w64-mingw32.static-gcc not found. Run on Linux with MXE in PATH."
+    CXX="${CC%gcc}g++"
+    PREFIX="$REPO_ROOT/depends/x86_64-w64-mingw32"
+    LIBS="" ./configure --prefix="$PREFIX" --host=x86_64-w64-mingw32 CC="${CC} -g" CXX="${CXX} -g" > /dev/null
+  else
+    LIBS="" ./configure > /dev/null
+  fi
+  make clean > /dev/null 2>&1
+  if [[ "${OSTYPE:-}" == darwin* ]]; then
+    make CFLAGS="-mmacosx-version-min=10.11" CPPFLAGS="-mmacosx-version-min=10.11" > /dev/null 2>&1
+  else
+    make > /dev/null 2>&1
+  fi
+}
+
+# Full build: extract, configure, make, copy. Call from repo root. Arg: "unix" or "win".
+sodium_build() {
+  local target="${1:-unix}"
+  [ -f res/libsodium.a ] && rm res/libsodium.a
+  notice "Building libsodium..."
+  sodium_extract
+  sodium_configure_make "$target"
+  cd ..
+  sodium_copy "$target"
+}
+
 # Copy built libsodium.a to res/. Call from res/libsodium/ (parent of libsodium-${VER}/).
 # Arg target: "unix" or "win". Win: for Windows target (build runs on Linux); creates libsodiumd.a, liblibsodium.a, liblibsodiumd.a (symlinks).
 sodium_copy() {

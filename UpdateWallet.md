@@ -401,7 +401,7 @@ libqt5websockets5-dev, qt5-qmake
 
 **libsodium Status**
 - `res/libsodium.a` — Static library (MinGW .a; use buildlibsodium-win.sh for Windows)
-- `res/libsodium/win/libsodium-1.0.21/` — Windows cross-compiled source
+- `res/libsodium/libsodium-1.0.21/` — Windows cross-compiled source (no win/ subdir)
 
 ### Implementation Recommendations
 
