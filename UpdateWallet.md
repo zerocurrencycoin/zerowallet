@@ -151,17 +151,6 @@ macOS injects items into the Edit menu ("Start Dictation", "Emoji & Symbols", "W
 
 **If not fixed:** Likely zerod or connection (RPC timeout, auth). Isolate with `zero-cli z_getnewaddress`.
 
-**Follow-up (for fix):**
-
-| Item | Detail |
-|------|--------|
-| Error path | `connection.cpp:782` `doRPCWithDefaultErrorHandling` → `showTxError` (dialog title says "Transaction Error" for non-tx) |
-| Fix location | `connection.cpp` – add `showRpcError()` or param for non-tx; `mainwindow.cpp:1642` `addNewZaddr` |
-| Verify | Receive tab → New Address (shielded) → success; with zerod stopped → clear error (not "Transaction Error") |
-| Tag | `v2.1.1` (or next patch) |
-| Commit msg | `Fix shielded address creation error handling (#1)` |
-| Release note | Fixes #1. Clearer error when z_getnewaddress fails (RPC/auth/Sapling). |
-
 ### #2 — Windows app keeps syncing for days, no information
 
 **Flow:** Sync from zerod (`getblockchaininfo`); wallet shows "Your node is still syncing", may hide balances.
@@ -169,25 +158,6 @@ macOS injects items into the Edit menu ("Start Dictation", "Emoji & Symbols", "W
 **If fixed:** Sync depends on zerod, network, disk. Test: fresh install → connect → wait. If stuck: zerod `-reindex`, peers, disk. Windows: antivirus, firewall, path.
 
 **Test:** Run zerod standalone; if it syncs, wallet follows. Compare Linux/macOS vs Windows.
-
-**Follow-up (for fix):**
-
-| Item | Detail |
-|------|--------|
-| Sync logic | `rpc.cpp:722` `getblockchaininfo` → `verificationprogress`, `blocks`, `estimatedheight`; syncing if `progress < 0.9999` |
-| UI | `mainwindow.ui:337` `lblSyncWarning`; `rpc.cpp:759` blockheight text |
-| Fix location | `rpc.cpp` sync callback; `mainwindow.ui` for labels/tooltips |
-| Root cause | zerod sync (peers/disk/network); wallet reflects zerod only |
-| Verify | Fresh install → connect → sync shows block progress; long sync shows guidance |
-| Tag | `v2.1.1` (or same as #1 if both fixed) |
-| Commit msg | `Improve sync feedback and troubleshooting (#2)` |
-| Release note | Fixes #2. Better sync feedback; guidance for peers, disk, antivirus. |
-
-### Suggested maintainer comments (for GitHub)
-
-**#1:** Since `zero-cli z_getnewaddress` works, the issue is likely GUI RPC connection. Check: Settings → host/port match zerod (default 127.0.0.1:8232); rpcuser/rpcpassword if set; zerod synced, Sapling active (mainnet block > 492850). Debug: enable zerowallet logging or zerod `-debug=rpc`.
-
-**#2:** Wallet gets sync from zerod. If stuck for days, zerod is slow/stuck. Check: run zerod standalone; `zero-cli getconnectioncount` (want 8+ peers); antivirus/firewall; disk health; `zerod -reindex` if stuck (backup wallet.zero first). We'll improve sync feedback.
 
 ---
 
@@ -401,7 +371,7 @@ libqt5websockets5-dev, qt5-qmake
 
 **libsodium Status**
 - `res/libsodium.a` — Static library (MinGW .a; use buildlibsodium-win.sh for Windows)
-- `res/libsodium/libsodium-1.0.21/` — Windows cross-compiled source (no win/ subdir)
+- `res/libsodium/win/libsodium-1.0.21/` — Windows cross-compiled source
 
 ### Implementation Recommendations
 
@@ -445,7 +415,7 @@ docker run -v $(pwd):/workspace zerowallet-builder bash -c "
 **Environment Variables**
 ```bash
 export MXE_PATH="/opt/mxe/usr/bin"
-export QT_PREFIX="/opt/mxe/usr/x86_64-w64-mingw32.static"
+export QT_STATIC="/opt/mxe/usr/x86_64-w64-mingw32.static"
 export ZERO_DIR="/path/to/zero/src"
 ```
 
@@ -496,7 +466,7 @@ zip -r Windows-zerowallet-v$APP_VERSION.zip release/zerowallet-v$APP_VERSION/
 
 ### References
 
-- MXE build-from-source: https://github.com/mxe/mxe
+- [MXE (M Cross Environment)](https://mxe.cc/)
 - [Qt Cross-Compilation](https://doc.qt.io/qt-5/configure-options.html)
 - [MinGW-w64](http://mingw-w64.org/)
 - [ZeroWallet Build Scripts](src/scripts/)
@@ -512,30 +482,6 @@ zip -r Windows-zerowallet-v$APP_VERSION.zip release/zerowallet-v$APP_VERSION/
 - zerod default datadir: `~/.zero/`
 - No doc on zerowallet ↔ zerod connection flow
 
-### zero.conf Creation (when absent)
-
-When zerowallet runs in embedded mode (use embedded zerod) and no `zero.conf` exists at the default datadir (`~/.zero/` on Linux, `Library/Application Support/Zero/` on macOS, `%APPDATA%\Zero\` on Windows), the wallet creates one via `createZcashConf()` in `src/connection.cpp` (lines 127–230).
-
-**Written on creation:**
-
-| Option | Value | Source | Notes |
-|--------|-------|--------|-------|
-| `server` | 1 | connection.cpp:194 | RPC server |
-| `rpcuser` | zero | connection.cpp:195 | RPC auth |
-| `rpcpassword` | random 20 chars | connection.cpp:196, `randomPassword()` | RPC auth |
-| `rpcport` | 23811 | connection.cpp:197 | Zero default |
-| `rpcworkqueue` | 256 | connection.cpp:198 | |
-| `txindex` | 1 | connection.cpp:199 | Standard in Bitcoin/Zcash; verify `zerod -?` |
-| `deletetx` | 1 | connection.cpp:202 | Zero-specific; verify |
-| `keeptxfornblocks` | 1 | connection.cpp:203 | Zero-specific; verify |
-| `keeptxnum` | 1 | connection.cpp:204 | Zero-specific; verify |
-| `consolidation` | 1 | connection.cpp:207 | Zero-specific; verify |
-| `consolidationtxfee` | 10000 | connection.cpp:208 | Zatoshi (10000 = 0.0001 ZER); verify |
-| `datadir` | user-selected | connection.cpp:218 | Optional; custom path |
-| `proxy` | 127.0.0.1:9050 | connection.cpp:223 | Optional; Tor SOCKS5 |
-
-**Verification:** `txindex`, `deletetx`, `keeptxfornblocks`, `keeptxnum`, `consolidation`, `consolidationtxfee`, `datadir`, `proxy` should be confirmed against Zero repo (`zerod -?`, `src/init.cpp`, or config parsing). Zero example `contrib/debian/examples/zero.conf` does not list these; they are Zero-specific. `proxy` and `datadir` are standard Bitcoin/Zcash options.
-
 ---
 
 ## RPC Debug Logging
@@ -549,7 +495,25 @@ When zerowallet runs in embedded mode (use embedded zerod) and no `zero.conf` ex
 
 ## How zerod Gets Bundled
 
-See [BUILD](BUILD.md) §ZERO_DIR and §Script summary. zerod built separately; `ZERO_DIR` = pre-built binaries. Default `../Zero`; if absent, Linux uses `../ZeroLinux`, Windows uses `../ZeroWin`. MXE build-from-source only; no prebuilt.
+zerod built separately, copied into zerowallet package. No submodule. `ZERO_DIR` = pre-built binaries.
+
+**CI:** Workflows clone Zero, build zerod, set `ZERO_DIR`. Local default: `../Zero/src`.
+
+**build.sh / build-win.sh** (in Zero repo, not zerowallet):
+- **Linux:** `./zcutil/build.sh -j$(nproc)` — builds zerod and zero-cli into `zero_linux/src/`
+- **Windows:** `./zcutil/build-win.sh -j$(nproc)` — cross-builds zerod.exe and zero-cli.exe into `zero_win/src/`
+- Arguments after `-j` go to make. Other flags (e.g. `--disable-mining`) go before make args.
+
+**mkrelease scripts:**
+
+| Script | Platform | Use |
+|--------|----------|-----|
+| `mkrelease.sh` | Linux + Windows | Needs `QT_STATIC`, `ZERO_DIR`, `APP_VERSION`, `PREV_VERSION`. Defaults: `ZERO_DIR=../Zero/src`, `MXE_PATH=$HOME/mxe/usr/bin`. |
+| `mkrelease-linux.sh` | Linux | Produces `artifacts/linux-zerowallet-v$APP_VERSION.tar.gz` and `.deb`. Options: `-z`, `-v`, `-p`, `-q`, `-d` (debug: system Qt). Used by CI and locally. |
+| `mkrelease-win.sh` | Windows | Produces `artifacts/Windows-zerowallet-v$APP_VERSION.zip`. Defaults: `ZERO_DIR=../Zero/src`, `MXE_PATH=$HOME/mxe/usr/bin`. |
+| `mkrelease-mac.sh` | macOS | Defaults: `ZERO_DIR=../Zero/src`, `QT_STATIC=$(brew --prefix qt@5)`. Builds zerowallet, copies zerod/zero-cli into app bundle, macdeployqt, ad-hoc signs, creates DMG. See [BUILD](BUILD.md) §macOS App Signing and Distribution for Developer ID and notarization. |
+
+**ZERO_DIR:** Directory containing built zerod and zero-cli binaries. Not the Zero source tree. Expected: `zerod` and `zero-cli` (Linux/macOS) or `zerod.exe` and `zero-cli.exe` (Windows). Override with `-z` or `ZERO_DIR`.
 
 ---
 
@@ -618,7 +582,7 @@ See [BUILD](BUILD.md) §ZERO_DIR and §Script summary. zerod built separately; `
 | Location | Issue |
 |----------|-------|
 | `src/amount.h` | `MAX_MONEY = 16.95M ZER`; Zero total supply ~25.6M ZER exceeds this; validation uses per-subsidy `MoneyRange` only |
-| Zero `TODO.md`, `TEST_ZERO.md` | Outdated `338665500000000` total subsidy reference |
+| Zero Subsidy.md §11.3 | `338665500000000<?>` wrong founders value; see Subsidy.md, UpdateZero §4.6 |
 | Zero `README.md` | "Stable supply is 3888 ZER, after first halfing" — ambiguous; 3888 ≈ daily emission (720×5.4), not total supply |
 | Zero `doc/tor.md` | `"subver" : "/MagicBean:1.0.0/"` — legacy; Zero uses Ambrym |
 
@@ -655,7 +619,7 @@ See [BUILD](BUILD.md) §ZERO_DIR and §Script summary. zerod built separately; `
 | Dep | URL |
 |-----|-----|
 | Qt 5.15.17 | https://download.qt.io/archive/qt/5.15/5.15.17/single/qt-everywhere-opensource-src-5.15.17.tar.xz |
-| libsodium 1.0.21 | https://github.com/jedisct1/libsodium/releases/download/1.0.21-RELEASE/libsodium-1.0.21.tar.gz |
+| libsodium 1.0.21 | https://download.libsodium.org/libsodium/releases/libsodium-1.0.21.tar.gz |
 | OpenSSL 1.1.1w | https://www.openssl.org/source/openssl-1.1.1w.tar.gz |
 
 **Build:**
