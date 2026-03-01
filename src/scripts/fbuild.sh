@@ -281,8 +281,9 @@ check_version_mismatch() {
 }
 
 # Replace PREV_VERSION with APP_VERSION in zero-qt-wallet.pro and README.md. Run from repo root.
+# Portable sed -i: BSD (macOS) requires backup suffix; use .bak then remove.
 apply_version_sed() {
-  sed -i "s/${PREV_VERSION}/${APP_VERSION}/g" zero-qt-wallet.pro >/dev/null
-  sed -i "s/${PREV_VERSION}/${APP_VERSION}/g" README.md >/dev/null
+  sed -i.bak "s/${PREV_VERSION}/${APP_VERSION}/g" zero-qt-wallet.pro && rm -f zero-qt-wallet.pro.bak
+  sed -i.bak "s/${PREV_VERSION}/${APP_VERSION}/g" README.md && rm -f README.md.bak
   step_done "Version files"
 }
