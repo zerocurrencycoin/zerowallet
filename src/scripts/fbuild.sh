@@ -190,7 +190,6 @@ check_zero_binaries() {
   local plat="${1:-linux}" suf=""
   [ "$plat" = "win" ] && suf=".exe"
   [ -f "$ZERO_DIR/zerod$suf" ] || err "zerod$suf not found in $ZERO_DIR. Build Zero first."
-  [ "$plat" = "mac" ] && return 0
   [ -f "$ZERO_DIR/zero-cli$suf" ] || err "zero-cli$suf not found in $ZERO_DIR. Build Zero first."
 }
 
