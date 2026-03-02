@@ -31,7 +31,7 @@ section "Windows target (Linux host)"
 
 rm -f zero-qt-wallet-mingw.pro
 rm -rf release/
-sed "s/precompile_header/release/g" zero-qt-wallet.pro | sed "s/PRECOMPILED_HEADER.*//g" > zero-qt-wallet-mingw.pro
+sed "s/precompile_header/release/g" zero-qt-wallet.pro | sed '/PRECOMPILED_HEADER/d' > zero-qt-wallet-mingw.pro
 step_done "Configuring"
 
 res/libsodium/buildlibsodium-win.sh >/dev/null
