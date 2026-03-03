@@ -193,14 +193,15 @@ check_zero_binaries() {
   [ -f "$ZERO_DIR/zero-cli$suf" ] || err "zero-cli$suf not found in $ZERO_DIR. Build Zero first."
 }
 
-# Resolve ZERO_DIR. $1: platform (linux|mac|win). Uses ZERO_BASE: ../Zero, else ../ZeroLinux or ../ZeroWin.
+# Resolve ZERO_DIR. $1: platform (linux|mac|win). Uses ../Zero, else ../ZeroLinux, ../ZeroMac, or ../ZeroWin.
 resolve_zero_dir() {
   local plat="${1:-linux}"
   [ -n "${ZERO_DIR:-}" ] && return 0
   local base="../Zero"
   case "$plat" in
-    linux|mac) [ -d "$base" ] || base="../ZeroLinux" ;;
-    win)       [ -d "$base" ] || base="../ZeroWin" ;;
+    linux) [ -d "$base" ] || base="../ZeroLinux" ;;
+    mac)   [ -d "$base" ] || base="../ZeroMac" ;;
+    win)   [ -d "$base" ] || base="../ZeroWin" ;;
   esac
   ZERO_DIR="$base/src"
 }
