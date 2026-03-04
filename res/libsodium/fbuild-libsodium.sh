@@ -33,6 +33,8 @@ sodium_extract() {
 }
 
 # Configure and build libsodium. Call from libsodium-${VER}/. Arg: "unix" or "win".
+# Win: requires MXE in PATH. When invoked from mkrelease-win.sh, resolve_path_win has
+# already prepended MXE_PATH to PATH, so command -v finds the static gcc.
 sodium_configure_make() {
   local target="${1:-unix}"
   if [ "$target" = "win" ]; then

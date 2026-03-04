@@ -98,7 +98,7 @@ Use `fbuild.sh` as the shared build library. It provides:
 - **Logging:** `err`, `warn`, `info`, `notice`, `step_done`, `section`. With `-L`/`--log`, logs **append** (mkdev: log_capture/tee -a; mkrelease: exec > tee -a). Do not truncate at start.
 - **Build:** `log_capture`, `build_fail`, `analyze_build_log`
 - **Args:** `parse_mkdev_args` (mkdev scripts)
-- **Resolution:** `resolve_zero_dir`, `resolve_qt`, `detect_mxe`
+- **Resolution:** `resolve_zero_dir`, `resolve_qt`, `resolve_path_win`
 - **Version:** `resolve_version`, `apply_version_sed`, `check_version_mismatch`
 - **Globals:** `SCRIPT_DIR`, `REPO_ROOT`, `JOBS`
 
@@ -120,6 +120,16 @@ make -j"$(nproc)"
 ```
 
 Quote the expansion. Prefer `JOBS` from fbuild when available.
+
+**Redirection to null:**
+
+Use `>/dev/null` (no space before `/`). Consistent across scripts.
+
+```bash
+make distclean >/dev/null 2>&1 || true
+cp file dest >/dev/null
+command -v tool >/dev/null 2>&1 || err "tool not found"
+```
 
 **Packaging (avoid SIGPIPE):**
 
@@ -176,6 +186,8 @@ done
 ## libsodium
 
 **Scripts:** `res/libsodium/buildlibsodium.sh` (Unix). `res/libsodium/buildlibsodium-win.sh` (Windows target; runs on Linux, MXE cross-compile).
+
+**Windows build:** When `buildlibsodium-win.sh` is invoked from `mkrelease-win.sh`, `resolve_path_win` has already run and prepended `MXE_PATH` to `PATH`. The libsodium script inherits that environment; `command -v x86_64-w64-mingw32.static-gcc` finds the tool. Callers must run `resolve_path_win` (or `resolve_qt win`) before `buildlibsodium-win.sh`.
 
 ### Naming
 

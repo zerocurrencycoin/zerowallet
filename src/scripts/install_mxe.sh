@@ -30,8 +30,14 @@ case "${1:---install}" in
     notice "Done. MXE at $MXE_PATH"
     ;;
   -c|--check)
-    [ -x "$MXE_PATH/$QMAKE" ] && { notice "OK: MXE at $MXE_PATH"; exit 0; }
-    err "MXE not found. Run ./install_mxe.sh --install"
+    [ -x "$MXE_PATH/x86_64-w64-mingw32.static-gcc" ] || err "MXE gcc not found at $MXE_PATH"
+    [ -x "$MXE_PATH/$QMAKE" ] || err "MXE qmake not found at $MXE_PATH"
+    if [ -x "$MXE_PATH/x86_64-w64-mingw32.static-strip" ]; then
+      notice "OK: MXE at $MXE_PATH (gcc, qmake, strip)"
+    else
+      warn "MXE at $MXE_PATH (gcc, qmake OK; strip not found)"
+    fi
+    exit 0
     ;;
   *)
     echo "Usage: ./install_mxe.sh [-i|--install|-d|--deps|-c|--check]" >&2

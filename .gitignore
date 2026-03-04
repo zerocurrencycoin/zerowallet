@@ -1,5 +1,7 @@
-# Cursor: .cursor/rules/, AGENTS.md are versioned. .vscode is local.
+# AGENTS.md is versioned, but currently .cursor[/rules] are not
 
+.cursor/
+.vscode/
 bin/
 logs/
 qt5-static/
@@ -9,7 +11,6 @@ release/
 x64/
 artifacts/
 docs/website/public
-.vscode/
 res/libsodium.a
 res/libsodiumd.a
 res/liblibsodium.a
@@ -28,7 +29,6 @@ zerowallet.vcxproj*
 zero-qt-wallet.sln
 zerowallet.pro.user
 *.qm
-Makefile
 Makefile.*
 qrc_application.cpp
 zero-qt-wallet_plugin_import.cpp
@@ -38,14 +38,20 @@ workspace.code-workspace
 buildrelease.sh
 *.out
 *.zip
+*.log
+*.tgz
 *.tar.gz
 *.xcsettings
 .DS_Store
 *.mak
 zerod
 zero-cli
-zerowallet.exe
+zero-tx
 zerowallet
+zerod.exe
+zero-cli.exe
+zero-tx.exe
+zerowallet.exe
 IDEWorkspaceChecks.plist
 *.sln
 node_modules

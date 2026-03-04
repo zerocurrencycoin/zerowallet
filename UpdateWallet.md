@@ -4,7 +4,13 @@ Project document for history, directions, design decisions, planning, issue trac
 
 **Document references:** General — zerowallet [README](README.md), Zero full node [README](https://github.com/zerocurrencycoin/zero) (repo root), Zero project UpdateZero.md (repo root). Other references point to specific sections or subsections for a particular item (e.g. BUILD §macOS App Signing and Distribution).
 
-**Document structure:** Some docs are user-facing (README, BUILD); others are project (UpdateWallet, Zero's Subsidy, UpdateZero). Do not reference project docs from user-facing docs.
+**Document structure:** User-facing (README, BUILD) = current state only; no future plans. Project (UpdateWallet, Zero's Subsidy, UpdateZero) = status, plans, futures. Do not reference project docs from user-facing docs.
+
+---
+
+## Branch
+
+- **Main line**: `zerowallet-merge`. Future work: branch from and merge into `zerowallet-merge`.
 
 ---
 
@@ -182,7 +188,7 @@ macOS injects items into the Edit menu ("Start Dictation", "Emoji & Symbols", "W
 **Recent Improvements (19 commits since fork)**
 1. UI Fixes: Balance view updates, tab improvements
 2. Features: DeleteTx, Consolidation settings, new RPC methods
-3. Development: GitHub workflows, version bumps
+3. Development: version bumps
 4. Dependencies: libsodium 1.0.21 update
 
 ### Safewallet Upstream Improvements (197 commits)
@@ -460,7 +466,7 @@ zip -r Windows-zerowallet-v$APP_VERSION.zip release/zerowallet-v$APP_VERSION/
 
 ### Future Improvements
 
-**Automation:** CI/CD integration for MXE; pre-built MXE containers; 32-bit Windows, ARM64 support.
+**Automation:** Pre-built MXE containers; 32-bit Windows, ARM64 support.
 
 **Optimization:** Minimal MXE (only required Qt modules); Windows-specific static analysis; security hardening.
 
@@ -497,7 +503,7 @@ zip -r Windows-zerowallet-v$APP_VERSION.zip release/zerowallet-v$APP_VERSION/
 
 zerod built separately, copied into zerowallet package. No submodule. `ZERO_DIR` = pre-built binaries.
 
-**CI:** Workflows clone Zero, build zerod, set `ZERO_DIR`. Local default: `../Zero/src`.
+Local default: `../Zero/src`. CI plans: ~/Work/ZK/CI/README.md.
 
 **build.sh / build-win.sh** (in Zero repo, not zerowallet):
 - **Linux:** `./zcutil/build.sh -j$(nproc)` — builds zerod and zero-cli into `zero_linux/src/`
@@ -509,7 +515,7 @@ zerod built separately, copied into zerowallet package. No submodule. `ZERO_DIR`
 | Script | Platform | Use |
 |--------|----------|-----|
 | `mkrelease.sh` | Linux + Windows | Needs `QT_STATIC`, `ZERO_DIR`, `APP_VERSION`, `PREV_VERSION`. Defaults: `ZERO_DIR=../Zero/src`, `MXE_PATH=$HOME/mxe/usr/bin`. |
-| `mkrelease-linux.sh` | Linux | Produces `artifacts/linux-zerowallet-v$APP_VERSION.tar.gz` and `.deb`. Options: `-z`, `-v`, `-p`, `-q`, `-d` (debug: system Qt). Used by CI and locally. |
+| `mkrelease-linux.sh` | Linux | Produces `artifacts/linux-zerowallet-v$APP_VERSION.tar.gz` and `.deb`. Options: `-z`, `-v`, `-p`, `-q`, `-d` (debug: system Qt). |
 | `mkrelease-win.sh` | Windows | Produces `artifacts/Windows-zerowallet-v$APP_VERSION.zip`. Defaults: `ZERO_DIR=../Zero/src`, `MXE_PATH=$HOME/mxe/usr/bin`. |
 | `mkrelease-mac.sh` | macOS | Defaults: `ZERO_DIR=../Zero/src`, `QT_STATIC=$(brew --prefix qt@5)`. Builds zerowallet, copies zerod/zero-cli into app bundle, macdeployqt, ad-hoc signs, creates DMG. See [BUILD](BUILD.md) §macOS App Signing and Distribution for Developer ID and notarization. |
 
@@ -535,7 +541,6 @@ zerod built separately, copied into zerowallet package. No submodule. `ZERO_DIR`
 | nlohmann/json | 3.6.1 | 3.12.0 | 3.6.1 | Single-header; 3.12.0 backward-compatible; deprecations only (4.0 prep). |
 | SingleApplication | 3.0.14 | 3.5.4 | 3.0.14 | Usage unchanged in 3.5.x. Submodule or copy. |
 | Qt | 5.9.1 | 5.15.17 | 5.15.18 | Target 5.15.17 (last open-source). |
-| GitHub Actions | ubuntu-18.04 | ubuntu-24.04 | ubuntu-24.04 | Done. |
 | Docker | ubuntu:16.04 | ubuntu:24.04 | ubuntu:16.04 | `src/scripts/docker/Dockerfile`. |
 | OpenSSL | 1.0.2r | 1.1.1w | 1.0.2r | Dockerfile only. 1.0.2 EOL. 1.1.1 API changes; Qt static build may need `-openssl-linked`. |
 | Nayuki QR-Code | (blank) | v1.8.0 | unversioned (~v1.0–1.4) | zerowallet has 6 files; v1.8.0 unified (qrcodegen.hpp/cpp). API identical. Replace 6 with 2, update .pro and include. |
@@ -635,7 +640,9 @@ make
 
 ### System Install (brew, pyenv, pip)
 
-No package-manager installs for library upgrades — all vendored. For builds: **macOS:** `brew install qt@5`. **Linux:** `apt-get install` deps. **Windows (MXE):** MXE provides Qt. **Docker:** Dockerfile `apt-get` and tarballs. **Python:** Zero full node RPC tests use system Python; zerowallet does not.
+No package-manager installs for library upgrades — all vendored. For builds: **macOS:** `brew install qt@5`. **Linux:** `apt-get install` deps. **Windows (MXE):** MXE provides Qt. **Docker:** Dockerfile `apt-get` and tarballs.
+
+**Python (zerowallet):** Build dependencies only; no runtime, no tests. (1) `install_mxe.sh --deps`: apt-installs `python3-mako`, `python3-setuptools` for MXE build. (2) `src/scripts/docker/Dockerfile`: apt-installs `python` (and `ruby`) for Qt offline installer / MXE build. Zero full node RPC tests use system Python; zerowallet does not.
 
 ### Risk / Effort
 
@@ -707,9 +714,12 @@ No package-manager installs for library upgrades — all vendored. For builds: *
 
 ### Cross-Compilation
 
-- MXE automation in CI
 - Pre-built MXE containers
 - 32-bit Windows, ARM64 support
+
+### Tooling
+
+- **Cursor configuration:** See UpdateZero §2.1. Both repos have `.cursor/rules/mainline-branches.mdc`. Zero has CLAUDE.md. Full issue list documented; resolution postponed.
 
 ---
 
