@@ -36,6 +36,7 @@ zerowallet_plugin_import.cpp
 zerowallet_resource*
 workspace.code-workspace
 buildrelease.sh
+*.out
 *.zip
 *.tar.gz
 *.xcsettings
