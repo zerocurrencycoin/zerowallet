@@ -3,7 +3,7 @@
 # Shared build helpers for mkdev/mkrelease scripts.
 # Usage: ME="script-name"; . "$(dirname "$0")/fbuild.sh"
 # Provides: SCRIPT_DIR, REPO_ROOT, JOBS, err, warn, info, notice, step_done, section,
-#           analyze_build_log, log_capture, build_fail, resolve_zero_dir, detect_mxe,
+#           analyze_build_log, log_capture, build_fail, resolve_zero_dir, resolve_path_win,
 #           resolve_qt, version helpers, parse_mkdev_args, parse_mkrelease_args,
 #           show_mkdev_help, show_mkrelease_help, run_dotranslations, apply_version_sed
 
@@ -172,10 +172,7 @@ resolve_qt() {
       export PATH="$QT_PREFIX/bin:$PATH"
       ;;
     win)
-      detect_mxe
-      # shellcheck disable=SC2034
-      QMAKE="x86_64-w64-mingw32.static-qmake-qt5"
-      export PATH="$MXE_PATH:$PATH"
+      resolve_path_win
       # Host Qt for dotranslations (lrelease). Precedence: -q/QT_PREFIX > default qt5-static.
       if [ "$mode" = "release" ]; then
         QT_PREFIX="${QT_PREFIX:-$REPO_ROOT/qt5-static}"
@@ -220,31 +217,47 @@ resolve_zero_dirs_linuxwin() {
   ZERO_DIR_WIN="${ZERO_DIR_WIN:-$base/src}"
 }
 
-# Detect MXE path (Windows target, Linux host).
-# Requires both gcc (libsodium, wallet) and qmake (wallet). Probe for each.
-# Precedence: -m/--mxe (command line) > MXE_PATH (env) > both tools in PATH > probe $HOME/mxe, /opt/mxe.
-# Resolved MXE_PATH is prepended to PATH, so it overrides system PATH for tool lookup.
-mxe_has_both() {
-  local d="$1"
-  [ -x "$d/x86_64-w64-mingw32.static-gcc" ] && [ -x "$d/x86_64-w64-mingw32.static-qmake-qt5" ]
-}
-detect_mxe() {
-  [ -n "${MXE_PATH:-}" ] && return 0
-  local gcc_path qmake_path d
-  gcc_path=$(command -v x86_64-w64-mingw32.static-gcc 2>/dev/null) || true
-  qmake_path=$(command -v x86_64-w64-mingw32.static-qmake-qt5 2>/dev/null) || true
-  if [ -n "$gcc_path" ]; then
-    d="$(dirname "$gcc_path")"
-    mxe_has_both "$d" && { MXE_PATH="$d"; return 0; }
+# Resolve MXE path and tools for Windows target (Linux host).
+# Strategy: MXE_PATH (env) > tools in PATH > probe $HOME/mxe, /opt/mxe.
+# Sets: MXE_PATH, QMAKE, STRIP. Prepends MXE_PATH to PATH.
+# STRIP: warn-but-continue if not found (larger binaries).
+resolve_path_win() {
+  local d p
+
+  # 1. MXE_PATH from environment
+  if [ -n "${MXE_PATH:-}" ] && [ -d "${MXE_PATH}" ]; then
+    d="$MXE_PATH"
+  # 2. Tools in PATH
+  elif d=$(command -v x86_64-w64-mingw32.static-gcc 2>/dev/null) && [ -n "$d" ]; then
+    d="$(dirname "$d")"
+    [ -x "$d/x86_64-w64-mingw32.static-qmake-qt5" ] || d=""
+  # 3. Probe
+  else
+    d=""
+    for p in "$HOME/mxe/usr/bin" /opt/mxe/usr/bin; do
+      if [ -x "$p/x86_64-w64-mingw32.static-gcc" ] && [ -x "$p/x86_64-w64-mingw32.static-qmake-qt5" ]; then
+        d="$p"
+        break
+      fi
+    done
   fi
-  if [ -n "$qmake_path" ]; then
-    d="$(dirname "$qmake_path")"
-    mxe_has_both "$d" && { MXE_PATH="$d"; return 0; }
+
+  [ -z "${d:-}" ] && err "MXE not found. Set MXE_PATH or -m/--mxe, or install to ~/mxe. See BUILD.md Windows."
+  [ -x "$d/x86_64-w64-mingw32.static-gcc" ] || err "MXE gcc not found at $d"
+  [ -x "$d/x86_64-w64-mingw32.static-qmake-qt5" ] || err "MXE qmake not found at $d"
+
+  MXE_PATH="$d"
+  PATH="${MXE_PATH}:${PATH}"
+  export PATH
+  QMAKE="${MXE_PATH}/x86_64-w64-mingw32.static-qmake-qt5"
+  if [ -x "${MXE_PATH}/x86_64-w64-mingw32.static-strip" ]; then
+    STRIP="${MXE_PATH}/x86_64-w64-mingw32.static-strip"
+  elif command -v x86_64-w64-mingw32-strip >/dev/null 2>&1; then
+    STRIP="x86_64-w64-mingw32-strip"
+  else
+    STRIP=""
+    warn "MinGW strip not found; packaging without stripping (larger binaries)"
   fi
-  for p in "$HOME/mxe/usr/bin" /opt/mxe/usr/bin; do
-    mxe_has_both "$p" && { MXE_PATH="$p"; return 0; }
-  done
-  err "MXE not found. Set MXE_PATH or -m/--mxe, or install to ~/mxe. See BUILD.md Windows."
 }
 
 # Version helpers (mkrelease-linux)

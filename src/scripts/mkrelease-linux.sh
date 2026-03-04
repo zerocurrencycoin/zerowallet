@@ -28,13 +28,13 @@ step_done "Cleaning"
 section "Linux ($(lsb_release -rs 2>/dev/null || echo 'build'))"
 
 run_dotranslations >/dev/null
-$QMAKE zero-qt-wallet.pro -spec linux-g++ CONFIG+=release > /dev/null
+$QMAKE zero-qt-wallet.pro -spec linux-g++ CONFIG+=release >/dev/null
 step_done "Configuring"
 
-rm -rf bin/zero-qt-wallet* > /dev/null
-rm -rf bin/zerowallet* > /dev/null
-make clean > /dev/null
-make -j"${JOBS:-2}" > /dev/null
+rm -rf bin/zero-qt-wallet* >/dev/null
+rm -rf bin/zerowallet* >/dev/null
+make clean >/dev/null
+make -j"${JOBS:-2}" >/dev/null
 step_done "Building"
 
 if ldd zerowallet | grep -qi "Qt"; then
@@ -45,11 +45,11 @@ step_done "Static link"
 mkdir -p "bin/zerowallet-v${APP_VERSION}"
 strip zerowallet
 
-cp zerowallet                     "bin/zerowallet-v${APP_VERSION}/" > /dev/null
-cp "$ZERO_DIR/zerod"              "bin/zerowallet-v${APP_VERSION}/" > /dev/null
-cp "$ZERO_DIR/zero-cli"           "bin/zerowallet-v${APP_VERSION}/" > /dev/null
-cp README.md                      "bin/zerowallet-v${APP_VERSION}/" > /dev/null
-cp LICENSE                        "bin/zerowallet-v${APP_VERSION}/" > /dev/null
+cp zerowallet                     "bin/zerowallet-v${APP_VERSION}/" >/dev/null
+cp "$ZERO_DIR/zerod"              "bin/zerowallet-v${APP_VERSION}/" >/dev/null
+cp "$ZERO_DIR/zero-cli"           "bin/zerowallet-v${APP_VERSION}/" >/dev/null
+cp README.md                      "bin/zerowallet-v${APP_VERSION}/" >/dev/null
+cp LICENSE                        "bin/zerowallet-v${APP_VERSION}/" >/dev/null
 
 (cd bin && tar czf "linux-zerowallet-v${APP_VERSION}.tar.gz" "zerowallet-v${APP_VERSION}/" >/dev/null 2>&1) || err "tar failed"
 
