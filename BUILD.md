@@ -377,6 +377,22 @@ MXE (M Cross Environment) for MinGW + static Qt. Build from source only; we do n
 
 **Project files:** `zero-qt-wallet.pro` is the main project file (Linux, macOS). For MinGW cross-build, scripts generate `zero-qt-wallet-mingw.pro` by stripping precompiled headers (PCH); PCH often causes issues with MinGW cross-compilation. The mingw file is generated on the fly and gitignored.
 
+### Precompiled headers (PCH)
+
+**What `precompiled.h` does:** A precompiled header is a C++ header file (e.g. `src/precompiled.h`) that the compiler parses once and caches. All `.cpp` files that include it reuse that cache instead of re-parsing the same includes. This speeds up builds. Our `precompiled.h` pulls in common Qt headers (QApplication, QWidget, etc.), nlohmann/json, libsodium, and other shared includes. Source files include it via `#include "precompiled.h"` at the top.
+
+**Where PRECOMPILED_HEADER is used:**
+
+| Platform | .pro file | PCH |
+|----------|------------|-----|
+| Linux | `zero-qt-wallet.pro` | ✓ enabled |
+| macOS | `zero-qt-wallet.pro` | ✓ enabled |
+| Windows (MinGW) | `zero-qt-wallet-mingw.pro` (generated) | ✗ stripped |
+
+**Why Windows strips it:** `mkdev-win.sh` and `mkrelease-win.sh` generate `zero-qt-wallet-mingw.pro` with `sed '/PRECOMPILED_HEADER/d'` to remove the `PRECOMPILED_HEADER = src/precompiled.h` line. PCH has historically caused issues with MinGW cross-compilation (include paths, defines, toolchain quirks). Stripping avoids those failures.
+
+**Trying PCH with ZeroWin:** To test whether current MXE/Qt/MinGW supports PCH, one would stop stripping the PRECOMPILED_HEADER line and keep `precompile_header` in CONFIG when generating the mingw .pro. **Postponed** — no trial planned until needed.
+
 ---
 
 ## Signing
