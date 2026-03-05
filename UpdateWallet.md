@@ -517,7 +517,7 @@ Local default: `../Zero/src`. CI plans: ~/Work/ZK/CI/README.md.
 | Script | Platform | Use |
 |--------|----------|-----|
 | `mkrelease.sh` | Linux + Windows | Needs `QT_STATIC`, `ZERO_DIR`, `APP_VERSION`, `PREV_VERSION`. Defaults: `ZERO_DIR=../Zero/src`, `MXE_PATH=$HOME/mxe/usr/bin`. |
-| `mkrelease-linux.sh` | Linux | Produces `artifacts/linux-zerowallet-v$APP_VERSION.tar.gz` and `.deb`. Options: `-z`, `-v`, `-p`, `-q`, `-d` (debug: system Qt). |
+| `mkrelease-linux.sh` | Linux | Produces `artifacts/linux-zerowallet-v$APP_VERSION.tgz` and `.deb`. Staging: `bin/tgz/linux-zerowallet-v$APP_VERSION/`. Options: `-z`, `-v`, `-p`, `-q`, `-d` (debug: system Qt). |
 | `mkrelease-win.sh` | Windows | Produces `artifacts/Windows-zerowallet-v$APP_VERSION.zip`. Defaults: `ZERO_DIR=../Zero/src`, `MXE_PATH=$HOME/mxe/usr/bin`. |
 | `mkrelease-mac.sh` | macOS | Defaults: `ZERO_DIR=../Zero/src`, `QT_STATIC=$(brew --prefix qt@5)`. Builds zerowallet, copies zerod/zero-cli into app bundle, macdeployqt, ad-hoc signs, creates DMG. See [BUILD](BUILD.md) §macOS App Signing and Distribution for Developer ID and notarization. |
 
