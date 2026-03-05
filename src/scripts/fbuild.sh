@@ -89,13 +89,14 @@ show_mkdev_help() {
   echo "No -z with dev."
 }
 
-# Parse common mkrelease args. Sets ZERO_DIR, APP_VERSION, PREV_VERSION, QT_PREFIX, MXE_PATH, SKIP_TRANSLATIONS, LOG_FILE, JOBS.
+# Parse common mkrelease args. Sets ZERO_DIR, APP_VERSION, PREV_VERSION, QT_PREFIX, MXE_PATH, SKIP_TRANSLATIONS, SKIP_STRIP, LOG_FILE, JOBS.
 # Usage: parse_mkrelease_args "logs/mkrelease-linux.log" "$@"
 # shellcheck disable=SC2034
 parse_mkrelease_args() {
   local default_log="${1:-}"
   shift
   SKIP_TRANSLATIONS=""
+  SKIP_STRIP=""
   LOG_FILE=""
   while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -113,6 +114,7 @@ parse_mkrelease_args() {
       -m|--mxe) MXE_PATH="$2"; shift 2 ;;
       -p|--prev) PREV_VERSION="$2"; shift 2 ;;
       -q|--qt) QT_PREFIX="$2"; shift 2 ;;
+      -S|--no-strip) SKIP_STRIP=1; shift ;;
       -t|--tran) SKIP_TRANSLATIONS=1; shift ;;
       -v|--version) APP_VERSION="$2"; shift 2 ;;
       -z|--zero) ZERO_DIR="$2"; shift 2 ;;
@@ -132,6 +134,7 @@ show_mkrelease_help() {
   echo "  -m, --mxe PATH  MXE usr/bin (Windows target, Linux host)"
   echo "  -p, --prev V    PREV_VERSION (default: from version.h or git)"
   echo "  -q, --qt PATH   Qt prefix (static Qt for release)"
+  echo "  -S, --no-strip  skip stripping binaries (larger artifacts)"
   echo "  -t, --tran      skip translations"
   echo "  -v, --version V APP_VERSION (X.Y.Z)"
   echo "  -z, --zero PATH Zero src dir (zerod, zero-cli)"
@@ -187,19 +190,24 @@ check_zero_binaries() {
   local plat="${1:-linux}" suf=""
   [ "$plat" = "win" ] && suf=".exe"
   [ -f "$ZERO_DIR/zerod$suf" ] || err "zerod$suf not found in $ZERO_DIR. Build Zero first."
+  [ "$plat" = "mac" ] && return 0
   [ -f "$ZERO_DIR/zero-cli$suf" ] || err "zero-cli$suf not found in $ZERO_DIR. Build Zero first."
 }
 
-# Resolve ZERO_DIR. $1: platform (linux|mac|win). Uses ../Zero, else ../ZeroLinux, ../ZeroMac, or ../ZeroWin.
+# Resolve ZERO_DIR. $1: platform (linux|mac|win). Uses ../Zero if it exists and is non-empty, else ../ZeroLinux, ../ZeroMac, ../ZeroWin.
 resolve_zero_dir() {
   local plat="${1:-linux}"
   [ -n "${ZERO_DIR:-}" ] && return 0
   local base="../Zero"
-  case "$plat" in
-    linux) [ -d "$base" ] || base="../ZeroLinux" ;;
-    mac)   [ -d "$base" ] || base="../ZeroMac" ;;
-    win)   [ -d "$base" ] || base="../ZeroWin" ;;
-  esac
+  if [ -d "$base" ] && [ -n "$(ls -A "$base" 2>/dev/null)" ]; then
+    : # use ../Zero
+  else
+    case "$plat" in
+      linux) base="../ZeroLinux" ;;
+      mac)   base="../ZeroMac" ;;
+      win)   base="../ZeroWin" ;;
+    esac
+  fi
   ZERO_DIR="$base/src"
 }
 

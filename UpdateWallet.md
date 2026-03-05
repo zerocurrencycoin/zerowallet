@@ -458,6 +458,8 @@ zip -r Windows-zerowallet-v$APP_VERSION.zip release/zerowallet-v$APP_VERSION/
 | `windres: can't open file 'application.qrc'` | Verify resource files accessible; `x86_64-w64-mingw32-windres --version` |
 | Precompiled header issues | `CONFIG -= precompile_header` in mingw.pro (already done) |
 
+**macOS PCH:** `__OPTIMIZE__ predefined macro was enabled in PCH file but is currently disabled` — PCH built with different CONFIG (debug vs release). Fix: `./src/scripts/mkdev.sh -c -L`. See [BUILD](BUILD.md) §Troubleshooting.
+
 ### Performance Considerations
 
 **Build Times:** MXE Initial Setup 2-4 hours; zerowallet 5-10 min; libsodium 2-3 min.
@@ -506,9 +508,9 @@ zerod built separately, copied into zerowallet package. No submodule. `ZERO_DIR`
 Local default: `../Zero/src`. CI plans: ~/Work/ZK/CI/README.md.
 
 **build.sh / build-win.sh** (in Zero repo, not zerowallet):
-- **Linux:** `./zcutil/build.sh -j$(nproc)` — builds zerod and zero-cli into `zero_linux/src/`
-- **Windows:** `./zcutil/build-win.sh -j$(nproc)` — cross-builds zerod.exe and zero-cli.exe into `zero_win/src/`
-- Arguments after `-j` go to make. Other flags (e.g. `--disable-mining`) go before make args.
+- **Linux:** `./zcutil/build.sh` — builds zerod and zero-cli into `zero_linux/src/`
+- **Windows:** `./zcutil/build-win.sh` — cross-builds zerod.exe and zero-cli.exe into `zero_win/src/`
+- `-jN` is optional; omit to use auto-detected jobs. Other flags (e.g. `--disable-mining`) go before make args.
 
 **mkrelease scripts:**
 
@@ -518,6 +520,10 @@ Local default: `../Zero/src`. CI plans: ~/Work/ZK/CI/README.md.
 | `mkrelease-linux.sh` | Linux | Produces `artifacts/linux-zerowallet-v$APP_VERSION.tar.gz` and `.deb`. Options: `-z`, `-v`, `-p`, `-q`, `-d` (debug: system Qt). |
 | `mkrelease-win.sh` | Windows | Produces `artifacts/Windows-zerowallet-v$APP_VERSION.zip`. Defaults: `ZERO_DIR=../Zero/src`, `MXE_PATH=$HOME/mxe/usr/bin`. |
 | `mkrelease-mac.sh` | macOS | Defaults: `ZERO_DIR=../Zero/src`, `QT_STATIC=$(brew --prefix qt@5)`. Builds zerowallet, copies zerod/zero-cli into app bundle, macdeployqt, ad-hoc signs, creates DMG. See [BUILD](BUILD.md) §macOS App Signing and Distribution for Developer ID and notarization. |
+
+**Versions and sizes:** APP_VERSION inferred from `src/version.h` (or git when unchanged); `-v` optional. mkrelease-mac echoes zerod size when copying; compare artifact zerod size to `ZERO_DIR/zerod` to verify correct source.
+
+**Stripping:** Strip by default; `-S`/`--no-strip` to skip (larger artifacts). Linux: host `strip` for zerowallet, zerod, zero-cli. Windows: `x86_64-w64-mingw32.static-strip` when MXE provides it; else warn and skip. macOS: no strip (BUILD.md). **Revisit:** Consider adding macOS strip (and `-S` to skip) once code signing and Developer ID are in place; strip would run before signing.
 
 **ZERO_DIR:** Directory containing built zerod and zero-cli binaries. Not the Zero source tree. Expected: `zerod` and `zero-cli` (Linux/macOS) or `zerod.exe` and `zero-cli.exe` (Windows). Override with `-z` or `ZERO_DIR`.
 
@@ -642,7 +648,7 @@ make
 
 No package-manager installs for library upgrades — all vendored. For builds: **macOS:** `brew install qt@5`. **Linux:** `apt-get install` deps. **Windows (MXE):** MXE provides Qt. **Docker:** Dockerfile `apt-get` and tarballs.
 
-**Python (zerowallet):** Build dependencies only; no runtime, no tests. (1) `install_mxe.sh --deps`: apt-installs `python3-mako`, `python3-setuptools` for MXE build. (2) `src/scripts/docker/Dockerfile`: apt-installs `python` (and `ruby`) for Qt offline installer / MXE build. Zero full node RPC tests use system Python; zerowallet does not.
+**Python (zerowallet):** Build dependencies only; no runtime, no tests. (1) `install_mxe.sh --deps`: apt-installs `python3-mako`, `python3-setuptools` (Python 3). (2) `src/scripts/docker/Dockerfile` (ubuntu:16.04): apt-installs `python` (→ python2 on that base) and `ruby` for Qt/MXE build. Zero full node RPC tests use system Python; zerowallet does not. No zerowallet Python scripts.
 
 ### Risk / Effort
 

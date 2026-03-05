@@ -43,8 +43,9 @@ fi
 step_done "Static link"
 
 mkdir -p "bin/zerowallet-v${APP_VERSION}"
-strip zerowallet
+[ -z "${SKIP_STRIP:-}" ] && strip zerowallet
 
+notice "ZERO_DIR=$ZERO_DIR (zerod: $(stat -c %s "$ZERO_DIR/zerod" 2>/dev/null) bytes)"
 cp zerowallet                     "bin/zerowallet-v${APP_VERSION}/" >/dev/null
 cp "$ZERO_DIR/zerod"              "bin/zerowallet-v${APP_VERSION}/" >/dev/null
 cp "$ZERO_DIR/zero-cli"           "bin/zerowallet-v${APP_VERSION}/" >/dev/null
@@ -71,8 +72,7 @@ sed "s/RELEASE_VERSION/$APP_VERSION/g" src/scripts/control > "$debdir/DEBIAN/con
 
 cp zerowallet                   "$debdir/usr/local/bin/"
 
-strip "$ZERO_DIR/zerod"
-strip "$ZERO_DIR/zero-cli"
+[ -z "${SKIP_STRIP:-}" ] && strip "$ZERO_DIR/zerod" "$ZERO_DIR/zero-cli"
 
 cp "$ZERO_DIR/zerod"            "$debdir/usr/local/bin/zerod"
 cp "$ZERO_DIR/zero-cli"         "$debdir/usr/local/bin/zero-cli"

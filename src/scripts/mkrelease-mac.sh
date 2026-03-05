@@ -38,8 +38,10 @@ step_done "Building"
 mkdir -p artifacts
 rm -f artifacts/zerowallet.dmg >/dev/null 2>&1
 rm -f artifacts/rw* >/dev/null 2>&1
+notice "ZERO_DIR=$ZERO_DIR (zerod: $(stat -f %z "$ZERO_DIR/zerod" 2>/dev/null || stat -c %s "$ZERO_DIR/zerod" 2>/dev/null) bytes)"
 cp "$ZERO_DIR/zerod" zerowallet.app/Contents/MacOS/
 cp "$ZERO_DIR/zero-cli" zerowallet.app/Contents/MacOS/
+step_done "Copying zerod"
 rm -rf zerowallet.app/Contents/PlugIns
 $QT_PREFIX/bin/macdeployqt zerowallet.app
 step_done "Deploying"

@@ -46,6 +46,7 @@ One-time install per platform. Custom path via `-q` or `QT_STATIC` only when nee
 | `mkrelease-mac.sh` | macOS | `artifacts/macOS-zerowallet-vX.Y.Z.dmg` |
 | `mkrelease-win.sh` | Windows | `artifacts/Windows-zerowallet-vX.Y.Z.zip` |
 | `mkrelease.sh` | Linux + Windows | Both in one run (requires MXE for Windows) |
+| `mkdev.sh` | Linux, macOS, Windows | Dev build; `-c` clean, `-r` release, `-L` log |
 | `signbinaries.sh` | Any | GPG signatures and sha256sums |
 
 ### Unified Arguments
@@ -56,6 +57,7 @@ One-time install per platform. Custom path via `-q` or `QT_STATIC` only when nee
 | `-v`, `--version` | `APP_VERSION` | — | Release version. Must match `src/version.h`. Required. See [APP_VERSION](#app_version) below. |
 | `-p`, `--prev` | `PREV_VERSION` | — | Previous version. Required for Linux/Windows. Not used by macOS. See [PREV](#prev) below. |
 | `-q`, `--qt` | `QT_STATIC` | see Qt table | Qt prefix |
+| `-S`, `--no-strip` | — | — | Skip stripping (larger artifacts) |
 | `-m`, `--mxe` | `MXE_PATH` | — | MXE `usr/bin` (Windows only) |
 
 ### APP_VERSION
@@ -70,7 +72,7 @@ Canonical tag format `vN.N.N` is trivial to recognize; `git describe --tags --ab
 
 ### ZERO_DIR
 
-Directory containing built `zerod` and `zero-cli` (or `.exe` on Windows). Not the Zero source tree. Default `../Zero/src`; **macOS auto-detects** `../ZeroMac/src`, `../ZeroLinux/src`, `../ZeroWin/src` if `zerod` exists. Override with `-z` or `ZERO_DIR`. zerowallet packages copy binaries at build time; no zerod source in zerowallet. Stripping: Linux and Windows scripts strip binaries before packaging; macOS not stripped.
+Directory containing built `zerod` and `zero-cli` (or `.exe` on Windows). Not the Zero source tree. Default `../Zero/src` if that dir exists and is non-empty; else `../ZeroMac/src` (mac), `../ZeroLinux/src` (linux), `../ZeroWin/src` (win). Override with `-z` or `ZERO_DIR`. zerowallet packages copy binaries at build time; no zerod source in zerowallet. Stripping: Linux and Windows strip by default; `-S`/`--no-strip` to skip. macOS not stripped.
 
 ### PREV
 
@@ -82,7 +84,7 @@ Linux and Windows scripts use `sed` to replace the previous version with the new
 
 ### Linux
 
-Build zerod: `cd ../Zero && ./zcutil/build.sh -j$(nproc)`. Then:
+Build zerod: `cd ../Zero && ./zcutil/build.sh`. Then:
 
 ```bash
 ./src/scripts/mkrelease-linux.sh -v X.Y.Z -p X.Y.(Z-1) -q $QT_STATIC
@@ -90,7 +92,7 @@ Build zerod: `cd ../Zero && ./zcutil/build.sh -j$(nproc)`. Then:
 
 ### macOS
 
-**Prerequisites:** `brew install create-dmg qt@5`. zerod built in Zero repo. `ZERO_DIR` auto-detects `../ZeroMac/src`, `../ZeroLinux/src`, `../ZeroWin/src`, or `../Zero/src`; override with `-z` when Zero is elsewhere.
+**Prerequisites:** `brew install create-dmg qt@5`. zerod built in Zero repo. `ZERO_DIR` defaults to `../Zero/src` if non-empty, else `../ZeroMac/src`; override with `-z` when Zero is elsewhere.
 
 **Tooling:** Qt from Homebrew (`$(brew --prefix qt@5)`). `macdeployqt` copies Qt frameworks/plugins into the app bundle. `create-dmg` builds the DMG. `codesign` signs the app (ad-hoc or Developer ID). `xcrun notarytool` and `xcrun stapler` for notarization.
 
@@ -98,12 +100,14 @@ Build zerod: `cd ../Zero && ./zcutil/build.sh -j$(nproc)`. Then:
 
 **1. Dev build**
 
-For development. Produces `zerowallet.app` with symlinks to Homebrew Qt; not standalone. Run from build dir.
+For development. Produces `zerowallet.app` with symlinks to Homebrew Qt; not standalone. Run from repo root.
 
 ```bash
-make distclean && make
+./src/scripts/mkdev.sh
 ./zerowallet.app/Contents/MacOS/zerowallet
 ```
+
+Or: `make distclean && make` (after qmake). Use `mkdev.sh -c` to force clean before build.
 
 Test a Release build (`artifacts/ZeroWallet.app` or DMG) for standalone verification.
 
@@ -159,27 +163,19 @@ xcrun stapler staple artifacts/macOS-zerowallet-vX.Y.Z.dmg
 
 ### Windows
 
-**Status: tentative; subject to change.** Cross-build from Linux or WSL; both require test and validation. Build zerod: `cd ../Zero && ./zcutil/build-win.sh -j$(nproc)`. Run `mkrelease-win.sh` with `-z`, `-v`, `-p`, `-m` (MXE path). Requires [MXE](#mxe).
+**Status: tentative; subject to change.** Cross-build from Linux or WSL; both require test and validation. Build zerod: `cd ../Zero && ./zcutil/build-win.sh`. Run `mkrelease-win.sh` with `-z`, `-v`, `-p`, `-m` (MXE path). Requires [MXE](#mxe).
 
 #### MXE
 
 [MXE](https://mxe.cc/) (M Cross Environment) for MinGW + static Qt. Clone to `~/mxe`; `make MXE_TARGETS='x86_64-w64-mingw32.static' qtbase qtwebsockets` (2–4 h). Set `MXE_PATH` to `usr/bin`. Build: `./src/scripts/mkrelease-win.sh -z $ZERO_DIR -v X.Y.Z -p X.Y.(Z-1) -m $MXE_PATH`
 
-### Precompiled headers (PCH)
+---
 
-**What `precompiled.h` does:** A precompiled header is a C++ header file (e.g. `src/precompiled.h`) that the compiler parses once and caches. All `.cpp` files that include it reuse that cache instead of re-parsing the same includes. This speeds up builds. Our `precompiled.h` pulls in common Qt headers (QApplication, QWidget, etc.), nlohmann/json, libsodium, and other shared includes. Source files include it via `#include "precompiled.h"` at the top.
+## Troubleshooting
 
-**Where PRECOMPILED_HEADER is used:**
-
-| Platform | .pro file | PCH |
-|----------|------------|-----|
-| Linux | `zero-qt-wallet.pro` | ✓ enabled |
-| macOS | `zero-qt-wallet.pro` | ✓ enabled |
-| Windows (MinGW) | `zero-qt-wallet-mingw.pro` (generated) | ✗ stripped |
-
-**Why Windows strips it:** `mkdev-win.sh` and `mkrelease-win.sh` generate `zero-qt-wallet-mingw.pro` with `sed '/PRECOMPILED_HEADER/d'` to remove the `PRECOMPILED_HEADER = src/precompiled.h` line. PCH has historically caused issues with MinGW cross-compilation (include paths, defines, toolchain quirks). Stripping avoids those failures.
-
-**Trying PCH with ZeroWin:** To test whether current MXE/Qt/MinGW supports PCH, one would stop stripping the PRECOMPILED_HEADER line and keep `precompile_header` in CONFIG when generating the mingw .pro. **Postponed** — no trial planned until needed.
+| Issue | Platform | Solution |
+|-------|----------|----------|
+| `__OPTIMIZE__ predefined macro was enabled in PCH file but is currently disabled` | macOS | PCH built with different CONFIG (debug vs release). Run `./src/scripts/mkdev.sh -c -L` to force clean and rebuild. |
 
 ---
 
