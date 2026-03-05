@@ -28,13 +28,13 @@ step_done "Cleaning"
 section "Linux ($(lsb_release -rs 2>/dev/null || echo 'build'))"
 
 run_dotranslations >/dev/null
-$QMAKE zero-qt-wallet.pro -spec linux-g++ CONFIG+=release >/dev/null
+$QMAKE zero-qt-wallet.pro -spec linux-g++ CONFIG+=release > /dev/null
 step_done "Configuring"
 
-rm -rf bin/zero-qt-wallet* >/dev/null
-rm -rf bin/zerowallet* >/dev/null
-make clean >/dev/null
-make -j"${JOBS:-2}" >/dev/null
+rm -rf bin/zero-qt-wallet* > /dev/null
+rm -rf bin/zerowallet* > /dev/null
+make clean > /dev/null
+make -j"${JOBS:-2}" > /dev/null
 step_done "Building"
 
 if ldd zerowallet | grep -qi "Qt"; then
@@ -43,13 +43,12 @@ fi
 step_done "Static link"
 
 mkdir -p "bin/zerowallet-v${APP_VERSION}"
-strip zerowallet
-
-cp zerowallet                     "bin/zerowallet-v${APP_VERSION}/" >/dev/null
-cp "$ZERO_DIR/zerod"              "bin/zerowallet-v${APP_VERSION}/" >/dev/null
-cp "$ZERO_DIR/zero-cli"           "bin/zerowallet-v${APP_VERSION}/" >/dev/null
-cp README.md                      "bin/zerowallet-v${APP_VERSION}/" >/dev/null
-cp LICENSE                        "bin/zerowallet-v${APP_VERSION}/" >/dev/null
+cp zerowallet                     "bin/zerowallet-v${APP_VERSION}/" > /dev/null
+cp "$ZERO_DIR/zerod"              "bin/zerowallet-v${APP_VERSION}/" > /dev/null
+cp "$ZERO_DIR/zero-cli"           "bin/zerowallet-v${APP_VERSION}/" > /dev/null
+cp README.md                      "bin/zerowallet-v${APP_VERSION}/" > /dev/null
+cp LICENSE                        "bin/zerowallet-v${APP_VERSION}/" > /dev/null
+[ -z "${SKIP_STRIP:-}" ] && strip "bin/zerowallet-v${APP_VERSION}/zerowallet" "bin/zerowallet-v${APP_VERSION}/zerod" "bin/zerowallet-v${APP_VERSION}/zero-cli"
 
 (cd bin && tar czf "linux-zerowallet-v${APP_VERSION}.tar.gz" "zerowallet-v${APP_VERSION}/" >/dev/null 2>&1) || err "tar failed"
 
@@ -62,6 +61,7 @@ step_done "Packaging"
 "$SCRIPT_DIR/package-verify.sh" --linux "artifacts/linux-zerowallet-v${APP_VERSION}.tar.gz"
 step_done "Package contents"
 
+# This repo builds Linux *target* too: tar.gz + .deb (debdir = Debian package layout).
 debdir="bin/deb/zerowallet-v${APP_VERSION}"
 mkdir -p "$debdir"
 mkdir -p "$debdir/DEBIAN"
@@ -70,12 +70,9 @@ mkdir -p "$debdir/usr/local/bin"
 sed "s/RELEASE_VERSION/$APP_VERSION/g" src/scripts/control > "$debdir/DEBIAN/control"
 
 cp zerowallet                   "$debdir/usr/local/bin/"
-
-strip "$ZERO_DIR/zerod"
-strip "$ZERO_DIR/zero-cli"
-
 cp "$ZERO_DIR/zerod"            "$debdir/usr/local/bin/zerod"
 cp "$ZERO_DIR/zero-cli"         "$debdir/usr/local/bin/zero-cli"
+[ -z "${SKIP_STRIP:-}" ] && strip "$debdir/usr/local/bin/zerowallet" "$debdir/usr/local/bin/zerod" "$debdir/usr/local/bin/zero-cli"
 
 mkdir -p                        "$debdir/usr/share/pixmaps/"
 cp res/zero.xpm                 "$debdir/usr/share/pixmaps/"

@@ -28,6 +28,13 @@ RESOURCES     = application.qrc
 MOC_DIR = bin
 OBJECTS_DIR = bin
 UI_DIR = src
+# Windows (MXE): all build artifacts in debug/ or release/
+win32: CONFIG(debug, debug|release): MOC_DIR = debug
+win32: CONFIG(debug, debug|release): OBJECTS_DIR = debug
+win32: CONFIG(debug, debug|release): DESTDIR = debug
+else: win32: CONFIG(release, debug|release): MOC_DIR = release
+else: win32: CONFIG(release, debug|release): OBJECTS_DIR = release
+else: win32: CONFIG(release, debug|release): DESTDIR = release
 
 CONFIG += c++14
 

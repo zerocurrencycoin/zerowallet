@@ -70,7 +70,14 @@ Canonical tag format `vN.N.N` is trivial to recognize; `git describe --tags --ab
 
 ### ZERO_DIR
 
-Directory containing built `zerod` and `zero-cli` (or `.exe` on Windows). Not the Zero source tree. Default `../Zero/src`; **macOS auto-detects** `../ZeroMac/src`, `../ZeroLinux/src`, `../ZeroWin/src` if `zerod` exists. Override with `-z` or `ZERO_DIR`. zerowallet packages copy binaries at build time; no zerod source in zerowallet. Stripping: Linux and Windows scripts strip binaries before packaging; macOS not stripped.
+Directory containing built `zerod` and `zero-cli` (or `.exe` on Windows). Not the Zero source tree. Default `../Zero/src`; **macOS auto-detects** `../ZeroMac/src`, `../ZeroLinux/src`, `../ZeroWin/src` if `zerod` exists. Override with `-z` or `ZERO_DIR`. zerowallet packages copy binaries at build time; no zerod source in zerowallet. Scripts strip only the copies in the package dir; originals in `ZERO_DIR` are never modified. See [Stripping](#stripping).
+
+
+### Stripping
+
+- **Linux / Windows (zerowallet release):** mkrelease copies binaries into the package directory, then runs `strip` on those copies only. Originals in `ZERO_DIR` are never modified. Use `-s` or `--no-strip` to skip (larger packages).
+- **macOS:** The system `strip` command removes symbol tables to reduce size; often used for release after debugging. mkrelease-mac optionally strips ZeroWallet.app/Contents/MacOS/* before signing (for experiments). For signed/notarized release use -s or --no-strip: stripping can complicate or invalidate code signatures. Default is to strip; use -s when building for distribution.
+- **Direct zerod distribution (standalone node):** Whether and how to strip zerod/zero-cli for official node tarballs or installers is **TBD** (not yet documented or standardized here).
 
 ### PREV
 
