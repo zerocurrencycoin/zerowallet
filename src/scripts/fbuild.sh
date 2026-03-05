@@ -3,7 +3,7 @@
 # Shared build helpers for mkdev/mkrelease scripts.
 # Usage: ME="script-name"; . "$(dirname "$0")/fbuild.sh"
 # Provides: SCRIPT_DIR, REPO_ROOT, JOBS, err, warn, info, notice, step_done, section,
-#           analyze_build_log, log_capture, build_fail, resolve_zero_dir, resolve_path_win,
+#           analyze_build_log, log_capture, build_fail, resolve_zero_dir, detect_mxe,
 #           resolve_qt, version helpers, parse_mkdev_args, parse_mkrelease_args,
 #           show_mkdev_help, show_mkrelease_help, run_dotranslations, apply_version_sed
 
@@ -89,13 +89,14 @@ show_mkdev_help() {
   echo "No -z with dev."
 }
 
-# Parse common mkrelease args. Sets ZERO_DIR, APP_VERSION, PREV_VERSION, QT_PREFIX, MXE_PATH, SKIP_TRANSLATIONS, LOG_FILE, JOBS.
+# Parse common mkrelease args. Sets ZERO_DIR, APP_VERSION, PREV_VERSION, QT_PREFIX, MXE_PATH, SKIP_TRANSLATIONS, SKIP_STRIP, LOG_FILE, JOBS.
 # Usage: parse_mkrelease_args "logs/mkrelease-linux.log" "$@"
 # shellcheck disable=SC2034
 parse_mkrelease_args() {
   local default_log="${1:-}"
   shift
   SKIP_TRANSLATIONS=""
+  SKIP_STRIP=""
   LOG_FILE=""
   while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -113,6 +114,7 @@ parse_mkrelease_args() {
       -m|--mxe) MXE_PATH="$2"; shift 2 ;;
       -p|--prev) PREV_VERSION="$2"; shift 2 ;;
       -q|--qt) QT_PREFIX="$2"; shift 2 ;;
+      -s|--no-strip) SKIP_STRIP=1; shift ;;
       -t|--tran) SKIP_TRANSLATIONS=1; shift ;;
       -v|--version) APP_VERSION="$2"; shift 2 ;;
       -z|--zero) ZERO_DIR="$2"; shift 2 ;;
@@ -132,6 +134,7 @@ show_mkrelease_help() {
   echo "  -m, --mxe PATH  MXE usr/bin (Windows target, Linux host)"
   echo "  -p, --prev V    PREV_VERSION (default: from version.h or git)"
   echo "  -q, --qt PATH   Qt prefix (static Qt for release)"
+  echo "  -s, --no-strip  skip stripping binaries (default: strip)"
   echo "  -t, --tran      skip translations"
   echo "  -v, --version V APP_VERSION (X.Y.Z)"
   echo "  -z, --zero PATH Zero src dir (zerod, zero-cli)"
@@ -172,7 +175,19 @@ resolve_qt() {
       export PATH="$QT_PREFIX/bin:$PATH"
       ;;
     win)
-      resolve_path_win
+      detect_mxe
+      export PATH="$MXE_PATH:$PATH"
+      # STRIP for mkrelease-win (optional; warn if missing)
+      if [ -x "${MXE_PATH}/x86_64-w64-mingw32.static-strip" ]; then
+        STRIP="${MXE_PATH}/x86_64-w64-mingw32.static-strip"
+      elif command -v x86_64-w64-mingw32.static-strip >/dev/null 2>&1; then
+        STRIP="x86_64-w64-mingw32.static-strip"
+      else
+        STRIP=""
+        warn "MinGW strip not found; packaging without stripping (larger binaries)"
+      fi
+      # shellcheck disable=SC2034
+      QMAKE="x86_64-w64-mingw32.static-qmake-qt5"
       # Host Qt for dotranslations (lrelease). Precedence: -q/QT_PREFIX > default qt5-static.
       if [ "$mode" = "release" ]; then
         QT_PREFIX="${QT_PREFIX:-$REPO_ROOT/qt5-static}"
@@ -190,15 +205,14 @@ check_zero_binaries() {
   [ -f "$ZERO_DIR/zero-cli$suf" ] || err "zero-cli$suf not found in $ZERO_DIR. Build Zero first."
 }
 
-# Resolve ZERO_DIR. $1: platform (linux|mac|win). Uses ../Zero, else ../ZeroLinux, ../ZeroMac, or ../ZeroWin.
+# Resolve ZERO_DIR. $1: platform (linux|mac|win). Uses ZERO_BASE: ../Zero, else ../ZeroLinux or ../ZeroWin.
 resolve_zero_dir() {
   local plat="${1:-linux}"
   [ -n "${ZERO_DIR:-}" ] && return 0
   local base="../Zero"
   case "$plat" in
-    linux) [ -d "$base" ] || base="../ZeroLinux" ;;
-    mac)   [ -d "$base" ] || base="../ZeroMac" ;;
-    win)   [ -d "$base" ] || base="../ZeroWin" ;;
+    linux|mac) [ -d "$base" ] || base="../ZeroLinux" ;;
+    win)       [ -d "$base" ] || base="../ZeroWin" ;;
   esac
   ZERO_DIR="$base/src"
 }
@@ -217,47 +231,31 @@ resolve_zero_dirs_linuxwin() {
   ZERO_DIR_WIN="${ZERO_DIR_WIN:-$base/src}"
 }
 
-# Resolve MXE path and tools for Windows target (Linux host).
-# Strategy: MXE_PATH (env) > tools in PATH > probe $HOME/mxe, /opt/mxe.
-# Sets: MXE_PATH, QMAKE, STRIP. Prepends MXE_PATH to PATH.
-# STRIP: warn-but-continue if not found (larger binaries).
-resolve_path_win() {
-  local d p
-
-  # 1. MXE_PATH from environment
-  if [ -n "${MXE_PATH:-}" ] && [ -d "${MXE_PATH}" ]; then
-    d="$MXE_PATH"
-  # 2. Tools in PATH
-  elif d=$(command -v x86_64-w64-mingw32.static-gcc 2>/dev/null) && [ -n "$d" ]; then
-    d="$(dirname "$d")"
-    [ -x "$d/x86_64-w64-mingw32.static-qmake-qt5" ] || d=""
-  # 3. Probe
-  else
-    d=""
-    for p in "$HOME/mxe/usr/bin" /opt/mxe/usr/bin; do
-      if [ -x "$p/x86_64-w64-mingw32.static-gcc" ] && [ -x "$p/x86_64-w64-mingw32.static-qmake-qt5" ]; then
-        d="$p"
-        break
-      fi
-    done
+# Detect MXE path (Windows target, Linux host).
+# Requires both gcc (libsodium, wallet) and qmake (wallet). Probe for each.
+# Precedence: -m/--mxe (command line) > MXE_PATH (env) > both tools in PATH > probe $HOME/mxe, /opt/mxe.
+# Resolved MXE_PATH is prepended to PATH, so it overrides system PATH for tool lookup.
+mxe_has_both() {
+  local d="$1"
+  [ -x "$d/x86_64-w64-mingw32.static-gcc" ] && [ -x "$d/x86_64-w64-mingw32.static-qmake-qt5" ]
+}
+detect_mxe() {
+  [ -n "${MXE_PATH:-}" ] && return 0
+  local gcc_path qmake_path d
+  gcc_path=$(command -v x86_64-w64-mingw32.static-gcc 2>/dev/null) || true
+  qmake_path=$(command -v x86_64-w64-mingw32.static-qmake-qt5 2>/dev/null) || true
+  if [ -n "$gcc_path" ]; then
+    d="$(dirname "$gcc_path")"
+    mxe_has_both "$d" && { MXE_PATH="$d"; return 0; }
   fi
-
-  [ -z "${d:-}" ] && err "MXE not found. Set MXE_PATH or -m/--mxe, or install to ~/mxe. See BUILD.md Windows."
-  [ -x "$d/x86_64-w64-mingw32.static-gcc" ] || err "MXE gcc not found at $d"
-  [ -x "$d/x86_64-w64-mingw32.static-qmake-qt5" ] || err "MXE qmake not found at $d"
-
-  MXE_PATH="$d"
-  PATH="${MXE_PATH}:${PATH}"
-  export PATH
-  QMAKE="${MXE_PATH}/x86_64-w64-mingw32.static-qmake-qt5"
-  if [ -x "${MXE_PATH}/x86_64-w64-mingw32.static-strip" ]; then
-    STRIP="${MXE_PATH}/x86_64-w64-mingw32.static-strip"
-  elif command -v x86_64-w64-mingw32-strip >/dev/null 2>&1; then
-    STRIP="x86_64-w64-mingw32-strip"
-  else
-    STRIP=""
-    warn "MinGW strip not found; packaging without stripping (larger binaries)"
+  if [ -n "$qmake_path" ]; then
+    d="$(dirname "$qmake_path")"
+    mxe_has_both "$d" && { MXE_PATH="$d"; return 0; }
   fi
+  for p in "$HOME/mxe/usr/bin" /opt/mxe/usr/bin; do
+    mxe_has_both "$p" && { MXE_PATH="$p"; return 0; }
+  done
+  err "MXE not found. Set MXE_PATH or -m/--mxe, or install to ~/mxe. See BUILD.md Windows."
 }
 
 # Version helpers (mkrelease-linux)
@@ -294,9 +292,8 @@ check_version_mismatch() {
 }
 
 # Replace PREV_VERSION with APP_VERSION in zero-qt-wallet.pro and README.md. Run from repo root.
-# Portable sed -i: BSD (macOS) requires backup suffix; use .bak then remove.
 apply_version_sed() {
-  sed -i.bak "s/${PREV_VERSION}/${APP_VERSION}/g" zero-qt-wallet.pro && rm -f zero-qt-wallet.pro.bak
-  sed -i.bak "s/${PREV_VERSION}/${APP_VERSION}/g" README.md && rm -f README.md.bak
+  sed -i "s/${PREV_VERSION}/${APP_VERSION}/g" zero-qt-wallet.pro >/dev/null
+  sed -i "s/${PREV_VERSION}/${APP_VERSION}/g" README.md >/dev/null
   step_done "Version files"
 }

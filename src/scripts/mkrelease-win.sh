@@ -44,7 +44,7 @@ mkdir -p "$PKGDIR"
 cp release/zerowallet.exe             "$PKGDIR/" >/dev/null
 cp "$ZERO_DIR/zerod.exe"             "$PKGDIR/" >/dev/null
 cp "$ZERO_DIR/zero-cli.exe"          "$PKGDIR/" >/dev/null
-[ -n "${STRIP:-}" ] && "$STRIP" "$PKGDIR/zerowallet.exe" "$PKGDIR/zerod.exe" "$PKGDIR/zero-cli.exe"
+[ -z "${SKIP_STRIP:-}" ] && [ -n "${STRIP:-}" ] && "$STRIP" "$PKGDIR/zerowallet.exe" "$PKGDIR/zerod.exe" "$PKGDIR/zero-cli.exe"
 cp README.md                          "$PKGDIR/" >/dev/null
 cp LICENSE                            "$PKGDIR/" >/dev/null
 
