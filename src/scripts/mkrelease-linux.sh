@@ -1,6 +1,6 @@
 #!/bin/bash
 # Copyright 2026 Zero Developers
-# Release build for Linux: static Qt, tar.gz + deb.
+# Release build for Linux: static Qt, .tgz + deb.
 set -e -u -o pipefail
 # shellcheck disable=SC2034
 ME="mkrelease-linux"
@@ -42,25 +42,26 @@ if ldd zerowallet | grep -qi "Qt"; then
 fi
 step_done "Static link"
 
-mkdir -p "bin/zerowallet-v${APP_VERSION}"
-[ -z "${SKIP_STRIP:-}" ] && strip zerowallet
+tgzdir="bin/tgz/linux-zerowallet-v${APP_VERSION}"
+mkdir -p "$tgzdir"
 
 notice "ZERO_DIR=$ZERO_DIR (zerod: $(stat -c %s "$ZERO_DIR/zerod" 2>/dev/null) bytes)"
-cp zerowallet                     "bin/zerowallet-v${APP_VERSION}/" >/dev/null
-cp "$ZERO_DIR/zerod"              "bin/zerowallet-v${APP_VERSION}/" >/dev/null
-cp "$ZERO_DIR/zero-cli"           "bin/zerowallet-v${APP_VERSION}/" >/dev/null
-cp README.md                      "bin/zerowallet-v${APP_VERSION}/" >/dev/null
-cp LICENSE                        "bin/zerowallet-v${APP_VERSION}/" >/dev/null
+cp zerowallet                     "$tgzdir/" >/dev/null
+cp "$ZERO_DIR/zerod"              "$tgzdir/" >/dev/null
+cp "$ZERO_DIR/zero-cli"           "$tgzdir/" >/dev/null
+cp README.md                      "$tgzdir/" >/dev/null
+cp LICENSE                        "$tgzdir/" >/dev/null
+[ -z "${SKIP_STRIP:-}" ] && strip "$tgzdir/zerowallet" "$tgzdir/zerod" "$tgzdir/zero-cli"
 
-(cd bin && tar czf "linux-zerowallet-v${APP_VERSION}.tar.gz" "zerowallet-v${APP_VERSION}/" >/dev/null 2>&1) || err "tar failed"
+(cd bin/tgz && tar czf "linux-zerowallet-v${APP_VERSION}.tgz" "linux-zerowallet-v${APP_VERSION}/" >/dev/null 2>&1) || err "tar failed"
 
 mkdir -p artifacts
 mkdir -p release
-cp "bin/linux-zerowallet-v${APP_VERSION}.tar.gz" "./artifacts/linux-zerowallet-v${APP_VERSION}.tar.gz"
+cp "bin/tgz/linux-zerowallet-v${APP_VERSION}.tgz" "./artifacts/linux-zerowallet-v${APP_VERSION}.tgz"
 step_done "Packaging"
 
-[ ! -f "artifacts/linux-zerowallet-v${APP_VERSION}.tar.gz" ] && err "tar.gz artifact not created"
-"$SCRIPT_DIR/package-verify.sh" --linux "artifacts/linux-zerowallet-v${APP_VERSION}.tar.gz"
+[ ! -f "artifacts/linux-zerowallet-v${APP_VERSION}.tgz" ] && err "tgz artifact not created"
+"$SCRIPT_DIR/package-verify.sh" --linux "artifacts/linux-zerowallet-v${APP_VERSION}.tgz"
 step_done "Package contents"
 
 debdir="bin/deb/zerowallet-v${APP_VERSION}"
@@ -71,11 +72,12 @@ mkdir -p "$debdir/usr/local/bin"
 sed "s/RELEASE_VERSION/$APP_VERSION/g" src/scripts/control > "$debdir/DEBIAN/control"
 
 cp zerowallet                   "$debdir/usr/local/bin/"
-
-[ -z "${SKIP_STRIP:-}" ] && strip "$ZERO_DIR/zerod" "$ZERO_DIR/zero-cli"
-
 cp "$ZERO_DIR/zerod"            "$debdir/usr/local/bin/zerod"
 cp "$ZERO_DIR/zero-cli"         "$debdir/usr/local/bin/zero-cli"
+[ -z "${SKIP_STRIP:-}" ] && strip "$debdir/usr/local/bin/zerowallet" "$debdir/usr/local/bin/zerod" "$debdir/usr/local/bin/zero-cli"
+
+mkdir -p                        "$debdir/usr/share/doc/zero-qt-wallet"
+cp README.md                    "$debdir/usr/share/doc/zero-qt-wallet/README.md"
 
 mkdir -p                        "$debdir/usr/share/pixmaps/"
 cp res/zero.xpm                 "$debdir/usr/share/pixmaps/"

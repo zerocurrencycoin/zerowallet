@@ -158,7 +158,7 @@ Check for required files by name, not line count. For tar, use a pattern that ma
 ```bash
 # Linux (tar: match "zerowallet" or "pkg/zerowallet" or "pkg/zerowallet/")
 for f in zerowallet zerod zero-cli; do
-  tar tf "artifacts/linux-zerowallet-v$APP_VERSION.tar.gz" | grep -qE "(^|/)${f}(/|$)" || err "package missing $f"
+  tar tf "artifacts/linux-zerowallet-v$APP_VERSION.tgz" | grep -qE "(^|/)${f}(/|$)" || err "package missing $f"
 done
 
 # Windows (unzip -l: match filename in listing)

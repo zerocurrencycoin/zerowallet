@@ -109,7 +109,7 @@ fi
 
 # If -v given, verify artifacts/
 if [ -n "$APP_VERSION" ]; then
-  [ -n "$LINUX_PATH" ] || LINUX_PATH="artifacts/linux-zerowallet-v${APP_VERSION}.tar.gz"
+  [ -n "$LINUX_PATH" ] || LINUX_PATH="artifacts/linux-zerowallet-v${APP_VERSION}.tgz"
   [ -n "$WIN_PATH" ]  || WIN_PATH="artifacts/Windows-zerowallet-v${APP_VERSION}.zip"
   [ -n "$MAC_PATH" ]  || MAC_PATH="artifacts/macOS-zerowallet-v${APP_VERSION}.dmg"
 fi

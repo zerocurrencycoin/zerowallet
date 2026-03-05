@@ -42,7 +42,7 @@ One-time install per platform. Custom path via `-q` or `QT_STATIC` only when nee
 
 | Script | Platform | Output |
 |--------|----------|--------|
-| `mkrelease-linux.sh` | Linux | `artifacts/linux-zerowallet-vX.Y.Z.tar.gz`, `.deb` |
+| `mkrelease-linux.sh` | Linux | `artifacts/linux-zerowallet-vX.Y.Z.tgz`, `.deb` |
 | `mkrelease-mac.sh` | macOS | `artifacts/macOS-zerowallet-vX.Y.Z.dmg` |
 | `mkrelease-win.sh` | Windows | `artifacts/Windows-zerowallet-vX.Y.Z.zip` |
 | `mkrelease.sh` | Linux + Windows | Both in one run (requires MXE for Windows) |
@@ -57,7 +57,7 @@ One-time install per platform. Custom path via `-q` or `QT_STATIC` only when nee
 | `-v`, `--version` | `APP_VERSION` | — | Release version. Must match `src/version.h`. Required. See [APP_VERSION](#app_version) below. |
 | `-p`, `--prev` | `PREV_VERSION` | — | Previous version. Required for Linux/Windows. Not used by macOS. See [PREV](#prev) below. |
 | `-q`, `--qt` | `QT_STATIC` | see Qt table | Qt prefix |
-| `-S`, `--no-strip` | — | — | Skip stripping (larger artifacts) |
+| `-S`, `--no-strip` | — | — | Skip stripping release binaries (larger artifacts; symbols kept). Default: strip on Linux/Windows. |
 | `-m`, `--mxe` | `MXE_PATH` | — | MXE `usr/bin` (Windows only) |
 
 ### APP_VERSION
@@ -72,7 +72,7 @@ Canonical tag format `vN.N.N` is trivial to recognize; `git describe --tags --ab
 
 ### ZERO_DIR
 
-Directory containing built `zerod` and `zero-cli` (or `.exe` on Windows). Not the Zero source tree. Default `../Zero/src` if that dir exists and is non-empty; else `../ZeroMac/src` (mac), `../ZeroLinux/src` (linux), `../ZeroWin/src` (win). Override with `-z` or `ZERO_DIR`. zerowallet packages copy binaries at build time; no zerod source in zerowallet. Stripping: Linux and Windows strip by default; `-S`/`--no-strip` to skip. macOS not stripped.
+Directory containing built `zerod` and `zero-cli` (or `.exe` on Windows). Not the Zero source tree. **Default:** `../Zero/src`. If that directory is missing or empty, fallback by platform: **mac** → `../ZeroMac/src`, **linux** → `../ZeroLinux/src`, **win** → `../ZeroWin/src`. Override with `-z` or `ZERO_DIR`. zerowallet packages copy binaries at build time; no zerod source in zerowallet. **Stripping:** Linux and Windows strip by default (copies only; originals in `ZERO_DIR` unchanged); `-S`/`--no-strip` to skip. macOS not stripped.
 
 ### PREV
 
@@ -89,6 +89,10 @@ Build zerod: `cd ../Zero && ./zcutil/build.sh`. Then:
 ```bash
 ./src/scripts/mkrelease-linux.sh -v X.Y.Z -p X.Y.(Z-1) -q $QT_STATIC
 ```
+
+**Tarball:** Staged in `bin/tgz/linux-zerowallet-vX.Y.Z/`; output `artifacts/linux-zerowallet-vX.Y.Z.tgz`.
+
+**Deb behavior:** mkrelease-linux produces both a .tgz and a .deb. Staging: `bin/deb/zerowallet-vX.Y.Z/`. Contents: `DEBIAN/control`, `usr/local/bin/` (zerowallet, zerod, zero-cli), README.md (from repo root), `usr/share/pixmaps/`, .desktop file. Binaries are stripped in place when not using `-S`. Output: `artifacts/linux-zerowallet-vX.Y.Z.deb`.
 
 ### macOS
 
