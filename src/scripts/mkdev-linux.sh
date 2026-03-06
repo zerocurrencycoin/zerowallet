@@ -10,8 +10,8 @@ ME="mkdev-linux"
 cd "$REPO_ROOT"
 
 parse_mkdev_args "logs/mkdev-linux.log" "$@"
-notice "CONFIG=$CONFIG -j$JOBS"
-[ -n "$LOG_FILE" ] && notice "Log: $LOG_FILE"
+notice "CONFIG=${CONFIG} -j${JOBS}"
+[ -n "${LOG_FILE:-}" ] && notice "Log: ${LOG_FILE}"
 
 for pkg in qtbase5-dev qtbase5-dev-tools libqt5websockets5-dev libqt5svg5-dev; do
   if ! dpkg -l "$pkg" 2>/dev/null | grep -q ^ii; then
@@ -23,22 +23,23 @@ done
 resolve_qt linux dev
 [ -z "${QMAKE:-}" ] && err "qmake not found. Install qtbase5-dev-tools."
 
-notice "Configuring..."
+notice 'Configuring...'
 if [ -n "${MKDEV_CLEAN:-}" ]; then
   make distclean 2>/dev/null || true
   rm -rf bin
-  notice "Cleaned (distclean)"
+  rm -f zerowallet
+  notice 'Cleaned (distclean)'
 fi
 $QMAKE zero-qt-wallet.pro CONFIG+="$CONFIG" 2>&1 | log_capture
 
-notice "Building..."
+notice 'Building...'
 if make -j"$JOBS" 2>&1 | log_capture; then
   :
 else
-  build_fail "build failed"
+  build_fail 'build failed'
 fi
 
-[ -f zerowallet ] || err "zerowallet binary not produced"
-notice "Done. Run ./zerowallet"
+[ -f zerowallet ] || err 'zerowallet binary not produced'
+notice 'Done. Run ./zerowallet'
 ls -la zerowallet
-[ -n "${RUN_AFTER_BUILD:-}" ] && { notice "Running ./zerowallet --help"; ./zerowallet --help || true; }
+[ -n "${RUN_AFTER_BUILD:-}" ] && { notice 'Running ./zerowallet --help'; ./zerowallet --help || true; }

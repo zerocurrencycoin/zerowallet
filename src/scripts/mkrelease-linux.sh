@@ -9,7 +9,7 @@ ME="mkrelease-linux"
 cd "$REPO_ROOT"
 
 parse_mkrelease_args "logs/mkrelease-linux.log" "$@"
-[ -n "$LOG_FILE" ] && exec > >(tee -a "$LOG_FILE") 2>&1
+[ -n "${LOG_FILE:-}" ] && exec > >(tee -a "${LOG_FILE}") 2>&1
 resolve_zero_dir linux
 resolve_qt linux release
 [ ! -x "${QMAKE:-}" ] && err "QT_PREFIX not found at ${QT_PREFIX:-}. Run ./src/scripts/build-qt-static.sh first, or set -q/--qt."
@@ -21,48 +21,47 @@ apply_version_sed
 check_zero_binaries linux
 
 rm -rf bin/*
-rm -rf artifacts/*
 make distclean >/dev/null 2>&1 || true
-step_done "Cleaning"
+step_done 'Cleaning'
 
 section "Linux ($(lsb_release -rs 2>/dev/null || echo 'build'))"
 
 run_dotranslations >/dev/null
 $QMAKE zero-qt-wallet.pro -spec linux-g++ CONFIG+=release >/dev/null
-step_done "Configuring"
+step_done 'Configuring'
 
 rm -rf bin/zero-qt-wallet* >/dev/null
 rm -rf bin/zerowallet* >/dev/null
 make clean >/dev/null
 make -j"${JOBS:-2}" >/dev/null
-step_done "Building"
+step_done 'Building'
 
 if ldd zerowallet | grep -qi "Qt"; then
-    err "release build requires static Qt; found dynamic Qt linkage"
+    err 'release build requires static Qt; found dynamic Qt linkage'
 fi
-step_done "Static link"
+step_done 'Static link'
 
 tgzdir="bin/tgz/linux-zerowallet-v${APP_VERSION}"
 mkdir -p "$tgzdir"
 
-notice "ZERO_DIR=$ZERO_DIR (zerod: $(stat -c %s "$ZERO_DIR/zerod" 2>/dev/null) bytes)"
-cp zerowallet                     "$tgzdir/" >/dev/null
-cp "$ZERO_DIR/zerod"              "$tgzdir/" >/dev/null
-cp "$ZERO_DIR/zero-cli"           "$tgzdir/" >/dev/null
-cp README.md                      "$tgzdir/" >/dev/null
-cp LICENSE                        "$tgzdir/" >/dev/null
+notice "ZERO_DIR=${ZERO_DIR} (zerod: $(stat -c %s "${ZERO_DIR}/zerod" 2>/dev/null) bytes)"
+cp -f zerowallet                     "$tgzdir/" >/dev/null
+cp -f "$ZERO_DIR/zerod"              "$tgzdir/" >/dev/null
+cp -f "$ZERO_DIR/zero-cli"           "$tgzdir/" >/dev/null
+cp -f README.md                      "$tgzdir/" >/dev/null
+cp -f LICENSE                        "$tgzdir/" >/dev/null
 [ -z "${SKIP_STRIP:-}" ] && strip "$tgzdir/zerowallet" "$tgzdir/zerod" "$tgzdir/zero-cli"
 
-(cd bin/tgz && tar czf "linux-zerowallet-v${APP_VERSION}.tgz" "linux-zerowallet-v${APP_VERSION}/" >/dev/null 2>&1) || err "tar failed"
+(cd bin/tgz && tar czf "linux-zerowallet-v${APP_VERSION}.tgz" "linux-zerowallet-v${APP_VERSION}/" >/dev/null 2>&1) || err 'tar failed'
 
 mkdir -p artifacts
 mkdir -p release
-cp "bin/tgz/linux-zerowallet-v${APP_VERSION}.tgz" "./artifacts/linux-zerowallet-v${APP_VERSION}.tgz"
-step_done "Packaging"
+cp -f "bin/tgz/linux-zerowallet-v${APP_VERSION}.tgz" "./artifacts/linux-zerowallet-v${APP_VERSION}.tgz"
+step_done 'Packaging'
 
-[ ! -f "artifacts/linux-zerowallet-v${APP_VERSION}.tgz" ] && err "tgz artifact not created"
+[ ! -f "artifacts/linux-zerowallet-v${APP_VERSION}.tgz" ] && err 'tgz artifact not created'
 "$SCRIPT_DIR/package-verify.sh" --linux "artifacts/linux-zerowallet-v${APP_VERSION}.tgz"
-step_done "Package contents"
+step_done 'Package contents'
 
 debdir="bin/deb/zerowallet-v${APP_VERSION}"
 mkdir -p "$debdir"
@@ -71,20 +70,20 @@ mkdir -p "$debdir/usr/local/bin"
 
 sed "s/RELEASE_VERSION/$APP_VERSION/g" src/scripts/control > "$debdir/DEBIAN/control"
 
-cp zerowallet                   "$debdir/usr/local/bin/"
-cp "$ZERO_DIR/zerod"            "$debdir/usr/local/bin/zerod"
-cp "$ZERO_DIR/zero-cli"         "$debdir/usr/local/bin/zero-cli"
+cp -f zerowallet                   "$debdir/usr/local/bin/"
+cp -f "$ZERO_DIR/zerod"            "$debdir/usr/local/bin/zerod"
+cp -f "$ZERO_DIR/zero-cli"         "$debdir/usr/local/bin/zero-cli"
 [ -z "${SKIP_STRIP:-}" ] && strip "$debdir/usr/local/bin/zerowallet" "$debdir/usr/local/bin/zerod" "$debdir/usr/local/bin/zero-cli"
 
 mkdir -p                        "$debdir/usr/share/doc/zero-qt-wallet"
-cp README.md                    "$debdir/usr/share/doc/zero-qt-wallet/README.md"
+cp -f README.md                    "$debdir/usr/share/doc/zero-qt-wallet/README.md"
 
 mkdir -p                        "$debdir/usr/share/pixmaps/"
-cp res/zero.xpm                 "$debdir/usr/share/pixmaps/"
+cp -f res/zero.xpm                 "$debdir/usr/share/pixmaps/"
 
 mkdir -p                        "$debdir/usr/share/applications"
-cp src/scripts/desktopentry     "$debdir/usr/share/applications/zerowallet.desktop"
+cp -f src/scripts/desktopentry     "$debdir/usr/share/applications/zerowallet.desktop"
 
 dpkg-deb --build                "$debdir" >/dev/null
-cp "${debdir}.deb"              "artifacts/linux-zerowallet-v${APP_VERSION}.deb"
-step_done "Building deb"
+cp -f "${debdir}.deb"              "artifacts/linux-zerowallet-v${APP_VERSION}.deb"
+step_done 'Building deb'

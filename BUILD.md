@@ -28,7 +28,7 @@ Qt is the only versioned external dependency; others are vendored.
 
 ### Qt
 
-One-time install per platform. Custom path via `-q` or `QT_STATIC` only when needed.
+One-time install per platform. Custom path via `-q` or `QT_PREFIX` when needed.
 
 | Platform | Source | Install |
 |----------|--------|---------|
@@ -56,8 +56,10 @@ One-time install per platform. Custom path via `-q` or `QT_STATIC` only when nee
 | `-z`, `--zero` | `ZERO_DIR` | `../Zero/src` | Directory with zerod binaries; see [ZERO_DIR](#zero_dir) below |
 | `-v`, `--version` | `APP_VERSION` | — | Release version. Must match `src/version.h`. Required. See [APP_VERSION](#app_version) below. |
 | `-p`, `--prev` | `PREV_VERSION` | — | Previous version. Required for Linux/Windows. Not used by macOS. See [PREV](#prev) below. |
-| `-q`, `--qt` | `QT_STATIC` | see Qt table | Qt prefix |
-| `-S`, `--no-strip` | — | — | Skip stripping release binaries (larger artifacts; symbols kept). Default: strip on Linux/Windows. |
+| `-q`, `--qt` | `QT_PREFIX` | see Qt table | Qt prefix (mkdev/mkrelease) |
+| `-P`, `--no-strip` | — | — | Skip stripping release binaries (larger artifacts; symbols kept). Default: strip on Linux, macOS, Windows. |
+| `-N`, `--no-sign` | — | — | Ad-hoc sign only (macOS; no developer identity). App is always signed so it runs; default uses `CODESIGN_IDENTITY` or ad-hoc. |
+| `-L`, `--log` | `LOG_FILE` | script-specific | Capture build/release log (e.g. `logs/mkrelease-mac.log`). mkdev and mkrelease support `-L` or `-L=PATH`. |
 | `-m`, `--mxe` | `MXE_PATH` | — | MXE `usr/bin` (Windows only) |
 
 ### APP_VERSION
@@ -72,7 +74,7 @@ Canonical tag format `vN.N.N` is trivial to recognize; `git describe --tags --ab
 
 ### ZERO_DIR
 
-Directory containing built `zerod` and `zero-cli` (or `.exe` on Windows). Not the Zero source tree. **Default:** `../Zero/src`. If that directory is missing or empty, fallback by platform: **mac** → `../ZeroMac/src`, **linux** → `../ZeroLinux/src`, **win** → `../ZeroWin/src`. Override with `-z` or `ZERO_DIR`. zerowallet packages copy binaries at build time; no zerod source in zerowallet. **Stripping:** Linux and Windows strip by default (copies only; originals in `ZERO_DIR` unchanged); `-S`/`--no-strip` to skip. macOS not stripped.
+Directory containing built `zerod` and `zero-cli` (or `.exe` on Windows). **Default:** `../Zero/src`. If that directory is missing or empty, fallback by platform: **mac** → `../ZeroMac/src`, **linux** → `../ZeroLinux/src`, **win** → `../ZeroWin/src`. Override with `-z` or `ZERO_DIR`. zerowallet packages copy binaries at build time; no zerod source in zerowallet. **Stripping:** Linux, macOS, and Windows strip by default (copies only; originals in `ZERO_DIR` unchanged); `-P`/`--no-strip` to skip.
 
 ### PREV
 
@@ -87,12 +89,12 @@ Linux and Windows scripts use `sed` to replace the previous version with the new
 Build zerod: `cd ../Zero && ./zcutil/build.sh`. Then:
 
 ```bash
-./src/scripts/mkrelease-linux.sh -v X.Y.Z -p X.Y.(Z-1) -q $QT_STATIC
+./src/scripts/mkrelease-linux.sh -v X.Y.Z -p X.Y.(Z-1) -q "$QT_PREFIX"
 ```
 
 **Tarball:** Staged in `bin/tgz/linux-zerowallet-vX.Y.Z/`; output `artifacts/linux-zerowallet-vX.Y.Z.tgz`.
 
-**Deb behavior:** mkrelease-linux produces both a .tgz and a .deb. Staging: `bin/deb/zerowallet-vX.Y.Z/`. Contents: `DEBIAN/control`, `usr/local/bin/` (zerowallet, zerod, zero-cli), README.md (from repo root), `usr/share/pixmaps/`, .desktop file. Binaries are stripped in place when not using `-S`. Output: `artifacts/linux-zerowallet-vX.Y.Z.deb`.
+**Deb behavior:** mkrelease-linux produces both a .tgz and a .deb. Staging: `bin/deb/zerowallet-vX.Y.Z/`. Contents: `DEBIAN/control`, `usr/local/bin/` (zerowallet, zerod, zero-cli), README.md (from repo root), `usr/share/pixmaps/`, .desktop file. Binaries are stripped in place when not using `-P`. Output: `artifacts/linux-zerowallet-vX.Y.Z.deb`.
 
 ### macOS
 
@@ -104,11 +106,12 @@ Build zerod: `cd ../Zero && ./zcutil/build.sh`. Then:
 
 **1. Dev build**
 
-For development. Produces `zerowallet.app` with symlinks to Homebrew Qt; not standalone. Run from repo root.
+For development. Produces `ZeroWallet.app` (in repo root) with symlinks to Homebrew Qt; not standalone. Run from repo root.
 
 ```bash
 ./src/scripts/mkdev.sh
-./zerowallet.app/Contents/MacOS/zerowallet
+open ZeroWallet.app
+# or: ./ZeroWallet.app/Contents/MacOS/ZeroWallet
 ```
 
 Or: `make distclean && make` (after qmake). Use `mkdev.sh -c` to force clean before build.
@@ -119,13 +122,15 @@ Test a Release build (`artifacts/ZeroWallet.app` or DMG) for standalone verifica
 
 **2. Release (ad-hoc signing)**
 
-For distribution without notarization. Script: clean → qmake → make → copy zerod/zero-cli into app → macdeployqt → codesign (ad-hoc) → create-dmg. Ad-hoc uses `CODESIGN_IDENTITY=-` or unset.
+For distribution without notarization. Script: clean → qmake → make → copy zerod/zero-cli into app → macdeployqt → strip (unless `-P`) → codesign (always; ad-hoc if `-N` or unset) → move app to `artifacts/` → create-dmg. The script prints signing mode (`Signing (ad-hoc)` or `Signing (identity: …)`). Use `-N` for ad-hoc-only; without `-N`, set `CODESIGN_IDENTITY` for Developer ID. Use `-L` to capture log.
 
 ```bash
 ./src/scripts/mkrelease-mac.sh -v X.Y.Z
+# or with logging:
+./src/scripts/mkrelease-mac.sh -L -N -v X.Y.Z
 ```
 
-Output: `artifacts/macOS-zerowallet-vX.Y.Z.dmg`, `artifacts/ZeroWallet.app`.
+Output: `artifacts/ZeroWallet.app`, `artifacts/macOS-zerowallet-vX.Y.Z.dmg`. The script prints DMG format and size (e.g. `DMG: UDZO, 24MB`); format should be **UDZO** (compressed). If the DMG is unexpectedly large or format is not UDZO, ensure zerod in `ZERO_DIR` was built release and stripped. If create-dmg fails, the app is already in `artifacts/`; re-run with `CREATE_DMG_VERBOSE=1` to see full output.
 
 **Test before distribute:**
 ```bash
@@ -180,6 +185,7 @@ xcrun stapler staple artifacts/macOS-zerowallet-vX.Y.Z.dmg
 | Issue | Platform | Solution |
 |-------|----------|----------|
 | `__OPTIMIZE__ predefined macro was enabled in PCH file but is currently disabled` | macOS | PCH built with different CONFIG (debug vs release). Run `./src/scripts/mkdev.sh -c -L` to force clean and rebuild. |
+| DMG not created / create-dmg fails | macOS | By default create-dmg runs with `--hdiutil-quiet`. To see full hdiutil/create-dmg stderr, re-run with `CREATE_DMG_VERBOSE=1` (e.g. `CREATE_DMG_VERBOSE=1 ./src/scripts/mkrelease-mac.sh -L -N`). Check disk space and "File exists" (remove existing `artifacts/macOS-zerowallet-v*.dmg`); app is in `artifacts/ZeroWallet.app` if create-dmg failed. |
 
 ---
 
@@ -188,5 +194,9 @@ xcrun stapler staple artifacts/macOS-zerowallet-vX.Y.Z.dmg
 ### GPG (all platforms)
 
 Run `./src/scripts/signbinaries.sh -v X.Y.Z`; produces `sha256sum-vX.Y.Z.txt` and `*.sig` in `artifacts/`, packaged as `signatures-vX.Y.Z.zip`. Verification: `sha256sum -c sha256sum-vX.Y.Z.txt`; `gpg --verify <file.sig> <file>`. Import key from `public_key.asc` on GitHub. See `res/SIGNATURES_README`.
+
+### Package verification
+
+After mkrelease, run `./src/scripts/package-verify.sh` to check archive contents (required files present, structure). Use `-v X.Y.Z` to verify artifacts for that version, or `--linux` / `--windows` / `--mac` with a path. See script `-h` for options.
 
 

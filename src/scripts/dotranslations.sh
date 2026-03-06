@@ -10,7 +10,7 @@ ME="dotranslations"
 . "$(dirname "${BASH_SOURCE[0]}")/fbuild.sh"
 cd "$REPO_ROOT"
 
-[ -z "${QT_PREFIX:-}" ] && err "QT_PREFIX not set. Set -q/--qt or QT_PREFIX, or run from mkrelease script."
+[ -z "${QT_PREFIX:-}" ] && err 'QT_PREFIX not set. Set -q/--qt or QT_PREFIX, or run from mkrelease script.'
 
 # Skip only when -t/--tran (DOTRANSLATIONS_SKIP) and .qm are fresh
 if [ -n "${DOTRANSLATIONS_SKIP:-}" ]; then
@@ -24,7 +24,7 @@ if [ -n "${DOTRANSLATIONS_SKIP:-}" ]; then
     fi
   done
   if [ "$need_rebuild" = 0 ] && ls res/*.qm 1>/dev/null 2>&1; then
-    notice "Translations off, skipping lrelease (-t/--tran)"
+    notice 'Translations off, skipping lrelease (-t/--tran)'
     exit 0
   fi
 fi

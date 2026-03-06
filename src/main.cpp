@@ -1,6 +1,7 @@
 #include <singleapplication.h>
 
 #include "precompiled.h"
+#include <QMessageLogContext>
 #include "mainwindow.h"
 #include "rpc.h"
 #include "settings.h"
@@ -181,13 +182,30 @@ public:
         QCoreApplication::setOrganizationName("zero-qt-wallet-org");
         QCoreApplication::setApplicationName("zero-qt-wallet");
 
+        /*
+         * Release-only message handler: keep end-user console quiet by suppressing
+         * low-value output (all qDebug, and Qt warnings from QNetworkReply/QIODevice).
+         * Rationale: same as Bitcoin Core PR #7692 — debug logs are for developers,
+         * not for shipped builds. In release (CONFIG(release), i.e. when QT_DEBUG is
+         * not defined) we install this handler; in debug builds Qt's default applies.
+         * See UpdateWallet.md §Release message handler and qDebug.
+         */
+#ifndef QT_DEBUG
+        static QtMessageHandler prev = nullptr;
+        prev = qInstallMessageHandler([](QtMsgType type, const QMessageLogContext& context, const QString& msg) {
+            if (type == QtDebugMsg) return;
+            if (type == QtWarningMsg && (msg.contains("QNetworkReply::") || msg.contains("QIODevice::"))) return;
+            if (prev) prev(type, context, msg);
+            else fprintf(stderr, "%s\n", msg.toLocal8Bit().constData());
+        });
+#endif
+
         QString locale = QLocale::system().name();
         locale.truncate(locale.lastIndexOf('_'));   // Get the language code
-        qDebug() << "Loading locale " << locale;
-        
         QTranslator translator;
         translator.load(QString(":/translations/res/zero_qt_wallet_") + locale);
         a.installTranslator(&translator);
+        // qDebug() << "Loading locale" << locale;  // suppressed in release; uncomment to debug i18n
 
         QIcon icon(":/icons/res/icon.ico");
         QApplication::setWindowIcon(icon);

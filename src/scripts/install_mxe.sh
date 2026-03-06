@@ -21,21 +21,21 @@ case "${1:---install}" in
   -i|--install)
     "$0" --deps
     if [ ! -d "$MXE_ROOT" ]; then
-      notice "Cloning MXE to $MXE_ROOT..."
+      notice "Cloning MXE to ${MXE_ROOT}..."
       git clone https://github.com/mxe/mxe.git "$MXE_ROOT"
     fi
     notice "Building MXE qtbase qtwebsockets (this may take over an hour)..."
     cd "$MXE_ROOT"
     make MXE_TARGETS='x86_64-w64-mingw32.static' qtbase qtwebsockets
-    notice "Done. MXE at $MXE_PATH"
+    notice "Done. MXE at ${MXE_PATH}"
     ;;
   -c|--check)
-    [ -x "$MXE_PATH/x86_64-w64-mingw32.static-gcc" ] || err "MXE gcc not found at $MXE_PATH"
-    [ -x "$MXE_PATH/$QMAKE" ] || err "MXE qmake not found at $MXE_PATH"
+    [ -x "$MXE_PATH/x86_64-w64-mingw32.static-gcc" ] || err "MXE gcc not found at ${MXE_PATH}"
+    [ -x "$MXE_PATH/$QMAKE" ] || err "MXE qmake not found at ${MXE_PATH}"
     if [ -x "$MXE_PATH/x86_64-w64-mingw32.static-strip" ]; then
-      notice "OK: MXE at $MXE_PATH (gcc, qmake, strip)"
+      notice "OK: MXE at ${MXE_PATH} (gcc, qmake, strip)"
     else
-      warn "MXE at $MXE_PATH (gcc, qmake OK; strip not found)"
+      warn "MXE at ${MXE_PATH} (gcc, qmake OK; strip not found)"
     fi
     exit 0
     ;;

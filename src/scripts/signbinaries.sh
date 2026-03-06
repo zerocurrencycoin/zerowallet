@@ -15,7 +15,7 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-[ -z "${APP_VERSION:-}" ] && err "APP_VERSION not set. Use -v/--version or set env."
+[ -z "${APP_VERSION:-}" ] && err 'APP_VERSION not set. Use -v/--version or set env.'
 
 # Store the hash and signatures here
 rm -rf release/signatures
@@ -34,12 +34,12 @@ if command -v sha256sum >/dev/null 2>&1; then
 elif command -v shasum >/dev/null 2>&1; then
   shasum -a 256 ./*"${APP_VERSION}"* > "sha256sum-v${APP_VERSION}.txt"
 else
-  err "Neither sha256sum nor shasum found. Install coreutils (Linux) or use macOS (shasum built-in)."
+  err 'Neither sha256sum nor shasum found. Install coreutils (Linux) or use macOS (shasum built-in).'
 fi
 
 for i in ./*"${APP_VERSION}"*; do
   [ -e "$i" ] || continue
-  notice "Signing $i"
+  notice "Signing ${i}"
   gpg --batch --output "../release/signatures/$(basename "$i").sig" --detach-sig "$i"
 done
 
