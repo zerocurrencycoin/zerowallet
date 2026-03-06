@@ -43,16 +43,21 @@ if [ ! -f qt-everywhere-opensource-src-5.15.18.tar.xz ]; then
     curl -L -o qt-everywhere-opensource-src-5.15.18.tar.xz "$URL" || err 'download failed'
 fi
 
-if [ ! -d qt-everywhere-opensource-src-5.15.18 ]; then
+if [ ! -d qt-everywhere-opensource-src-5.15.18 ] && [ ! -d qt-everywhere-src-5.15.18 ]; then
     notice 'Extracting...'
     tar xf qt-everywhere-opensource-src-5.15.18.tar.xz || err 'extract failed'
 fi
 
-cd qt-everywhere-opensource-src-5.15.18
+# Tarball may extract to qt-everywhere-opensource-src-5.15.18 or qt-everywhere-src-5.15.18
+QT_SRC_DIR=""
+[ -d qt-everywhere-opensource-src-5.15.18 ] && QT_SRC_DIR=qt-everywhere-opensource-src-5.15.18
+[ -d qt-everywhere-src-5.15.18 ] && QT_SRC_DIR=qt-everywhere-src-5.15.18
+[ -z "$QT_SRC_DIR" ] && err "Extracted Qt source dir not found (expected qt-everywhere-*-src-5.15.18)"
+cd "$QT_SRC_DIR"
 PATCH_FILE="$REPO_ROOT/res/patches/qt-gcc13.diff"
 if [ -f "$PATCH_FILE" ]; then
   notice 'Applying GCC 13+ patch...'
-  (cd qtlocation && patch -p1 < "$PATCH_FILE") || err "GCC 13 patch failed. Script: ${SCRIPT_DIR}/build-qt-static.sh. Patch: ${PATCH_FILE}. See BUILD.md § GCC 13+ (Linux static Qt)."
+  (cd qtlocation && patch -p1 < "$PATCH_FILE") || err "GCC 13 patch failed. Script: ${SCRIPT_DIR}/build-qt-static.sh. Patch: ${PATCH_FILE}. See UpdateWallet.md §Linux Qt build (release)."
 fi
 notice "Configuring (prefix=${QT_PREFIX})..."
 ./configure -opensource -confirm-license -static -release \
