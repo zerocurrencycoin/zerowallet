@@ -12,7 +12,7 @@ parse_mkrelease_args "logs/mkrelease-linux.log" "$@"
 [ -n "${LOG_FILE:-}" ] && exec > >(tee -a "${LOG_FILE}") 2>&1
 resolve_zero_dir linux
 resolve_qt linux release
-[ ! -x "${QMAKE:-}" ] && err "QT_PREFIX not found at ${QT_PREFIX:-}. Run ./src/scripts/build-qt-static.sh first, or set -q/--qt."
+[ ! -x "${QMAKE:-}" ] && err "QT_PREFIX not found at ${QT_PREFIX:-}. Linux release requires static Qt: run ./src/scripts/build-qt-static.sh first (creates qt5-static/), or pass -q /path/to/qt-prefix."
 
 resolve_version
 check_version_mismatch
