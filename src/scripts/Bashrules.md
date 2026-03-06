@@ -85,6 +85,42 @@ Run `shellcheck -s bash src/scripts/*.sh`. Use directives when intentional:
 # shellcheck disable=SC1091   # Not following sourced file
 ```
 
+### Rationale and references
+
+Where authoritative sources only suggest or recommend, this project may **mandate** or make **strong recommendations** for consistency and safety. Inline references point to the [References](#references) section at the end.
+
+**Shebang: `#!/bin/bash` vs `#!/usr/bin/env bash`**
+
+- **First line:** The shebang must be the very first line of the file (no BOM, no blank line, no comment or other text before it). **Project:** Mandate.
+- **This project (Bashrules):** Default is `#!/bin/bash` — single interpreter path, no PATH lookup, no risk of a different `bash` in PATH [2][3].
+- **Portability:** `#!/usr/bin/env bash` is widely recommended when the same script must run on Linux, macOS, and other Unix-like systems where `bash` may live in `/usr/local/bin/bash`, under a version manager, or elsewhere. `env` is in `/usr/bin` per POSIX, so `#!/usr/bin/env bash` is portable; the script uses the first `bash` in PATH [2][3][4]. [5]. See refs: Baeldung “use #!/usr/bin/env bash if we’re looking for portability”; DevOps Daily; Stack Overflow “Why is #!/usr/bin/env bash superior to #!/bin/bash?”). `env` is required to be in `/usr/bin` by POSIX, so `#!/usr/bin/env bash` is portable; the script uses the first `bash` in PATH [2][3][4]. [5].
+- **Trade-off:** `#!/bin/bash` = predictable and slightly more secure (no PATH). `#!/usr/bin/env bash` = portable across install locations and environments. Scripts that must run on macOS and Linux (e.g. ftest.sh, CI) may use `#!/usr/bin/env bash`; scripts that only run in a controlled Linux environment can use `#!/bin/bash`. Document the choice where it matters.
+
+**Comment placement**
+
+- File header at top (what the file does). Function comments when they assist developers: for more complex or longer functions, or when naming is ambiguous; obvious helpers (e.g. `assert_eq`, `assert_empty`) need not have comments. Inline comments for non-obvious logic only. Aligned with [1]. **Project:** Mandate header; add function comments only when warranted (complexity, length, or ambiguous naming).
+
+**Indentation**
+
+- 2 spaces, no tabs. [1] requires this. **Project:** Mandate. (Google Shell Style Guide: “Indent 2 spaces. No tabs.” widespread.)
+
+**Function style**
+
+- `name() { ... }` with `{` on the same line as `)`. [1] allows `function name()` with same-line brace. **Project:** Use `name() {` consistently (no `function` keyword).
+
+**Quoting**
+
+- Single quotes when no expansion; double when expansion is needed. Prefer `"${var}"` when adjacent to text. [1]: single = no substitution, double = substitution required/tolerated. [5] and shell best practice: quote expansions to avoid word splitting and globbing. **Project:** Mandate quote-all-expansions; single for literals. (Google: “’Single’ quotes indicate that no substitution is desired. ‘Double’ quotes indicate that substitution is required/tolerated.” POSIX and shell best practice: quote all expansions to avoid word splitting and globbing.
+
+**Additional standardizations**
+
+- **Errors to STDERR:** All error and warning output must go to stderr (`>&2`). [1] recommends a dedicated err() and sending errors to STDERR. **Project:** Mandate; fmessage.sh provides `err`, `warn`.
+- **Local variables:** Use `local` for function-local variables. [1] requires this. **Project:** Strong recommendation for any function that sets variables not intended as output/API.
+- **Check return values:** Always check return values of commands and fail explicitly with an informative message. [1]; use `if ! cmd; then ...` or `cmd || err "..."`. **Project:** Mandate for build and packaging steps.
+- **Control flow:** Put `; then` and `; do` on the same line as the `if`/`for`/`while`; put `else`, `fi`, `done` on their own lines. [1]. **Project:** Strong recommendation.
+- **Case statements:** Indent alternatives by 2 spaces; multiline actions indented one more level; `;;` on its own line for multiline blocks. [1]. **Project:** Strong recommendation.
+- **Line length:** Prefer lines ≤80 characters; break long pipelines with `\` and 2-space indent. [1] mandates 80 chars. **Project:** Strong recommendation; allow longer when splitting harms clarity.
+
 ---
 
 ## zerowallet Build Infrastructure
@@ -237,3 +273,29 @@ zerowalletwin is the reference. When porting to zerowalletlinux:
 2. Use the same quoting, unbound-var, and build patterns
 3. Align `.gitignore` for libsodium artifacts
 4. Use `fbuild-libsodium.sh` for shared libsodium config (version, URL).
+
+---
+
+## References
+
+Numbered references used inline in the Rationale and Additional standardizations sections. Where a source only suggests or lightly recommends a practice, this project may still mandate or strongly recommend it for consistency.
+
+1. **Google Shell Style Guide**  
+   https://google.github.io/styleguide/shellguide.html  
+   Official shell style guide for Google-originated open-source projects. Covers shebang (`#!/bin/bash`), set flags, quoting (single vs double), indentation (2 spaces, no tabs), comments (file header, function, implementation), control flow and case style, local variables, checking return values, errors to STDERR, line length (80 chars), and function naming. Often cited by other style guides and tools.
+
+2. **Baeldung: Bash shebang lines**  
+   https://www.baeldung.com/linux/bash-shebang-lines  
+   Compares `#!/usr/bin/bash` and `#!/usr/bin/env bash`. Explains that the former is more secure and explicit; the latter is more portable because it uses PATH to find the interpreter. Recommends `#!/usr/bin/env bash` for portability and `#!/usr/bin/bash` when security is the priority.
+
+3. **Stack Overflow: Why is #!/usr/bin/env bash superior to #!/bin/bash?**  
+   https://stackoverflow.com/questions/21612980/why-is-usr-bin-env-bash-superior-to-bin-bash  
+   Community summary: `env` finds the interpreter via PATH, so the same script works when bash is installed in different locations (e.g. macOS Homebrew, Linux, version managers). `/bin/bash` is fixed and can be wrong or missing on some systems.
+
+4. **DevOps Daily: Preferred Bash shebang**  
+   https://devops-daily.com/posts/preferred-bash-shebang  
+   Short note on shebang choice; favors `#!/usr/bin/env bash` for portability in cross-environment scripts.
+
+5. **POSIX (Shell Command Language, env)**  
+   https://pubs.opengroup.org/onlinepubs/9699919799/utilities/env.html  
+   POSIX does not standardize the shebang line. The `env` utility is specified to be in the PATH and is commonly installed at `/usr/bin/env`; using `#!/usr/bin/env interpreter` is the portable way to run an interpreter that may be in different locations on different systems.

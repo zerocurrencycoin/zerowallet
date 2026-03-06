@@ -284,7 +284,7 @@ void ConnectionLoader::doNextDownload(std::function<void(void)> cb) {
         this->showError(QObject::tr("Couldn't download params. Please check the help site for more info."));
     }
     main->logger->write("Downloading to " + filename);
-    qDebug() << "Downloading " << url << " to " << filename;
+    // qDebug() << "Downloading " << url << " to " << filename;  // suppressed in release (message handler in main.cpp); uncomment to debug
 
     QNetworkRequest request(url);
     request.setAttribute(QNetworkRequest::FollowRedirectsAttribute, true);
@@ -370,7 +370,7 @@ bool ConnectionLoader::startEmbeddedZcashd() {
 #endif
 
     if (!QFile(zcashdProgram).exists()) {
-        qDebug() << "Can't find zerod at " << zcashdProgram;
+        // qDebug() << "Can't find zerod at " << zcashdProgram;  // suppressed in release (message handler in main.cpp); uncomment to debug
         main->logger->write("Can't find zerod at " + zcashdProgram);
         return false;
     }
@@ -478,10 +478,7 @@ void ConnectionLoader::refreshZcashdState(Connection* connection, std::function<
             this->doRPCSetConnection(connection);
         },
         [=] (auto reply, auto res) {
-            // Failed, see what it is.
             auto err = reply->error();
-            qDebug() << err << ":" << QString::fromStdString(res.dump());
-
             if (err == QNetworkReply::NetworkError::ConnectionRefusedError) {
                 refused();
             } else if (err == QNetworkReply::NetworkError::AuthenticationRequiredError) {
@@ -613,7 +610,7 @@ std::shared_ptr<ConnectionConfig> ConnectionLoader::autoDetectZcashConf() {
 
     QFile file(confLocation);
     if (!file.open(QIODevice::ReadOnly)) {
-        qDebug() << file.errorString();
+        // qDebug() << file.errorString();  // suppressed in release (message handler in main.cpp); uncomment to debug
         return nullptr;
     }
 

@@ -8,4 +8,4 @@ err()   { echo "${ME:-script}: ERROR: $*" >&2; exit 1; }
 warn()  { echo "${ME:-script}: WARN: $*" >&2; }
 info()  { echo "${ME:-script}: $*"; }
 notice() { echo "${ME:-script}: $*"; }
-step_done() { printf "%s: %-24s [OK]\n" "${ME:-script}" "$1"; }
+step_done() { printf '%s: %-24s [OK]\n' "${ME:-script}" "$1"; }

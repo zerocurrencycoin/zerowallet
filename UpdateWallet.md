@@ -6,6 +6,8 @@ Project document for history, directions, design decisions, planning, issue trac
 
 **Document structure:** User-facing (README, BUILD) = current state only; no future plans. Project (UpdateWallet, Zero's Subsidy, UpdateZero) = status, plans, futures. Do not reference project docs from user-facing docs.
 
+**Quick find:** [macOS release: sign, strip, DMG gotchas and fixes](#macos-release-pitfalls-and-solutions) · [Release message handler and qDebug](#release-message-handler-and-qdebug)
+
 ---
 
 ## Branch
@@ -70,7 +72,7 @@ SilentDragon/master ← ALTERNATE UPDATE SOURCE
 
 **Setup:** Vendored in `singleapplication/`. Build: `include(singleapplication/singleapplication.pri)` in `zero-qt-wallet.pro`. Core files: `singleapplication.{h,cpp}`, `singleapplication_p.{h,cpp}`, `SingleApplication` (convenience header), `singleapplication.pri`.
 
-**Reasons for vendoring (not submodule):**
+**Reasons for vendoring:**
 - Build uses Qt `.pri` only; upstream CMake, examples, `.github/` are unused.
 - Vendoring pins the exact version; submodule updates can break the build.
 - Simpler for contributors: no `git submodule init/update`.
@@ -82,7 +84,7 @@ SilentDragon/master ← ALTERNATE UPDATE SOURCE
 
 ### Zero / Zcash Divergence (Advice)
 
-Zero still has full P2P alert code (alertkeys.h, sendalert.cpp, alert_tests.cpp). Zcash removed it Aug 2025. **Advice:** This belongs in a Zero full node document (e.g. Subsidy.md §15.5 or UpdateZero), not in zerowallet docs. Retain here only if needed for wallet–zerod interface context.
+Zero still has full P2P alert code (alertkeys.h, sendalert.cpp, alert_tests.cpp). Zcash removed it Aug 2025. This belongs in a Zero full node document (e.g. Subsidy.md §15.5 or UpdateZero), not in zerowallet docs.
 
 ### Subsidy.md (Zero Full Node Repo)
 
@@ -112,11 +114,11 @@ Cryptoforge, Martin, OleksandrBlack, miodrag, Duke Leto, David Mercer, Aditya Ku
 
 ### Edit Menu / Writing Tools (macOS)
 
-macOS injects items into the Edit menu ("Start Dictation", "Emoji & Symbols", "Writing Tools" submenu). These are system menus, not ZeroWallet. App Edit menu items: Address Book, Recurring Payments, Settings. No app change needed; document for users if confusion arises.
+macOS injects items into the Edit menu ("Start Dictation", "Emoji & Symbols", "Writing Tools" submenu). These are system menus, not ZeroWallet. App Edit menu items: Address Book, Recurring Payments, Settings.
 
 ### File Dialog Default Directory (Refactor Candidate)
 
-`QStandardPaths::writableLocation(QStandardPaths::HomeLocation)` at 5 call sites. Centralizing would simplify future changes (e.g. switch default to Documents). Low priority.
+`QStandardPaths::writableLocation(QStandardPaths::HomeLocation)` at 5 call sites. Centralizing would simplify future changes (e.g. switch default to Documents).
 
 | File | Line | Usage |
 |------|------|-------|
@@ -480,7 +482,7 @@ zip -r Windows-zerowallet-v$APP_VERSION.zip release/zerowallet-v$APP_VERSION/
 - [ZeroWallet Build Scripts](src/scripts/)
 - [libsodium](https://libsodium.gitbook.io/)
 
-**Conclusion:** MXE (Option 1) is strongly recommended. Proven compatibility, static linking, active maintenance, integration with existing build scripts. Investment in MXE setup pays off with reliable, automated Windows builds.
+**Conclusion:** MXE (Option 1) is recommended: proven compatibility, static linking, integration with existing build scripts.
 
 ---
 
@@ -488,54 +490,34 @@ zip -r Windows-zerowallet-v$APP_VERSION.zip release/zerowallet-v$APP_VERSION/
 
 - First connect: `refreshAddresses()` → `getnewaddress` when no t-addrs; `addNewZaddr()` when user selects z-addr and none exist
 - zerod default datadir: `~/.zero/`
-- No doc on zerowallet ↔ zerod connection flow
 
 ---
 
-## RPC Debug Logging
+## Release message handler and qDebug
 
-- RPC logs commented out in `src/connection.cpp` (lines 751–752)
-- Other `qDebug` in websockets.cpp, turnstile.cpp, mainwindow.cpp, rpc.cpp, connection.cpp, recurring.cpp, settings.cpp — no audit or policy
-- Workaround: `QT_LOGGING_RULES="*.debug=false"`
-- Rationale (Bitcoin PR #7692 analogy) only in code comment
+**Location:** `src/main.cpp`, inside `Application::main()`, guarded by `#ifndef QT_DEBUG`.
+
+**What it does:** In release builds only, a custom `qInstallMessageHandler` is installed that (1) drops all `QtDebugMsg` (so every `qDebug()` is silent), and (2) drops `QtWarningMsg` whose text contains `QNetworkReply::` or `QIODevice::` (Qt network layer noise). All other messages (warnings, critical, fatal) are passed through to the previous handler or to stderr.
+
+**Justification:** Same idea as Bitcoin Core PR #7692 — debug logs are for developers, not for end users. Shipped builds should not clutter the console with "Loading locale", "Downloading ... to ...", RPC payloads, or Qt’s internal network warnings. In debug builds (`QT_DEBUG` defined) the handler is not installed, so all qDebug and warnings appear as usual.
+
+**Commented-out calls:** Low-value messages are left in source as commented-out so the next developer can re-enable them. In `main.cpp`: a "Loading locale" qDebug after `installTranslator`. In `connection.cpp`: download URL, "Can't find zerod at", file error string, and RPC payload lines (751–752). Uncomment as needed for debugging.
+
+**Re-enabling output:** (1) Build with debug (qmake without `CONFIG+=release` / with `CONFIG+=debug`) so `QT_DEBUG` is defined and the handler is not used. (2) Or at runtime: `QT_LOGGING_RULES="*.debug=true"`. (3) Or uncomment specific qDebug lines in source.
+
+**Other qDebug:** Still active in source (and suppressed at runtime in release by the handler) in websockets.cpp, turnstile.cpp, mainwindow.cpp, rpc.cpp, recurring.cpp, settings.cpp.
 
 ---
 
 ## How zerod Gets Bundled
 
-zerod built separately, copied into zerowallet package. No submodule. `ZERO_DIR` = pre-built binaries.
-
-Local default: `../Zero/src`. CI plans: ~/Work/ZK/CI/README.md.
-
-**build.sh / build-win.sh** (in Zero repo, not zerowallet):
-- **Linux:** `./zcutil/build.sh` — builds zerod and zero-cli into `zero_linux/src/`
-- **Windows:** `./zcutil/build-win.sh` — cross-builds zerod.exe and zero-cli.exe into `zero_win/src/`
-- `-jN` is optional; omit to use auto-detected jobs. Other flags (e.g. `--disable-mining`) go before make args.
-
-**mkrelease scripts:**
-
-| Script | Platform | Use |
-|--------|----------|-----|
-| `mkrelease.sh` | Linux + Windows | Needs `QT_STATIC`, `ZERO_DIR`, `APP_VERSION`, `PREV_VERSION`. Defaults: `ZERO_DIR=../Zero/src`, `MXE_PATH=$HOME/mxe/usr/bin`. |
-| `mkrelease-linux.sh` | Linux | Produces `artifacts/linux-zerowallet-v$APP_VERSION.tgz` and `.deb`. Staging: `bin/tgz/linux-zerowallet-v$APP_VERSION/`. Options: `-z`, `-v`, `-p`, `-q`, `-d` (debug: system Qt). |
-| `mkrelease-win.sh` | Windows | Produces `artifacts/Windows-zerowallet-v$APP_VERSION.zip`. Defaults: `ZERO_DIR=../Zero/src`, `MXE_PATH=$HOME/mxe/usr/bin`. |
-| `mkrelease-mac.sh` | macOS | Defaults: `ZERO_DIR=../Zero/src`, `QT_STATIC=$(brew --prefix qt@5)`. Builds zerowallet, copies zerod/zero-cli into app bundle, macdeployqt, ad-hoc signs, creates DMG. See [BUILD](BUILD.md) §macOS App Signing and Distribution for Developer ID and notarization. |
-
-**Versions and sizes:** APP_VERSION inferred from `src/version.h` (or git when unchanged); `-v` optional. mkrelease-mac echoes zerod size when copying; compare artifact zerod size to `ZERO_DIR/zerod` to verify correct source.
-
-**Stripping:** Strip by default; `-S`/`--no-strip` to skip (larger artifacts). Linux: host `strip` for zerowallet, zerod, zero-cli. Windows: `x86_64-w64-mingw32.static-strip` when MXE provides it; else warn and skip. macOS: no strip (BUILD.md). **Revisit:** Consider adding macOS strip (and `-S` to skip) once code signing and Developer ID are in place; strip would run before signing.
-
-**ZERO_DIR:** Directory containing built zerod and zero-cli binaries. Not the Zero source tree. Expected: `zerod` and `zero-cli` (Linux/macOS) or `zerod.exe` and `zero-cli.exe` (Windows). Override with `-z` or `ZERO_DIR`.
+zerod built separately, copied into zerowallet package. **ZERO_DIR** = directory containing built zerod/zero-cli (or .exe); default `../Zero/src`. Zero repo build: Linux `./zcutil/build.sh` → `zero_linux/src/`; Windows `./zcutil/build-win.sh` → `zero_win/src/`. Scripts use **QT_PREFIX** (not QT_STATIC) for Qt path in mkdev/mkrelease. For script reference, flags (`-z`, `-v`, `-p`, `-q`, `-P`/`-N`, `-m`, `-L`), APP_VERSION/PREV, stripping, signing, and platform notes see [BUILD](BUILD.md) §Script Reference, §Unified Arguments, §ZERO_DIR, §APP_VERSION, §PREV, §Platform Notes. CI plans: ~/Work/ZK/CI/README.md.
 
 ---
 
 ## Build / Environment Notes
 
-- libsodium 1.0.18 URL 404; 1.0.21 used
-- macOS: Homebrew Qt (`/opt/homebrew/opt/qt@5`)
-- No doc on `CONFIG(release): DEFINES += QT_NO_DEBUG_OUTPUT`
-- zerod as runtime dependency — not documented in cross-compilation
-- zerowallet-specific build notes — CROSS was cross-compilation only
+- libsodium 1.0.18 URL 404; 1.0.21 used. Qt and ZERO_DIR: see [BUILD](BUILD.md) §Dependencies, §Qt, §ZERO_DIR.
 
 ---
 
@@ -574,7 +556,7 @@ Local default: `../Zero/src`. CI plans: ~/Work/ZK/CI/README.md.
 | `res/libsodium` | Build scripts referenced 1.0.18 URL (404); 1.0.21 used | Low |
 | Version upgrade plan | Plan "current" for libsodium was 1.0.18; repo already 1.0.21 | Low |
 
-**signbinaries:** Covered in [BUILD](BUILD.md) §GPG Signatures. Script `src/scripts/signbinaries.sh` auto-detects: uses `sha256sum` on Linux, `shasum -a 256` on macOS. Run from `artifacts/`.
+**signbinaries:** See [BUILD](BUILD.md) §GPG Signatures. `signbinaries.sh` auto-detects (sha256sum / shasum -a 256); run from `artifacts/`.
 
 **WebSocket binding:** Single listen in `websockets.cpp:28` — `WSServer` for mobile "Direct Connection" on port 8237 (hardcoded, `mainwindow.cpp:180`). Address: `QHostAddress::AnyIPv4` (accepts connections from any IP, not just same LAN). LocalHost would block mobile entirely (mobile is a separate device; LocalHost only allows same-machine processes). To restrict to same LAN, would need subnet filtering on peer address. **Recommendation:** Mobile connect optional, off by default — do not auto-start websockets on app launch; only start when user explicitly opens Connect Mobile dialog. **Wormhole relay:** When user checks "Allow connections over the internet via ZeroWallet wormhole", desktop connects to `wss://wormhole.zecqtwallet.com:443` and registers a code; mobile can connect via relay when not on same LAN. **Wormhole status:** Consider broken until verified working with Zero mobile apps. **Once connected, phone does:** getInfo (balances), getTransactions, sendTx — companion app proxies through desktop wallet to zerod.
 
@@ -633,20 +615,11 @@ Local default: `../Zero/src`. CI plans: ~/Work/ZK/CI/README.md.
 | libsodium 1.0.21 | https://download.libsodium.org/libsodium/releases/libsodium-1.0.21.tar.gz |
 | OpenSSL 1.1.1w | https://www.openssl.org/source/openssl-1.1.1w.tar.gz |
 
-**Build:**
-```bash
-# macOS (Homebrew Qt)
-export PATH="/opt/homebrew/opt/qt@5/bin:$PATH"
-qmake zero-qt-wallet.pro CONFIG+=release
-make
-
-# Or mkrelease (Linux/Windows cross)
-./src/scripts/mkrelease.sh   # defaults: ZERO_DIR=../Zero/src, MXE_PATH=$HOME/mxe/usr/bin
-```
+**Build:** See [BUILD](BUILD.md) §Quick Start and §Platform Notes (Linux, macOS, Windows). mkrelease: `./src/scripts/mkrelease.sh` or platform-specific `mkrelease-{linux,mac,win}.sh`.
 
 ### System Install (brew, pyenv, pip)
 
-No package-manager installs for library upgrades — all vendored. For builds: **macOS:** `brew install qt@5`. **Linux:** `apt-get install` deps. **Windows (MXE):** MXE provides Qt. **Docker:** Dockerfile `apt-get` and tarballs.
+No package-manager installs for library upgrades — all vendored. For build prerequisites see [BUILD](BUILD.md) §Dependencies and §Qt. Docker: `src/scripts/docker/Dockerfile`.
 
 **Python (zerowallet):** Build dependencies only; no runtime, no tests. (1) `install_mxe.sh --deps`: apt-installs `python3-mako`, `python3-setuptools` (Python 3). (2) `src/scripts/docker/Dockerfile` (ubuntu:16.04): apt-installs `python` (→ python2 on that base) and `ruby` for Qt/MXE build. Zero full node RPC tests use system Python; zerowallet does not. No zerowallet Python scripts.
 

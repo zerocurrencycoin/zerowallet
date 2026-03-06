@@ -36,6 +36,9 @@ zerowallet_plugin_import.cpp
 zerowallet_resource*
 workspace.code-workspace
 buildrelease.sh
+*~
+*.bak
+*.back
 *.out
 *.zip
 *.log

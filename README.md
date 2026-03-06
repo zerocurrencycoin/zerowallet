@@ -14,7 +14,7 @@ Option `--no-embedded` forces zerowallet to connect to a running `zerod` full no
 
 ## Compiling from source
 
-zerowallet is written in C++ 14 and depends on Qt5, [available from](https://www.qt.io/download).  See [BUILD.md](BUILD.md) for full build and release details.  Note that building zerod from source [is a separate task](https://github.com/zerocurrencycoin/Zero#-building).
+zerowallet is written in C++ 14 and depends on Qt5, [available from](https://www.qt.io/download). Dev build: `./src/scripts/mkdev.sh`. Release: `./src/scripts/mkrelease-linux.sh`, `mkrelease-mac.sh`, or `mkrelease-win.sh` (see [BUILD.md](BUILD.md) for options and platforms). Building zerod from source [is a separate task](https://github.com/zerocurrencycoin/Zero#-building).
 
 ## Support
 
