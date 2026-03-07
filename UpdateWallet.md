@@ -164,7 +164,7 @@ Summary of issues we hit with macOS build, sign, strip, and DMG, what we did, an
 
 | Problem | Cause | Solution / current state |
 |--------|--------|---------------------------|
-| **DMG / app very large** (e.g. 24MB+ DMG, zerod ~13MB) | zerod from `ZERO_DIR` may be debug or unstripped; on Linux stripped zerod is a couple MB. | Script strips `ZeroWallet`, `zerod`, and `zero-cli` inside the app bundle by default. Use **`-P` / `--no-strip`** only to keep symbols for debugging. For smaller DMG, build zerod in Zero repo as **release + strip** so the binary copied into the app is already small. |
+| **DMG / app very large** (e.g. 24MB+ DMG, zerod ~13MB) | zerod from `ZERO_DIR` may be debug or unstripped; on Linux stripped zerod is a couple MB. | Script strips `ZeroWallet`, `zerod`, and `zero-cli` inside the app bundle by default. Use **`-P` / `--nostrip`** only to keep symbols for debugging. For smaller DMG, build zerod in Zero repo as **release + strip** so the binary copied into the app is already small. |
 | Need symbols for crash debugging | Default is strip. | Run mkrelease with `-P`; artifacts are larger but symbols remain. |
 
 **Mitigation:** Document in BUILD that "if DMG is unexpectedly large, ensure zerod in ZERO_DIR was built release and stripped." Script prints DMG format and size (e.g. `DMG: UDZO, 24MB`) so format (UDZO = compressed) and size are visible.
