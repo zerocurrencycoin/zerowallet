@@ -191,7 +191,7 @@ grep -q "1.2.4" "$tmpdir/zero-qt-wallet.pro" && grep -q "1.2.4" "$tmpdir/README.
 rm -rf "$tmpdir"
 
 echo '[ftest] help exits 0 and mentions options'
-parse_mkrelease_args "x.log" -h 2>/dev/null | grep -q "no-strip" && run_test true || run_test false
+parse_mkrelease_args "x.log" -h 2>/dev/null | grep -q "nostrip" && run_test true || run_test false
 parse_mkrelease_args "x.log" -h 2>/dev/null | grep -q "no-sign" && run_test true || run_test false
 
 echo ''

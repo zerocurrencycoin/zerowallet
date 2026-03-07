@@ -51,7 +51,7 @@ parse_mkdev_args() {
   RUN_AFTER_BUILD=""
   while [[ $# -gt 0 ]]; do
     case "$1" in
-      -c|--clean) MKDEV_CLEAN=1; shift ;;
+      -c|--clean) MKDEV_CLEAN="${MKDEV_CLEAN:-1}"; shift ;;
       -h|--help) show_mkdev_help "$default_log"; exit 0 ;;
       -j|--jobs) JOBS="${JOBS:-$2}"; shift 2 ;;
       -j*) JOBS="${JOBS:-${1#-j}}"; shift ;;
@@ -66,7 +66,7 @@ parse_mkdev_args() {
       -m|--mxe) MXE_PATH="${MXE_PATH:-$2}"; shift 2 ;;
       -q|--qt) QT_PREFIX="${QT_PREFIX:-$2}"; shift 2 ;;
       -r|--release) CONFIG="${CONFIG:-release}"; shift ;;
-      -R|--run) RUN_AFTER_BUILD=1; shift ;;
+      -R|--run) RUN_AFTER_BUILD="${RUN_AFTER_BUILD:-1}"; shift ;;
       *) shift ;;
     esac
   done
@@ -76,15 +76,16 @@ parse_mkdev_args() {
 show_mkdev_help() {
   local log="${1:-logs/mkdev.log}"
   echo "Usage: ${ME} [options]"
-  echo "  -c, --clean     force clean/distclean before build (default: incremental)"
-  echo "  -h, --help      show this help"
-  echo "  -j N, --jobs N  parallel jobs"
-  echo "  -L, -L=PATH     capture log (default: ${log})"
-  echo "  --log, --log=PATH  same as -L"
-  echo "  -m, --mxe PATH  MXE usr/bin (Windows target, Linux host)"
-  echo "  -q, --qt PATH   Qt prefix"
-  echo "  -r, --release   CONFIG+=release (default: debug)"
-  echo "  -R, --run       launch binary after build"
+  echo "  -c, --clean         [MKDEV_CLEAN] force clean/distclean"
+  echo "                      (default: incremental)"
+  echo "  -h, --help          [--] show this help"
+  echo "  -j N, --jobs N      [JOBS] parallel jobs"
+  echo "  -L, -L=PATH         [LOG_FILE] capture log (default: ${log})"
+  echo "  --log, --log=PATH   [LOG_FILE] same as -L"
+  echo "  -m, --mxe PATH      [MXE_PATH] MXE usr/bin (Windows target)"
+  echo "  -q, --qt PATH       [QT_PREFIX] Qt prefix"
+  echo "  -r, --release       [CONFIG] CONFIG+=release (default: debug)"
+  echo "  -R, --run           [RUN_AFTER_BUILD] launch binary after build"
   echo ""
   echo "No -z with dev."
 }
@@ -112,7 +113,7 @@ parse_mkrelease_args() {
       -m|--mxe) MXE_PATH="${MXE_PATH:-$2}"; shift 2 ;;
       -p|--prev) PREV_VERSION="${PREV_VERSION:-$2}"; shift 2 ;;
       -q|--qt) QT_PREFIX="${QT_PREFIX:-$2}"; shift 2 ;;
-      -P|--no-strip) SKIP_STRIP="${SKIP_STRIP:-1}"; shift ;;
+      -P|--nostrip) SKIP_STRIP="${SKIP_STRIP:-1}"; shift ;;
       -N|--no-sign) SKIP_SIGN="${SKIP_SIGN:-1}"; shift ;;
       -t|--tran) SKIP_TRANSLATIONS="${SKIP_TRANSLATIONS:-1}"; shift ;;
       -v|--version) APP_VERSION="${APP_VERSION:-$2}"; shift 2 ;;
@@ -126,18 +127,18 @@ parse_mkrelease_args() {
 show_mkrelease_help() {
   local log="${1:-logs/mkrelease.log}"
   echo "Usage: ${ME} [options]"
-  echo "  -h, --help      show this help"
-  echo "  -j N, --jobs N  parallel jobs"
-  echo "  -L, -L=PATH     capture log (default: ${log})"
-  echo "  --log, --log=PATH  same as -L"
-  echo "  -m, --mxe PATH  MXE usr/bin (Windows target, Linux host)"
-  echo "  -p, --prev V    PREV_VERSION (default: from version.h or git)"
-  echo "  -q, --qt PATH   Qt prefix (static Qt for release)"
-  echo "  -P, --no-strip  skip stripping binaries (larger artifacts)"
-  echo "  -N, --no-sign   ad-hoc sign only (macOS; no developer identity). App is always signed so it runs."
-  echo "  -t, --tran      skip translations"
-  echo "  -v, --version V APP_VERSION (X.Y.Z)"
-  echo "  -z, --zero PATH Zero src dir (zerod, zero-cli)"
+  echo "  -h, --help          [--] show this help"
+  echo "  -j N, --jobs N      [JOBS] parallel jobs"
+  echo "  -L, -L=PATH         [LOG_FILE] capture log (default: ${log})"
+  echo "  --log, --log=PATH   [LOG_FILE] same as -L"
+  echo "  -m, --mxe PATH      [MXE_PATH] MXE usr/bin (Windows target)"
+  echo "  -p, --prev V        [PREV_VERSION] default from version.h or git"
+  echo "  -q, --qt PATH       [QT_PREFIX] Qt prefix (static Qt for release)"
+  echo "  -P, --nostrip       [SKIP_STRIP] skip stripping binaries"
+  echo "  -N, --no-sign       [SKIP_SIGN] ad-hoc sign only (macOS)"
+  echo "  -t, --tran          [SKIP_TRANSLATIONS] skip translations"
+  echo "  -v, --version V     [APP_VERSION] (X.Y.Z)"
+  echo "  -z, --zero PATH     [ZERO_DIR] Zero src dir (zerod, zero-cli)"
   echo ""
   echo "No -z with dev."
 }
