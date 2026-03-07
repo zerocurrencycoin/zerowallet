@@ -7,9 +7,7 @@ set -e -u -o pipefail
 # shellcheck disable=SC2034
 ME="qt-report"
 # shellcheck disable=SC1091
-. "$(dirname "${BASH_SOURCE[0]}")/fmessage.sh"
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+. "$(dirname "${BASH_SOURCE[0]}")/fbuild.sh"
 
 detect_platform() {
   case "$(uname -s)" in

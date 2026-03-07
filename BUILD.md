@@ -2,6 +2,17 @@
 
 Build and release workflow for zerowallet. Platforms: Linux, macOS, Windows.
 
+## System status
+
+| Area | Status |
+|------|--------|
+| **Platforms** | Linux (native), macOS (native), Windows (cross-build from Linux via MXE). |
+| **Qt — Linux** | Dev: system Qt (mkdev-linux). Release: default static Qt (qt5-static from build-qt-static.sh); optional system Qt with `-S`/`--systemqt`. |
+| **Qt — macOS** | Dev and release: system Qt (Homebrew qt@5). macdeployqt bundles Qt; no static build. |
+| **Qt — Windows** | MXE only (Linux host). Target selected by script: `mkrelease-linux` vs `mkrelease-win`. |
+| **Options** | Env overrides CLI. Key: `QT_PREFIX`, `USE_SYSTEM_QT`, `MXE_PATH`, `ZERO_DIR`, `SKIP_STRIP`, `SKIP_SIGN`, `MAKE_TGZ`, `LOG_FILE`, `JOBS`. Long options: `--systemqt`, `--nostrip`, `--tgz`. |
+| **Reporting** | `./src/scripts/qt-report.sh` — Qt setup per platform (repo path, qmake/qt5-static/MXE, one-line summary). |
+
 ## Quick Start
 
 **System prerequisites:**
@@ -43,7 +54,7 @@ One-time install per platform. Custom path via `-q` or `QT_PREFIX` when needed.
 | Script | Platform | Output |
 |--------|----------|--------|
 | `mkrelease-linux.sh` | Linux | `artifacts/linux-zerowallet-vX.Y.Z.tgz`, `.deb` |
-| `mkrelease-mac.sh` | macOS | `artifacts/macOS-zerowallet-vX.Y.Z.dmg` |
+| `mkrelease-mac.sh` | macOS | `artifacts/macOS-zerowallet-vX.Y.Z.dmg`; optional `-T`/`--tgz` → also `artifacts/macOS-zerowallet-vX.Y.Z.tgz` |
 | `mkrelease-win.sh` | Windows | `artifacts/Windows-zerowallet-vX.Y.Z.zip` |
 | `mkrelease.sh` | Linux + Windows | Both in one run (requires MXE for Windows) |
 | `mkdev.sh` | Linux, macOS, Windows | Dev build; `-c` clean, `-r` release, `-L` log |
@@ -61,6 +72,7 @@ One-time install per platform. Custom path via `-q` or `QT_PREFIX` when needed.
 | `-P`, `--nostrip` | — | — | Skip stripping release binaries (larger artifacts; symbols kept). Default: strip on Linux, macOS, Windows. |
 | `-N`, `--no-sign` | — | — | Ad-hoc sign only (macOS; no developer identity). App is always signed so it runs; default uses `CODESIGN_IDENTITY` or ad-hoc. |
 | `-L`, `--log` | `LOG_FILE` | script-specific | Capture build/release log (e.g. `logs/mkrelease-mac.log`). mkdev and mkrelease support `-L` or `-L=PATH`. |
+| `-T`, `--tgz` | `MAKE_TGZ` | — | Also create .tgz of app bundle (macOS only). |
 | `-m`, `--mxe` | `MXE_PATH` | — | MXE `usr/bin` (Windows only) |
 
 ### APP_VERSION

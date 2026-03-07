@@ -11,7 +11,7 @@ set -e -u -o pipefail
 # shellcheck disable=SC2034
 ME="install_mxe"
 # shellcheck disable=SC1091
-. "$(dirname "${BASH_SOURCE[0]}")/fmessage.sh"
+. "$(dirname "${BASH_SOURCE[0]}")/fbuild.sh"
 QMAKE="${QMAKE:-x86_64-w64-mingw32.static-qmake-qt5}"
 MXE_ROOT="${MXE_ROOT:-$HOME/mxe}"
 MXE_PATH="${MXE_PATH:-$MXE_ROOT/usr/bin}"

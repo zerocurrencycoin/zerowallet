@@ -18,13 +18,6 @@ ME="package-verify"
 . "$(dirname "${BASH_SOURCE[0]}")/fbuild.sh"
 cd "$REPO_ROOT"
 
-check_file() {
-  local path="$1"
-  local desc="${2:-file}"
-  [ -e "$path" ] || err "${desc} not found: ${path}"
-  [ -f "$path" ] || err "${desc} not a file: ${path}"
-}
-
 verify_tar() {
   local archive="$1"
   check_file "$archive" "tar archive"
