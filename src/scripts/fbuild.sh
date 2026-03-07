@@ -115,6 +115,7 @@ parse_mkrelease_args() {
       -q|--qt) QT_PREFIX="${QT_PREFIX:-$2}"; shift 2 ;;
       -P|--nostrip) SKIP_STRIP="${SKIP_STRIP:-1}"; shift ;;
       -N|--no-sign) SKIP_SIGN="${SKIP_SIGN:-1}"; shift ;;
+      -S|--systemqt) USE_SYSTEM_QT="${USE_SYSTEM_QT:-1}"; shift ;;
       -t|--tran) SKIP_TRANSLATIONS="${SKIP_TRANSLATIONS:-1}"; shift ;;
       -v|--version) APP_VERSION="${APP_VERSION:-$2}"; shift 2 ;;
       -z|--zero) ZERO_DIR="${ZERO_DIR:-$2}"; shift 2 ;;
@@ -133,7 +134,8 @@ show_mkrelease_help() {
   echo "  --log, --log=PATH   [LOG_FILE] same as -L"
   echo "  -m, --mxe PATH      [MXE_PATH] MXE usr/bin (Windows target)"
   echo "  -p, --prev V        [PREV_VERSION] default from version.h or git"
-  echo "  -q, --qt PATH       [QT_PREFIX] Qt prefix (static Qt for release)"
+  echo "  -q, --qt PATH       [QT_PREFIX] Qt prefix (static Qt for Linux release)"
+  echo "  -S, --systemqt      [USE_SYSTEM_QT] Linux release with system Qt (dynamic link)"
   echo "  -P, --nostrip       [SKIP_STRIP] skip stripping binaries"
   echo "  -N, --no-sign       [SKIP_SIGN] ad-hoc sign only (macOS)"
   echo "  -t, --tran          [SKIP_TRANSLATIONS] skip translations"
@@ -161,8 +163,15 @@ resolve_qt() {
   case "$plat" in
     linux)
       if [ "$mode" = "release" ]; then
-        QT_PREFIX="${QT_PREFIX:-$REPO_ROOT/qt5-static}"
-        QMAKE="$QT_PREFIX/bin/qmake"
+        if [ -n "${USE_SYSTEM_QT:-}" ]; then
+          QMAKE="$(command -v qmake || command -v qmake-qt5 || true)"
+          if [ -n "$QMAKE" ]; then
+            QT_PREFIX="$("$QMAKE" -query QT_INSTALL_PREFIX 2>/dev/null || true)"
+          fi
+        else
+          QT_PREFIX="${QT_PREFIX:-$REPO_ROOT/qt5-static}"
+          QMAKE="$QT_PREFIX/bin/qmake"
+        fi
       else
         if [ -n "${QT_PREFIX:-}" ]; then
           QMAKE="$QT_PREFIX/bin/qmake"
