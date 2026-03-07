@@ -32,7 +32,7 @@ One-time install per platform. Custom path via `-q` or `QT_PREFIX` when needed.
 
 | Platform | Source | Install |
 |----------|--------|---------|
-| **Linux** | Static Qt | See [UpdateWallet](UpdateWallet.md) §Linux Qt packaging and modules (build-qt-static, modules, options). |
+| **Linux** | Static Qt or system Qt | Release: default static (build-qt-static → qt5-static); optional `-S`/`--systemqt` for system Qt (dynamic). See [UpdateWallet](UpdateWallet.md) §Linux Qt. |
 | **macOS** | Homebrew `qt@5` | `brew install qt@5`. Default: `$(brew --prefix qt@5)`. |
 | **Windows** | MXE (cross-build) | See [Windows](#windows) below. |
 
@@ -57,7 +57,8 @@ One-time install per platform. Custom path via `-q` or `QT_PREFIX` when needed.
 | `-v`, `--version` | `APP_VERSION` | from `version.h` / git | Release version (X.Y.Z). Override when not using default. See [APP_VERSION](#app_version) below. |
 | `-p`, `--prev` | `PREV_VERSION` | derived from `-v` or `version.h` | Previous version (Linux/Windows sed). Not used by macOS. See [PREV](#prev) below. |
 | `-q`, `--qt` | `QT_PREFIX` | see Qt table | Qt prefix (mkdev/mkrelease) |
-| `-P`, `--no-strip` | — | — | Skip stripping release binaries (larger artifacts; symbols kept). Default: strip on Linux, macOS, Windows. |
+| `-S`, `--systemqt` | `USE_SYSTEM_QT` | — | Linux release with system Qt (dynamic link). Default: static Qt (qt5-static or -q). |
+| `-P`, `--nostrip` | — | — | Skip stripping release binaries (larger artifacts; symbols kept). Default: strip on Linux, macOS, Windows. |
 | `-N`, `--no-sign` | — | — | Ad-hoc sign only (macOS; no developer identity). App is always signed so it runs; default uses `CODESIGN_IDENTITY` or ad-hoc. |
 | `-L`, `--log` | `LOG_FILE` | script-specific | Capture build/release log (e.g. `logs/mkrelease-mac.log`). mkdev and mkrelease support `-L` or `-L=PATH`. |
 | `-m`, `--mxe` | `MXE_PATH` | — | MXE `usr/bin` (Windows only) |
@@ -74,7 +75,7 @@ Canonical tag format `vN.N.N` is trivial to recognize; `git describe --tags --ab
 
 ### ZERO_DIR
 
-Directory containing built `zerod` and `zero-cli` (or `.exe` on Windows). **Default:** `../Zero/src`. If that directory is missing or empty, fallback by platform: **mac** → `../ZeroMac/src`, **linux** → `../ZeroLinux/src`, **win** → `../ZeroWin/src`. Override with `-z` or `ZERO_DIR`. zerowallet packages copy binaries at build time; no zerod source in zerowallet. **Stripping:** Linux, macOS, and Windows strip by default (copies only; originals in `ZERO_DIR` unchanged); `-P`/`--no-strip` to skip.
+Directory containing built `zerod` and `zero-cli` (or `.exe` on Windows). **Default:** `../Zero/src`. If that directory is missing or empty, fallback by platform: **mac** → `../ZeroMac/src`, **linux** → `../ZeroLinux/src`, **win** → `../ZeroWin/src`. Override with `-z` or `ZERO_DIR`. zerowallet packages copy binaries at build time; no zerod source in zerowallet. **Stripping:** Linux, macOS, and Windows strip by default (copies only; originals in `ZERO_DIR` unchanged); `-P`/`--nostrip` to skip.
 
 ### PREV
 
