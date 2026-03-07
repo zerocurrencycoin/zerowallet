@@ -1,20 +1,24 @@
 #!/bin/bash
 # Copyright 2026 Zero Developers
-# MXE install (default), deps only, or check. Usage: ./install_mxe.sh [-i|--install|-d|--deps|-c|--check]
+# MXE install (default), deps only, or check.
+# Usage: ./install_mxe.sh [-i|--install|-d|--deps|-c|--check]
 #   (default): full install = deps + clone + make qtbase qtwebsockets (~1h+)
-#   -d, --deps:    apt packages only
-#   -c, --check:   verify MXE + qmake ready
+#   -i, --install: [INSTALL_MXE_MODE] full install
+#   -d, --deps:    [INSTALL_MXE_MODE] apt packages only
+#   -c, --check:   [INSTALL_MXE_MODE] verify MXE + qmake ready
 # System-wide: MXE_ROOT=/opt/mxe ./install_mxe.sh
 set -e -u -o pipefail
 # shellcheck disable=SC2034
 ME="install_mxe"
 # shellcheck disable=SC1091
 . "$(dirname "${BASH_SOURCE[0]}")/fmessage.sh"
-QMAKE="x86_64-w64-mingw32.static-qmake-qt5"
+QMAKE="${QMAKE:-x86_64-w64-mingw32.static-qmake-qt5}"
 MXE_ROOT="${MXE_ROOT:-$HOME/mxe}"
 MXE_PATH="${MXE_PATH:-$MXE_ROOT/usr/bin}"
+INSTALL_MXE_MODE="${INSTALL_MXE_MODE:-}"
+MODE="${INSTALL_MXE_MODE:-${1:---install}}"
 
-case "${1:---install}" in
+case "$MODE" in
   -d|--deps)
     sudo apt install -y autoconf automake bison bzip2 flex g++ g++-multilib gettext git gperf libc6-dev-i386 libgdk-pixbuf2.0-dev libltdl-dev libssl-dev libtool-bin make openssl p7zip-full patch perl pkg-config python3-mako python3-setuptools ruby sed unzip wget xz-utils zstd
     ;;
@@ -41,7 +45,10 @@ case "${1:---install}" in
     ;;
   *)
     echo "Usage: ./install_mxe.sh [-i|--install|-d|--deps|-c|--check]" >&2
-    echo "  Default: --install. System-wide: MXE_ROOT=/opt/mxe ./install_mxe.sh" >&2
+    echo "  -i, --install  [INSTALL_MXE_MODE] full install (default)" >&2
+    echo "  -d, --deps     [INSTALL_MXE_MODE] apt dependencies only" >&2
+    echo "  -c, --check    [INSTALL_MXE_MODE] verify MXE and qmake" >&2
+    echo "  Env: [MXE_ROOT], [MXE_PATH], [QMAKE]" >&2
     exit 1
     ;;
 esac

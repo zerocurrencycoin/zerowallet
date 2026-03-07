@@ -6,7 +6,7 @@ Project document for history, directions, design decisions, planning, issue trac
 
 **Document structure:** User-facing (README, BUILD) = current state only; no future plans. Project (UpdateWallet, Zero's Subsidy, UpdateZero) = status, plans, futures. Do not reference project docs from user-facing docs.
 
-**Quick find:** [macOS release: sign, strip, DMG gotchas and fixes](#macos-release-pitfalls-and-solutions) · [Release message handler and qDebug](#release-message-handler-and-qdebug)
+**Quick find:** [macOS release: sign, strip, DMG gotchas and fixes](#macos-release-pitfalls-and-solutions) · [Release message handler and qDebug](#release-message-handler-and-qdebug) · [Linux Qt packaging and modules](#linux-qt-packaging-options-and-modules)
 
 ---
 
@@ -144,6 +144,50 @@ macOS injects items into the Edit menu ("Start Dictation", "Emoji & Symbols", "W
 **Gaps:** No automated tests. Shield change setting not wired. Rescan/reindex require zerod restart; external zerod needs manual `-rescan`/`-reindex`.
 
 **Zero test and doc support:** Zero repo ([zerocurrencycoin/Zero](https://github.com/zerocurrencycoin/Zero)) has `doc/`, `contrib/`, `qa/`. `zerod -?` lists command-line options. Sample configs: `contrib/zero.conf`, `contrib/debian/examples/zero.conf`. Reindex, rescan, deletetx, consolidation are zerod config options; Zero's own test coverage and documentation for these live in the Zero repo (e.g. `qa/` RPC tests, UpdateZero.md if present). zerowallet does not duplicate Zero's option docs; consult Zero for authoritative behavior and tests.
+
+---
+
+## macOS release: pitfalls and solutions
+
+Summary of issues we hit with macOS build, sign, strip, and DMG, what we did, and how to avoid or debug them. Script: `src/scripts/mkrelease-mac.sh`. User-facing flow: [BUILD](BUILD.md) §macOS App Signing and Distribution. Troubleshooting table: BUILD §Troubleshooting.
+
+### Signing
+
+| Problem | Cause | Solution / current state |
+|--------|--------|---------------------------|
+| **EXC_BAD_ACCESS (Code Signature Invalid)** on launch | App bundle was unsigned. macOS enforces signature for running GUI apps. | **Always sign.** Script runs `codesign` in all cases. Use **ad-hoc** when no Developer ID: `-N` or unset `CODESIGN_IDENTITY` → `codesign --sign "-"`. For distribution: set `CODESIGN_IDENTITY="Developer ID Application: …"` and notarize (BUILD §Developer ID + notarization). |
+| Unclear whether build used ad-hoc or identity | — | Script prints `Signing (ad-hoc)` or `Signing (identity: …)` before running codesign. |
+
+**Mitigation:** Never skip signing for the built app. `SKIP_SIGN` is only for special cases and still results in ad-hoc (identity `-`).
+
+### Stripping
+
+| Problem | Cause | Solution / current state |
+|--------|--------|---------------------------|
+| **DMG / app very large** (e.g. 24MB+ DMG, zerod ~13MB) | zerod from `ZERO_DIR` may be debug or unstripped; on Linux stripped zerod is a couple MB. | Script strips `ZeroWallet`, `zerod`, and `zero-cli` inside the app bundle by default. Use **`-P` / `--no-strip`** only to keep symbols for debugging. For smaller DMG, build zerod in Zero repo as **release + strip** so the binary copied into the app is already small. |
+| Need symbols for crash debugging | Default is strip. | Run mkrelease with `-P`; artifacts are larger but symbols remain. |
+
+**Mitigation:** Document in BUILD that "if DMG is unexpectedly large, ensure zerod in ZERO_DIR was built release and stripped." Script prints DMG format and size (e.g. `DMG: UDZO, 24MB`) so format (UDZO = compressed) and size are visible.
+
+### DMG (create-dmg / hdiutil)
+
+| Problem | Cause | Solution / current state |
+|--------|--------|---------------------------|
+| **hdiutil: convert failed - File exists** | `hdiutil convert` does not overwrite the output file. Leftover DMG or temp from a previous run. | Script **removes** `artifacts/macOS-zerowallet-v*.dmg` and `artifacts/rw.*.macOS-zerowallet-v*.dmg` **twice**: once at start (with other cleanup), once **immediately before** create-dmg. No manual rm needed in normal runs. |
+| **create-dmg very noisy** (Creating disk image…, Mounting…, Will sleep for 2 seconds…, etc.) | create-dmg and hdiutil print progress to stdout/stderr. | **Quieter by default:** script uses `--hdiutil-quiet` and redirects create-dmg stdout to `/dev/null`. On failure, **re-run with `CREATE_DMG_VERBOSE=1 ./src/scripts/mkrelease-mac.sh`** to see full hdiutil/create-dmg output. Documented in BUILD §Troubleshooting. |
+| **"hdiutil does not support internet-enable"** | Informational; internet-enable was removed in macOS 10.15. | Harmless; DMG is still built. Can appear on stderr even with `--hdiutil-quiet`. |
+| **Unclear if DMG is compressed** / suspicious size | Need to confirm format (UDZO = zlib compressed). | After create-dmg, script runs `hdiutil imageinfo` and prints one line: `DMG: UDZO, N MB`. If format is not UDZO, something is wrong. |
+| **App missing if create-dmg fails** | Previously create-dmg was run before moving the app to artifacts. | Script **moves app to `artifacts/` first**, then runs create-dmg. If create-dmg fails, `artifacts/ZeroWallet.app` is still there. |
+| **Temp rw.*.dmg left behind on failure** | create-dmg creates read-write temp images. | Script does **not** promote or keep rw.* on success; cleanup on next run. On failure, leave rw.* for inspection; next run removes them. |
+
+**Mitigation:** BUILD §Troubleshooting row for "DMG not created / create-dmg fails" points to `CREATE_DMG_VERBOSE=1` and "File exists".
+
+### Other macOS build / dev
+
+| Problem | Cause | Solution / current state |
+|--------|--------|---------------------------|
+| **PlugIns / ln failure in .pro** (e.g. "No such file or directory" for PlugIns) | qmake expanded `$$TARGET.app` to empty in some contexts, so path to app bundle was wrong. | **Use literal `ZeroWallet.app`** in `zero-qt-wallet.pro` for PlugIns path and clean-app-deploy (not `$$TARGET.app`). See BUILD §Troubleshooting for PCH. |
+| **PCH: __OPTIMIZE__ predefined macro was enabled in PCH file but is currently disabled** | PCH built with one CONFIG (debug vs release), then build switched. | Clean and rebuild: `./src/scripts/mkdev.sh -c -L`. Documented in BUILD §Troubleshooting. |
 
 ---
 
@@ -512,6 +556,61 @@ zip -r Windows-zerowallet-v$APP_VERSION.zip release/zerowallet-v$APP_VERSION/
 ## How zerod Gets Bundled
 
 zerod built separately, copied into zerowallet package. **ZERO_DIR** = directory containing built zerod/zero-cli (or .exe); default `../Zero/src`. Zero repo build: Linux `./zcutil/build.sh` → `zero_linux/src/`; Windows `./zcutil/build-win.sh` → `zero_win/src/`. Scripts use **QT_PREFIX** (not QT_STATIC) for Qt path in mkdev/mkrelease. For script reference, flags (`-z`, `-v`, `-p`, `-q`, `-P`/`-N`, `-m`, `-L`), APP_VERSION/PREV, stripping, signing, and platform notes see [BUILD](BUILD.md) §Script Reference, §Unified Arguments, §ZERO_DIR, §APP_VERSION, §PREV, §Platform Notes. CI plans: ~/Work/ZK/CI/README.md.
+
+---
+
+## Linux Qt: packaging options and modules
+
+### Why macOS uses Homebrew Qt (dynamic) and Linux uses static
+
+**macOS:** We use Homebrew Qt (dynamic link at build time). **macdeployqt** copies the Qt frameworks and plugins *into* the app bundle, so the shipped DMG is self-contained; the user does not install Qt. Effectively we bundle Qt with the app.
+
+**Linux:** Qt does not ship an official “linuxdeployqt.” Options:
+
+| Approach | Pros | Cons |
+|----------|------|------|
+| **Static Qt (what we do)** | Single binary (plus zerod/zero-cli) runs on many distros; no system Qt or version matrix. One-time cost: build Qt from source (`build-qt-static.sh`). | Long one-time build (~30–60 min); must rebuild Qt when upgrading. |
+| **Dynamic + system .deb** (e.g. `qtbase5-dev`, `libqt5websockets5-dev`) | No Qt build; use system packages for dev. | For *release* we would either require the user to install Qt (bad UX, version/distro matrix) or ship a binary that breaks on other distros. Not used for release. |
+| **Dynamic + bundle** (e.g. **linuxdeploy** + **linuxdeploy-plugin-qt**; AppImage) | Similar idea to macdeployqt: copy Qt libs into an app dir, fix rpaths; can produce AppImage. | Different workflow and tooling; more moving parts. We chose static for simpler artifacts (tarball + .deb) and broad compatibility. |
+
+So: **Mac = dynamic build, Qt bundled into .app via macdeployqt. Linux = static build, no bundling step.**
+
+### Qt modules we use
+
+From `zero-qt-wallet.pro`: `QT += core gui network`, then `QT += widgets` and `QT += websockets`. So the Qt modules (and the libraries we actually link) are:
+
+| Module | Qt library | Use in zerowallet |
+|--------|------------|-------------------|
+| core | Qt5Core | Base types, event loop, QSettings, etc. |
+| gui | Qt5Gui | Painting, fonts, images, OpenGL abstraction. |
+| network | Qt5Network | QNetworkAccessManager, RPC HTTP, param downloads. |
+| widgets | Qt5Widgets | UI (windows, dialogs, buttons, tables). |
+| websockets | Qt5WebSockets | Mobile “Direct Connection” (WSServer), wormhole. |
+
+We do *not* use (and `build-qt-static.sh` skips or does not enable): webengine, Qt Quick/QML (beyond what widgets may pull), Qt Multimedia, Qt SQL, etc. MXE build uses `qtbase qtwebsockets` only. SingleApplication is vendored (not a Qt module).
+
+### Qt versions in Ubuntu (apt)
+
+Distro packages are used for **dev** (`mkdev.sh`); **release** uses static Qt from `build-qt-static.sh` (5.15.18). We can build zerowallet with Qt 5.15.3 or 5.15.13 (and 5.15.18).
+
+| Ubuntu | Qt 5 (apt) | Qt 6 (apt) | Notes |
+|--------|------------|------------|-------|
+| **22.04 (Jammy)** | **5.15.3** (`qtbase5-dev` 5.15.3+dfsg-2, source `qtbase-opensource-src`) | — | Qt5 in universe. |
+| **24.04 (Noble)** | **5.15.13** (`qtbase5-dev` 5.15.13+dfsg-1ubuntu1) | 6.4.2 (`qt6-base`) | Qt5 still in repos; Qt6 is default. |
+
+Dev install (either release): `sudo apt install build-essential qtbase5-dev qtbase5-dev-tools libqt5websockets5-dev`. Release build uses static Qt from source (see Linux Qt build below), not these packages.
+
+### Linux Qt build (release)
+
+**Prerequisites (dev):** `sudo apt install build-essential qtbase5-dev qtbase5-dev-tools libqt5websockets5-dev` — for `mkdev.sh` only; release uses static Qt, not system packages.
+
+**Release: static Qt from source.** Script: `src/scripts/build-qt-static.sh`. Run once per repo (or per machine); creates `qt5-static/` in repo root. Default `QT_PREFIX` for Linux release is `$REPO_ROOT/qt5-static`; override with `-q /path`. If `qmake` is not found at `QT_PREFIX`, mkrelease-linux fails with a clear error.
+
+**build-qt-static.sh:** Downloads Qt 5.15.18 source from [download.qt.io](https://download.qt.io/archive/qt/5.15/5.15.18/single/qt-everywhere-opensource-src-5.15.18.tar.xz) (~633MB), extracts, configures with `-static -release -prefix $REPO_ROOT/qt5-static -skip webengine -nomake tools -nomake tests -nomake examples`, builds (~30–60 min), installs into `qt5-static/`. The tarball may extract to `qt-everywhere-opensource-src-5.15.18` or `qt-everywhere-src-5.15.18`; the script handles both. On GCC 13+ apply `res/patches/qt-gcc13.diff` (qtlocation) if present; script does this automatically.
+
+**Release flow:** Build zerod: `cd ../Zero && ./zcutil/build.sh`. Then, if `qt5-static/` does not exist, run `./src/scripts/build-qt-static.sh`. Then `./src/scripts/mkrelease-linux.sh`. Version comes from `version.h` (and git); to pin use `-v X.Y.Z -p X.Y.(Z-1)`. To use a Qt prefix elsewhere: `-q /path/to/qt5-static`.
+
+**Output:** `artifacts/linux-zerowallet-vX.Y.Z.tgz` (staged in `bin/tgz/linux-zerowallet-vX.Y.Z/`), `artifacts/linux-zerowallet-vX.Y.Z.deb` (staged in `bin/deb/zerowallet-vX.Y.Z/`: DEBIAN/control, usr/local/bin/, README.md, pixmaps, .desktop). Binaries stripped unless `-P`. Package verification: `./src/scripts/package-verify.sh --linux artifacts/linux-zerowallet-vX.Y.Z.tgz`.
 
 ---
 

@@ -3,11 +3,11 @@
 # Verify release package contents (tar, zip, dmg). Run from repo root.
 #
 # Usage:
-#   package-verify.sh -v VERSION     # verify artifacts/ for that version
-#   package-verify.sh -l PATH       # verify tar (--linux)
-#   package-verify.sh -w PATH       # verify zip (--windows)
-#   package-verify.sh -m PATH       # verify dmg (--mac)
-#   package-verify.sh -t            # self-test (--test)
+#   package-verify.sh -v VERSION     [APP_VERSION] verify artifacts/ for version
+#   package-verify.sh -l PATH        [LINUX_PATH] verify tar (--linux)
+#   package-verify.sh -w PATH        [WIN_PATH] verify zip (--windows)
+#   package-verify.sh -m PATH        [MAC_PATH] verify dmg (--mac)
+#   package-verify.sh -t             [DO_TEST] self-test (--test)
 #
 # See Bashrules.md § Package Verification.
 set -e -u -o pipefail
@@ -73,16 +73,18 @@ verify_dmg() {
 }
 
 # Parse args
-APP_VERSION=""
-LINUX_PATH="" MAC_PATH="" WIN_PATH=""
-DO_TEST=""
+APP_VERSION="${APP_VERSION:-}"
+LINUX_PATH="${LINUX_PATH:-}"
+MAC_PATH="${MAC_PATH:-}"
+WIN_PATH="${WIN_PATH:-}"
+DO_TEST="${DO_TEST:-}"
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    -l|--linux) LINUX_PATH="$2"; shift 2 ;;
-    -m|--mac|--macos) MAC_PATH="$2"; shift 2 ;;
-    -t|--test) DO_TEST=1; shift ;;
-    -v|--version) APP_VERSION="$2"; shift 2 ;;
-    -w|--windows) WIN_PATH="$2"; shift 2 ;;
+    -l|--linux) LINUX_PATH="${LINUX_PATH:-$2}"; shift 2 ;;
+    -m|--mac|--macos) MAC_PATH="${MAC_PATH:-$2}"; shift 2 ;;
+    -t|--test) DO_TEST="${DO_TEST:-1}"; shift ;;
+    -v|--version) APP_VERSION="${APP_VERSION:-$2}"; shift 2 ;;
+    -w|--windows) WIN_PATH="${WIN_PATH:-$2}"; shift 2 ;;
     *) shift ;;
   esac
 done
