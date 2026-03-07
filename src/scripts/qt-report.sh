@@ -22,7 +22,7 @@ detect_platform() {
 
 # --- Linux ---
 report_linux() {
-  local qmake_path prefix_static mxe_path qt_ver
+  local qmake_path prefix_static mxe_path qt_ver static_ready mxe_ready
   notice "repo zerowallet (${REPO_ROOT})"
   notice "Linux"
 
@@ -35,8 +35,10 @@ report_linux() {
   fi
 
   prefix_static="$REPO_ROOT/qt5-static"
+  static_ready=false
   if [ -x "$prefix_static/bin/qmake" ]; then
     notice "qt5-static (release): ${prefix_static} (ready)"
+    static_ready=true
   elif [ -d "$prefix_static" ]; then
     notice "qt5-static (release): ${prefix_static} (incomplete)"
   else
@@ -46,12 +48,21 @@ report_linux() {
   mxe_path="${MXE_PATH:-}"
   [ -z "$mxe_path" ] && [ -x "$HOME/mxe/usr/bin/x86_64-w64-mingw32.static-qmake-qt5" ] && mxe_path="$HOME/mxe/usr/bin"
   [ -z "$mxe_path" ] && [ -x "/opt/mxe/usr/bin/x86_64-w64-mingw32.static-qmake-qt5" ] && mxe_path="/opt/mxe/usr/bin"
+  mxe_ready=false
   if [ -n "$mxe_path" ] && [ -x "$mxe_path/x86_64-w64-mingw32.static-qmake-qt5" ]; then
     notice "Windows target (MXE): ${mxe_path} (ready)"
+    mxe_ready=true
   else
     notice "Windows target (MXE): not found"
   fi
-  echo "Release needs qt5-static; run build-qt-static.sh once."
+
+  if [ "$static_ready" = true ] && [ "$mxe_ready" = true ]; then
+    echo "Linux target (qt5-static) and Windows target (MXE) ready; use mkrelease-linux or mkrelease-win."
+  elif [ "$static_ready" = true ]; then
+    echo "Linux target ready; Windows target: install MXE, then mkrelease-win."
+  else
+    echo "Linux target: run build-qt-static.sh; Windows target: install MXE, then mkrelease-win."
+  fi
 }
 
 # --- macOS ---

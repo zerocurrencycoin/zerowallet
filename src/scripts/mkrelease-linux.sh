@@ -12,7 +12,7 @@ parse_mkrelease_args "logs/mkrelease-linux.log" "$@"
 [ -n "${LOG_FILE:-}" ] && exec > >(tee -a "${LOG_FILE}") 2>&1
 resolve_zero_dir linux
 resolve_qt linux release
-[ ! -x "${QMAKE:-}" ] && err "QT_PREFIX not found at ${QT_PREFIX:-}. Linux release requires static Qt: run ./src/scripts/build-qt-static.sh first (creates qt5-static/), or pass -q /path/to/qt-prefix."
+[ ! -x "${QMAKE:-}" ] && err "Qt not found. Use -q /path/to/qt-prefix (static Qt), run build-qt-static.sh for qt5-static/, or -S/--systemqt for system Qt."
 
 resolve_version
 check_version_mismatch
@@ -36,10 +36,14 @@ make clean >/dev/null
 make -j"${JOBS:-2}" >/dev/null
 step_done 'Building'
 
-if ldd zerowallet | grep -qi "Qt"; then
-    err 'release build requires static Qt; found dynamic Qt linkage'
+if [ -z "${USE_SYSTEM_QT:-}" ]; then
+  if ldd zerowallet | grep -qi "Qt"; then
+    err 'release build requires static Qt; found dynamic Qt linkage (use -S/--systemqt for system Qt)'
+  fi
+  step_done 'Static link'
+else
+  step_done 'System Qt (dynamic link)'
 fi
-step_done 'Static link'
 
 tgzdir="bin/tgz/linux-zerowallet-v${APP_VERSION}"
 mkdir -p "$tgzdir"
