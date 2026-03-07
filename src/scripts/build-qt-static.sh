@@ -152,7 +152,9 @@ install_is_ready() {
 }
 
 if install_is_ready && [ -z "$FORCE_ALL" ] && [ -z "$USE_EXISTING" ]; then
-  notice "Static Qt already at ${QT_PREFIX}. Remove to rebuild."
+  notice "Static Qt already installed at ${QT_PREFIX}."
+  notice "Checked: ${QT_PREFIX}/bin/qmake, bin/tracegen, lib/libQt5Network.a"
+  notice "--force: run all steps. --use: skip download/extract, rerun configure/build/install."
   exit 0
 fi
 
