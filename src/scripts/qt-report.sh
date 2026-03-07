@@ -1,6 +1,6 @@
 #!/bin/bash
 # Copyright 2026 Zero Developers
-# Report Qt setup for zerowallet: dev/release usage and platform defaults.
+# Report Qt system setup and for zerowallet: dev/release usage and platform defaults.
 # Run from repo root or any dir; detects Linux, macOS, Windows (host or WSL).
 # Usage: ./src/scripts/qt-report.sh
 set -e -u -o pipefail
@@ -10,9 +10,6 @@ ME="qt-report"
 . "$(dirname "${BASH_SOURCE[0]}")/fmessage.sh"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
-
-report() { printf '  %s\n' "$1"; }
-section() { echo ""; notice "[$1]"; }
 
 detect_platform() {
   case "$(uname -s)" in
@@ -25,48 +22,36 @@ detect_platform() {
 
 # --- Linux ---
 report_linux() {
-  section "Linux (this host)"
-  report "Dev: default is system Qt (qmake from PATH or qtbase5-dev)."
-  report "Release: static Qt in repo (qt5-static/). Run build-qt-static.sh once."
-  report ""
+  local qmake_path prefix_static mxe_path qt_ver
+  notice "repo zerowallet (${REPO_ROOT})"
+  notice "Linux"
 
-  local qmake_path prefix_static
   qmake_path="$(command -v qmake 2>/dev/null || command -v qmake-qt5 2>/dev/null || true)"
   if [ -n "$qmake_path" ]; then
-    report "qmake (dev default): $qmake_path"
-    report "  version: $("$qmake_path" -query QT_VERSION 2>/dev/null || echo "?")"
+    qt_ver="$("$qmake_path" -query QT_VERSION 2>/dev/null || echo "?")"
+    notice "qmake (dev): ${qmake_path} Version: ${qt_ver}"
   else
-    report "qmake (dev): not found. Install qtbase5-dev-tools."
-  fi
-
-  if [ -n "${QT_PREFIX:-}" ]; then
-    report "QT_PREFIX (set): $QT_PREFIX"
-    [ -x "$QT_PREFIX/bin/qmake" ] && report "  qmake: present" || report "  qmake: missing"
+    notice "qmake (dev): not found"
   fi
 
   prefix_static="$REPO_ROOT/qt5-static"
   if [ -x "$prefix_static/bin/qmake" ]; then
-    report "qt5-static (release): $prefix_static (ready)"
+    notice "qt5-static (release): ${prefix_static} (ready)"
   elif [ -d "$prefix_static" ]; then
-    report "qt5-static (release): $prefix_static (incomplete or missing qmake)"
+    notice "qt5-static (release): ${prefix_static} (incomplete)"
   else
-    report "qt5-static (release): not present. Run ./src/scripts/build-qt-static.sh"
+    notice "qt5-static (release): not present"
   fi
 
-  # Windows target (MXE) when on Linux host
-  local mxe_path
   mxe_path="${MXE_PATH:-}"
-  if [ -z "$mxe_path" ] && [ -x "$HOME/mxe/usr/bin/x86_64-w64-mingw32.static-qmake-qt5" ]; then
-    mxe_path="$HOME/mxe/usr/bin"
-  fi
-  if [ -z "$mxe_path" ] && [ -x "/opt/mxe/usr/bin/x86_64-w64-mingw32.static-qmake-qt5" ]; then
-    mxe_path="/opt/mxe/usr/bin"
-  fi
+  [ -z "$mxe_path" ] && [ -x "$HOME/mxe/usr/bin/x86_64-w64-mingw32.static-qmake-qt5" ] && mxe_path="$HOME/mxe/usr/bin"
+  [ -z "$mxe_path" ] && [ -x "/opt/mxe/usr/bin/x86_64-w64-mingw32.static-qmake-qt5" ] && mxe_path="/opt/mxe/usr/bin"
   if [ -n "$mxe_path" ] && [ -x "$mxe_path/x86_64-w64-mingw32.static-qmake-qt5" ]; then
-    report "Windows target (MXE): $mxe_path (qmake-qt5 present)"
+    notice "Windows target (MXE): ${mxe_path} (ready)"
   else
-    report "Windows target (MXE): not found (set MXE_PATH or install to ~/mxe for mkrelease-win)"
+    notice "Windows target (MXE): not found"
   fi
+  echo "Release needs qt5-static; run build-qt-static.sh once."
 }
 
 # --- macOS ---
@@ -86,55 +71,33 @@ report_mac() {
   echo "macdeployqt bundles Qt, no static build"
 }
 
-# --- Windows (native or WSL) ---
+# --- Windows (native MinGW/MSYS/CYGWIN) ---
 report_win() {
-  section "Windows (this host or WSL)"
-  report "zerowallet Windows builds are cross-built from Linux with MXE."
-  report "On a Windows host: use WSL or a Linux VM; MXE runs on Linux."
-  report ""
+  local qmake_path qt_ver
+  notice "repo zerowallet (${REPO_ROOT})"
+  notice "Windows"
 
-  if [ "$(uname -s)" = "Linux" ]; then
-    report "Host is Linux; Windows target reported under Linux section above."
-    return
-  fi
-
-  # Native Windows (MinGW/CYGWIN): report what exists
-  local qmake_path
   qmake_path="$(command -v qmake 2>/dev/null || true)"
   if [ -n "$qmake_path" ]; then
-    report "qmake in PATH: $qmake_path"
+    qt_ver="$("$qmake_path" -query QT_VERSION 2>/dev/null || echo "?")"
+    notice "qmake: ${qmake_path} Version: ${qt_ver}"
   else
-    report "qmake: not in PATH. For zerowallet use Linux + MXE to build Windows binaries."
+    notice "qmake: not found"
   fi
-
-  if [ -n "${MXE_PATH:-}" ]; then
-    report "MXE_PATH (set): $MXE_PATH"
-  fi
+  echo "Windows builds: cross-build from Linux with MXE."
 }
 
 # --- main ---
 PLATFORM="$(detect_platform)"
+UNAME_S="$(uname -s)"
 case "$PLATFORM" in
-  linux)
-    notice "Qt report for zerowallet (repo: ${REPO_ROOT})"
-    notice "Platform: ${PLATFORM}"
-    report_linux
-    ;;
-  mac)
-    report_mac
-    ;;
-  win)
-    notice "Qt report for zerowallet (repo: ${REPO_ROOT})"
-    notice "Platform: ${PLATFORM}"
-    report_win
-    ;;
+  linux) report_linux ;;
+  mac)   report_mac ;;
+  win)   report_win ;;
   *)
-    notice "Qt report for zerowallet (repo: ${REPO_ROOT})"
-    notice "Platform: ${PLATFORM}"
-    warn "Unknown platform; reporting Linux/Mac/Win hints."
-    report_linux
-    report_mac
-    report_win
+    notice "repo zerowallet (${REPO_ROOT})"
+    notice "Platform: unknown (${UNAME_S})"
+    warn "Unsupported host. Use Linux, macOS, or Windows (WSL)."
     ;;
 esac
 echo ""
