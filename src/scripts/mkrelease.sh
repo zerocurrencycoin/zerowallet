@@ -3,7 +3,10 @@
 set -e -u -o pipefail
 # Wrapper: run mkrelease-<platform>.sh. Pass all args through.
 # Linux -> mkrelease-linux, macOS -> mkrelease-mac, else -> mkrelease-win (Windows target, cross-build from Linux)
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck disable=SC2034
+ME="mkrelease"
+# shellcheck disable=SC1091
+. "$(dirname "${BASH_SOURCE[0]}")/fbuild.sh"
 case "$(uname -s)" in
   Linux)  exec "$SCRIPT_DIR/mkrelease-linux.sh" "$@" ;;
   Darwin) exec "$SCRIPT_DIR/mkrelease-mac.sh" "$@" ;;

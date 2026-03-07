@@ -3,9 +3,10 @@
 # Shared build helpers for mkdev/mkrelease scripts.
 # Usage: ME="script-name"; . "$(dirname "$0")/fbuild.sh"
 # Provides: SCRIPT_DIR, REPO_ROOT, JOBS, err, warn, info, notice, step_done, section,
-#           analyze_build_log, log_capture, build_fail, resolve_zero_dir, resolve_path_win,
-#           resolve_qt, version helpers, parse_mkdev_args, parse_mkrelease_args,
-#           show_mkdev_help, show_mkrelease_help, run_dotranslations, apply_version_sed
+#           analyze_build_log, log_capture, build_fail, check_file, check_zero_binaries,
+#           resolve_zero_dir, resolve_path_win, resolve_qt, version helpers (get_app_from_h, resolve_version, etc.),
+#           parse_mkdev_args, parse_mkrelease_args, show_mkdev_help, show_mkrelease_help,
+#           run_dotranslations, apply_version_sed
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
@@ -116,6 +117,7 @@ parse_mkrelease_args() {
       -P|--nostrip) SKIP_STRIP="${SKIP_STRIP:-1}"; shift ;;
       -N|--no-sign) SKIP_SIGN="${SKIP_SIGN:-1}"; shift ;;
       -S|--systemqt) USE_SYSTEM_QT="${USE_SYSTEM_QT:-1}"; shift ;;
+      -T|--tgz) MAKE_TGZ="${MAKE_TGZ:-1}"; shift ;;
       -t|--tran) SKIP_TRANSLATIONS="${SKIP_TRANSLATIONS:-1}"; shift ;;
       -v|--version) APP_VERSION="${APP_VERSION:-$2}"; shift 2 ;;
       -z|--zero) ZERO_DIR="${ZERO_DIR:-$2}"; shift 2 ;;
@@ -139,6 +141,7 @@ show_mkrelease_help() {
   echo "  -P, --nostrip       [SKIP_STRIP] skip stripping binaries"
   echo "  -N, --no-sign       [SKIP_SIGN] ad-hoc sign only (macOS)"
   echo "  -t, --tran          [SKIP_TRANSLATIONS] skip translations"
+  echo "  -T, --tgz           [MAKE_TGZ] also create .tgz of app (macOS)"
   echo "  -v, --version V     [APP_VERSION] (X.Y.Z)"
   echo "  -z, --zero PATH     [ZERO_DIR] Zero src dir (zerod, zero-cli)"
   echo ""
@@ -193,6 +196,13 @@ resolve_qt() {
       ;;
     *) err "resolve_qt: unknown platform ${plat}" ;;
   esac
+}
+
+# Check path exists and is a file. $1: path, $2: description (default "file"). Err if missing or not file.
+check_file() {
+  local path="$1" desc="${2:-file}"
+  [ -e "$path" ] || err "${desc} not found: ${path}"
+  [ -f "$path" ] || err "${desc} not a file: ${path}"
 }
 
 # Check zerod and zero-cli exist in ZERO_DIR. $1: platform (linux|mac|win). Err if missing.

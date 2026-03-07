@@ -14,7 +14,7 @@ while [[ $# -gt 0 ]]; do
     *) shift ;;
   esac
 done
-
+[ -z "${APP_VERSION:-}" ] && APP_VERSION=$(get_app_from_h)
 [ -z "${APP_VERSION:-}" ] && err 'APP_VERSION not set. Use -v/--version or set env.'
 
 # Store the hash and signatures here
