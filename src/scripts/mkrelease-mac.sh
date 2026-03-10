@@ -89,7 +89,7 @@ if [ -n "${MAKE_TGZ:-}" ]; then
   rm -rf "$TGZ_DIR" "${TGZ_OUT}"
   mkdir -p "artifacts/tgz" "$TGZ_DIR" || err 'mkdir for tgz failed'
   cp -R artifacts/ZeroWallet.app "$TGZ_DIR/" || err 'copy app into tgz dir failed'
-  cp -f README.md LICENSE "$TGZ_DIR/" || err 'copy README/LICENSE into tgz dir failed'
+  cp -f README.md "$TGZ_DIR/" || err 'copy README into tgz dir failed'
   (cd artifacts/tgz && tar czf "../macOS-zerowallet-v${APP_VERSION}.tgz" "macOS-zerowallet-v${APP_VERSION}") || err 'tar tgz failed'
   rm -rf "$TGZ_DIR"
   [ -f "$TGZ_OUT" ] || err 'tgz not created'

@@ -2,11 +2,59 @@
 
 Project document for history, directions, design decisions, planning, issue tracking, futures and wants. **Wallet-specific:** bundling zerod, invoking zerod, zerowallet UI and build — not general Zero node information. Covers everything [README](README.md) and [BUILD](BUILD.md) do not.
 
-**Document references:** General — zerowallet [README](README.md), Zero full node [README](https://github.com/zerocurrencycoin/zero) (repo root), Zero project UpdateZero.md (repo root). Other references point to specific sections or subsections for a particular item (e.g. BUILD §macOS App Signing and Distribution).
+**Document references:** General — zerowallet [README](README.md), Zero full node [README](https://github.com/zerocurrencycoin/zero) (repo root), Zero project UpdateZero.md (repo root). Canonical chain/coin/ops reference: **Zero repo ZeroCoin.md**. Scope and content policy: §Scope and document policy below.
 
-**Document structure:** User-facing (README, BUILD) = current state only; no future plans. Project (UpdateWallet, Zero's Subsidy, UpdateZero) = status, plans, futures. Do not reference project docs from user-facing docs.
+**Document structure:** User-facing (README, BUILD) = current state only; no future plans. Project (UpdateWallet, Zero’s Subsidy, UpdateZero) = status, plans, futures. Do not reference project docs from user-facing docs.
+
+**Content policy:** Prefer moving content to user-facing docs unless undecided, controversial, sensitive to coin perceptions, or commercial. See §Content policy below. Active items from this document: [TODO](TODO.md).
 
 **Quick find:** [macOS release: sign, strip, DMG gotchas and fixes](#macos-release-pitfalls-and-solutions) · [Release message handler and qDebug](#release-message-handler-and-qdebug) · [Linux Qt packaging and modules](#linux-qt-packaging-options-and-modules)
+
+---
+
+## Scope and document policy
+
+*Merged from SCOPE.md. Zerowallet-only; not part of Zero repo or UpdateZero.*
+
+### Zero vs zerowallet
+
+| Concern | Zero (full node repo) | zerowallet (this repo) |
+|--------|------------------------|-------------------------|
+| **Scope** | zerod, zero-cli; chain consensus; mining; subsidy; zeronodes. | Desktop wallet UI; bundles zerod; build and release of wallet + bundled node. |
+| **Goals** | Network rules, block reward, halving, consensus upgrades, node/pool operator support. | Reliable wallet builds (Linux, macOS, Windows); clear docs for install and build; no duplicate chain authority. |
+| **Docs** | Subsidy.md, UpdateZero.md, README, doc/. Single reference: ZeroCoin.md (Zero repo). | README.md, BUILD.md (user-facing); UpdateWallet.md (project). |
+| **TODO / issues** | Zero repo TODO and issue list. | This repo TODO.md. Wallet build, UI, security, deps; references Zero for node behavior. |
+
+**Rule:** zerowallet does not define or override chain rules. It consumes zerod from ZERO_DIR and documents how to build/release the wallet. Chain economics and subsidy live in the Zero repo (Subsidy.md; ZeroCoin.md).
+
+### Content policy: user-facing vs project-internal
+
+**Default:** Prefer moving content into user-facing docs (README, BUILD.md; for chain/coin, Zero repo ZeroCoin.md).
+
+**Keep content project-internal** (UpdateWallet, Zero’s UpdateZero/Subsidy) when it is: undecided; controversial; sensitive to coin perceptions; commercial.
+
+**User-facing:** Current state, install/build steps, script reference, operational how-to. No future promises unless released.
+
+**Project docs:** History, plans, futures, detected errors, version upgrade plan, risk/effort. Do not reference project docs from README or BUILD except via a “For contributors” link.
+
+### Reference documents
+
+| Where | Document | Role |
+|-------|----------|------|
+| Zero repo | ZeroCoin.md | Single reference for chain, coin, ops. Authoritative for external audiences (miners, pools, exchanges, DEX). |
+| zerowallet | UpdateWallet.md | This file; project doc; links to Zero for chain/coin. |
+
+---
+
+## For review: items delegated to other docs/repos
+
+*Copy of the end-group sent to Zero repo UpdateZero.md for routing. Merge of group at the end for review.*
+
+- **→ ZeroCoin.md (Zero repo):** Consolidate history, consensus params, subsidy, halving, zeronodes, supply, ops; MAX_MONEY vs supply; “3888 ZER” clarification.
+- **→ Subsidy.md (Zero repo):** §11.3 founders value fix; §15.5 P2P alert decision.
+- **→ README.md (Zero repo):** Clarify “Stable supply is 3888 ZER” (total supply vs emission rate).
+- **→ doc/tor.md (Zero repo):** subver MagicBean → Ambrym.
+- **→ zerowallet:** No transfer; zerowallet scope unchanged.
 
 ---
 
@@ -491,7 +539,7 @@ wine release/zerowallet.exe --help
 
 mkdir -p release/zerowallet-v$APP_VERSION
 cp release/zerowallet.exe release/zerowallet-v$APP_VERSION/
-cp README.md LICENSE release/zerowallet-v$APP_VERSION/
+cp README.md release/zerowallet-v$APP_VERSION/
 zip -r Windows-zerowallet-v$APP_VERSION.zip release/zerowallet-v$APP_VERSION/
 ```
 
@@ -604,11 +652,31 @@ Dev install (either release): `sudo apt install build-essential qtbase5-dev qtba
 
 **Prerequisites (dev):** `sudo apt install build-essential qtbase5-dev qtbase5-dev-tools libqt5websockets5-dev` — for `mkdev.sh` only; release uses static Qt, not system packages.
 
-**Release: static Qt from source.** Script: `src/scripts/build-qt-static.sh`. Run once per repo (or per machine); creates `qt5-static/` in repo root. Default `QT_PREFIX` for Linux release is `$REPO_ROOT/qt5-static`; override with `-q /path`. If `qmake` is not found at `QT_PREFIX`, mkrelease-linux fails with a clear error.
+**Release: static Qt or system Qt.** Default is **static Qt** (built in-repo or pointed to with `-q`). Script: `src/scripts/build-qt-static.sh`. Run once per repo (or per machine); creates `qt5-static/` in repo root. Default `QT_PREFIX` for Linux release is `$REPO_ROOT/qt5-static`; override with `-q /path`. Alternatively use **system Qt** (installed via package manager, not built in repo) with `-S`/`--systemqt` or `USE_SYSTEM_QT=1`; then the release binary is dynamically linked and the static-link check is skipped. If `qmake` is not found at `QT_PREFIX` (or on PATH for `-S`), mkrelease-linux fails with a clear error.
 
 **build-qt-static.sh:** Downloads Qt 5.15.18 source from [download.qt.io](https://download.qt.io/archive/qt/5.15/5.15.18/single/qt-everywhere-opensource-src-5.15.18.tar.xz) (~633MB), extracts, configures with `-static -release -prefix $REPO_ROOT/qt5-static -skip webengine -nomake tools -nomake tests -nomake examples`, builds (~30–60 min), installs into `qt5-static/`. The tarball may extract to `qt-everywhere-opensource-src-5.15.18` or `qt-everywhere-src-5.15.18`; the script handles both. On GCC 13+ apply `res/patches/qt-gcc13.diff` (qtlocation) if present; script does this automatically.
 
-**Release flow:** Build zerod: `cd ../Zero && ./zcutil/build.sh`. Then, if `qt5-static/` does not exist, run `./src/scripts/build-qt-static.sh`. Then `./src/scripts/mkrelease-linux.sh`. Version comes from `version.h` (and git); to pin use `-v X.Y.Z -p X.Y.(Z-1)`. To use a Qt prefix elsewhere: `-q /path/to/qt5-static`.
+**Only the five Qt libs zerowallet needs (Core, Gui, Network, WebSockets, Widgets):**  
+- **Download only those:** Qt provides modular source at `https://download.qt.io/archive/qt/5.15/5.15.18/submodules/`: **qtbase** (Core, Gui, Network, Widgets) ~49MB tar.xz and **qtwebsockets** ~234KB tar.xz. So you can download ~50MB instead of the full ~633MB single tarball. Building from these requires a different flow: build and install qtbase first, then build qtwebsockets against that prefix (e.g. `configure -qtbase $PREFIX`); the current script does not support this modular download/build.  
+- **Build only those (same download):** When using the full single tarball, you can add more `-skip` options to configure so only qtbase and qtwebsockets (and their deps) are built, e.g. `-skip webengine -skip qt3d -skip qtdeclarative -skip qtmultimedia -skip qtlocation -skip qtdoc …` (and already `-nomake tools -nomake tests -nomake examples`). That reduces build time and install size; download size stays ~633MB. The current script only uses `-skip webengine`; extending it with more `-skip` is possible.
+
+**Practice scripts and how to test**
+
+Two scripts in `src/scripts/` let you try modular download and skip-extra build without changing the main `qt5-static/` output:
+
+1. **Modular download + build** — `build-qt-static-modular.sh`  
+   Downloads only qtbase (~49MB) and qtwebsockets (~234KB) from Qt’s submodules, builds qtbase then qtwebsockets, installs to `qt5-static-modular/install`.  
+   - Run: `./src/scripts/build-qt-static-modular.sh` (optionally `-f` to force full rebuild, `-j N` for parallel jobs).  
+   - Test: After it finishes, run `./qt5-static-modular/install/bin/qmake -v` and check that `libQt5Core.a`, `libQt5WebSockets.a` exist under `qt5-static-modular/install/lib`. Then build zerowallet against it: `./src/scripts/mkrelease-linux.sh -q $(pwd)/qt5-static-modular/install` (on a Linux host). The resulting binary should link statically to Qt (no `libQt5*` in `ldd zerowallet`).
+
+2. **Single tarball with extra -skip (build only qtbase + qtwebsockets)** — `build-qt-static-skip-extra.sh`  
+   Downloads the full single tarball (~633MB), extracts, then configures with many `-skip` so only qtbase and qtwebsockets are built. Output: `qt5-static-skip/install`.  
+   - Run: `./src/scripts/build-qt-static-skip-extra.sh` (first run downloads and extracts then builds). Use `-u` to skip download/extract and only reconfigure+build (e.g. after changing skip list). Use `-f` to force full re-run.  
+   - Test: Same as above: `qt5-static-skip/install/bin/qmake -v`, check for `libQt5Core.a` and `libQt5WebSockets.a`, then `mkrelease-linux.sh -q $(pwd)/qt5-static-skip/install` and verify `ldd zerowallet` has no Qt libs.
+
+Both scripts use a separate output dir so they do not overwrite `qt5-static/` from the main build-qt-static.sh.
+
+**Release flow:** Build zerod: `cd ../Zero && ./zcutil/build.sh`. Then either (1) static Qt: if `qt5-static/` does not exist, run `./src/scripts/build-qt-static.sh`, then `./src/scripts/mkrelease-linux.sh` (or `-q /path/to/qt5-static` to use another prefix); or (2) system Qt: `./src/scripts/mkrelease-linux.sh -S` (no build-qt-static needed). Version comes from `version.h` (and git); to pin use `-v X.Y.Z -p X.Y.(Z-1)`.
 
 **Output:** `artifacts/linux-zerowallet-vX.Y.Z.tgz` (staged in `bin/tgz/linux-zerowallet-vX.Y.Z/`), `artifacts/linux-zerowallet-vX.Y.Z.deb` (staged in `bin/deb/zerowallet-vX.Y.Z/`: DEBIAN/control, usr/local/bin/, README.md, pixmaps, .desktop). Binaries stripped unless `-P`. Package verification: `./src/scripts/package-verify.sh --linux artifacts/linux-zerowallet-vX.Y.Z.tgz`.
 
@@ -669,14 +737,9 @@ Dev install (either release): `sudo apt install build-essential qtbase5-dev qtba
 
 **Tests:** Unit test `randomPassword()` — length 20, charset coverage, no null in output, no leak (valgrind/sanitizers). System test: create zero.conf, verify zerod accepts generated credentials.
 
-### Zero Full Node (from Subsidy.md §11.1)
+### Zero Full Node (for Zero repo triage)
 
-| Location | Issue |
-|----------|-------|
-| `src/amount.h` | `MAX_MONEY = 16.95M ZER`; Zero total supply ~25.6M ZER exceeds this; validation uses per-subsidy `MoneyRange` only |
-| Zero Subsidy.md §11.3 | `338665500000000<?>` wrong founders value; see Subsidy.md, UpdateZero §4.6 |
-| Zero `README.md` | "Stable supply is 3888 ZER, after first halfing" — ambiguous; 3888 ≈ daily emission (720×5.4), not total supply |
-| Zero `doc/tor.md` | `"subver" : "/MagicBean:1.0.0/"` — legacy; Zero uses Ambrym |
+**Transfer done:** Content merged into Zero repo **UpdateZero.md** (§4.6 triage column, §10–12); **ZeroCoin.md** created in Zero repo. You may remove from zerowallet: CHANGELOG.md, SCOPE.md, UpdateZero-insert.md, ZERO_TODO.md, ZeroChain.md, ZeroCoin-for-Zero-repo.md, ZeroCoin.md (and optionally UpdateZero-merge.md, ZeroCoin-Zero-repo-consolidated.md).
 
 ### Cross-Reference Mismatches
 

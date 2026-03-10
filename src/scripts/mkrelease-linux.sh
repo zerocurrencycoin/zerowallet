@@ -53,7 +53,6 @@ cp -f zerowallet                     "$tgzdir/" >/dev/null
 cp -f "$ZERO_DIR/zerod"              "$tgzdir/" >/dev/null
 cp -f "$ZERO_DIR/zero-cli"           "$tgzdir/" >/dev/null
 cp -f README.md                      "$tgzdir/" >/dev/null
-cp -f LICENSE                        "$tgzdir/" >/dev/null
 [ -z "${SKIP_STRIP:-}" ] && strip "$tgzdir/zerowallet" "$tgzdir/zerod" "$tgzdir/zero-cli"
 
 (cd bin/tgz && tar czf "linux-zerowallet-v${APP_VERSION}.tgz" "linux-zerowallet-v${APP_VERSION}/" >/dev/null 2>&1) || err 'tar failed'
