@@ -46,7 +46,6 @@ cp -f release/zerowallet.exe             "$PKGDIR/" >/dev/null
   cp -f "$ZERO_DIR/zero-cli.exe"          "$PKGDIR/" >/dev/null
 [ -z "${SKIP_STRIP:-}" ] && [ -n "${STRIP:-}" ] && "$STRIP" "$PKGDIR/zerowallet.exe" "$PKGDIR/zerod.exe" "$PKGDIR/zero-cli.exe"
 cp -f README.md                          "$PKGDIR/" >/dev/null
-  cp -f LICENSE                            "$PKGDIR/" >/dev/null
 
 # Wallet expects zerod.exe next to zerowallet.exe (connection.cpp: applicationDirPath + zerod.exe)
 ZEROD_IN_PKG="$PKGDIR/zerod.exe"

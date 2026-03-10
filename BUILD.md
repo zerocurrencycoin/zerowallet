@@ -2,6 +2,8 @@
 
 Build and release workflow for zerowallet. Platforms: Linux, macOS, Windows.
 
+For release preparation: see [CHANGELOG.md](CHANGELOG.md) (versioned changes), [ZeroChain.md](ZeroChain.md) and [ZeroCoin.md](ZeroCoin.md) (chain/coin reference formats). Scope and document policy: [SCOPE.md](SCOPE.md).
+
 ## System status
 
 | Area | Status |
@@ -11,6 +13,7 @@ Build and release workflow for zerowallet. Platforms: Linux, macOS, Windows.
 | **Qt — macOS** | Dev and release: system Qt (Homebrew qt@5). macdeployqt bundles Qt; no static build. |
 | **Qt — Windows** | MXE only (Linux host). Target selected by script: `mkrelease-linux` vs `mkrelease-win`. |
 | **Options** | Env overrides CLI. Key: `QT_PREFIX`, `USE_SYSTEM_QT`, `MXE_PATH`, `ZERO_DIR`, `SKIP_STRIP`, `SKIP_SIGN`, `MAKE_TGZ`, `LOG_FILE`, `JOBS`. Long options: `--systemqt`, `--nostrip`, `--tgz`. |
+| **Helpers** | `fbuild.sh`: SCRIPT_DIR, REPO_ROOT, err/warn/notice/step_done, check_file, check_zero_binaries, resolve_qt, get_app_from_h, resolve_version, parse_mkrelease_args, etc. qt-report, install_mxe, mkrelease.sh, mkdev.sh source fbuild; signbinaries uses get_app_from_h when APP_VERSION unset. |
 | **Reporting** | `./src/scripts/qt-report.sh` — Qt setup per platform (repo path, qmake/qt5-static/MXE, one-line summary). |
 
 ## Quick Start
@@ -56,9 +59,31 @@ One-time install per platform. Custom path via `-q` or `QT_PREFIX` when needed.
 | `mkrelease-linux.sh` | Linux | `artifacts/linux-zerowallet-vX.Y.Z.tgz`, `.deb` |
 | `mkrelease-mac.sh` | macOS | `artifacts/macOS-zerowallet-vX.Y.Z.dmg`; optional `-T`/`--tgz` → also `artifacts/macOS-zerowallet-vX.Y.Z.tgz` |
 | `mkrelease-win.sh` | Windows | `artifacts/Windows-zerowallet-vX.Y.Z.zip` |
-| `mkrelease.sh` | Linux + Windows | Both in one run (requires MXE for Windows) |
-| `mkdev.sh` | Linux, macOS, Windows | Dev build; `-c` clean, `-r` release, `-L` log |
+| `mkrelease.sh` | — | Dispatches to `mkrelease-linux.sh`, `mkrelease-mac.sh`, or `mkrelease-win.sh` |
+| `mkdev.sh` | — | Dispatches to `mkdev-{linux,mac,win}.sh` |
 | `signbinaries.sh` | Any | GPG signatures and sha256sums |
+
+### Artifacts (mkrelease)
+
+| Script | Artifacts (X.Y.Z = APP_VERSION) |
+|--------|----------------------------------|
+| **mkrelease-linux.sh** | `artifacts/linux-zerowallet-vX.Y.Z.tgz` (dir: zerowallet, zerod, zero-cli, README.md); `artifacts/linux-zerowallet-vX.Y.Z.deb`. Qt: see [Linux release Qt](#linux-release-qt) below. |
+| **mkrelease-mac.sh** | `artifacts/macOS-zerowallet-vX.Y.Z.dmg` (signed app bundle). With `-T`/`--tgz`: `artifacts/macOS-zerowallet-vX.Y.Z.tgz` (dir: ZeroWallet.app, README.md). |
+| **mkrelease-win.sh** | `artifacts/Windows-zerowallet-vX.Y.Z.zip` (dir: zerowallet.exe, zerod.exe, zero-cli.exe, README.md). |
+
+### Build outcomes (mkdev)
+
+| Script | Output | Notes |
+|--------|--------|--------|
+| **mkdev-linux.sh** | `zerowallet` (repo root) | System Qt, CONFIG+=debug by default; `-r` → release. Run: `./zerowallet`. |
+| **mkdev-mac.sh** | `ZeroWallet.app` (repo root) | System Qt, debug or release. Dev build leaves object files in `bin/`; final binary is ZeroWallet.app. Run: `open ZeroWallet.app`. |
+| **mkdev-win.sh** | `debug/zerowallet.exe` or `release/zerowallet.exe` | Default debug; `-r` → release. Requires MXE on Linux host. Run: `wine …/zerowallet.exe`. |
+
+#### Linux release Qt {#linux-release-qt}
+
+Default: **static Qt** used for the release binary. Either (1) build it in-repo with `./src/scripts/build-qt-static.sh` (creates `qt5-static/`), or (2) point to an existing static Qt with **`-q` / `QT_PREFIX`** — e.g. `mkrelease-linux.sh -q /path/to/qt5-static` (any prefix where `bin/qmake` and the static libs exist). The script uses that Qt’s `qmake` to build; the resulting zerowallet is statically linked to Qt.
+
+With **`-S` / `--systemqt`** (or **`USE_SYSTEM_QT=1`**): use **system Qt** (installed via package manager, e.g. `apt install qtbase5-dev`). The script uses `qmake` from `PATH` and sets `QT_PREFIX` from `qmake -query QT_INSTALL_PREFIX` for lrelease/translations. The release binary is dynamically linked to Qt; the static-link check is skipped.
 
 ### Unified Arguments
 
@@ -99,7 +124,11 @@ Linux and Windows scripts use `sed` to replace the previous version with the new
 
 ### Linux
 
-Build zerod: `cd ../Zero && ./zcutil/build.sh`. Then run `./src/scripts/mkrelease-linux.sh`. If `qt5-static/` is not present, run `./src/scripts/build-qt-static.sh` first (one-time). Output: `artifacts/linux-zerowallet-vX.Y.Z.tgz`, `artifacts/linux-zerowallet-vX.Y.Z.deb`. Full Linux Qt build, packaging options, and module list: [UpdateWallet](UpdateWallet.md) §Linux Qt packaging and modules.
+Build zerod: `cd ../Zero && ./zcutil/build.sh`. Then run `./src/scripts/mkrelease-linux.sh`. **Qt for release:** default is static Qt built locally — run `./src/scripts/build-qt-static.sh` once (creates qt5-static/) or pass `-q /path/to/qt-prefix`; or use `-S`/`--systemqt` for system Qt (installed via package manager, not built in repo; dynamic link). Output: `artifacts/linux-zerowallet-vX.Y.Z.tgz`, `artifacts/linux-zerowallet-vX.Y.Z.deb`. Full Linux Qt build, packaging options, and module list: [UpdateWallet](UpdateWallet.md) §Linux Qt packaging and modules.
+
+**Checking Linux binaries (stripped, linking, Qt):** Extract the tgz or use the built binary in repo root. **Stripped:** `file zerowallet` — reports `stripped` or `not stripped`. **Dynamic libraries:** `ldd zerowallet` — lists all shared libs. When linked to Qt dynamically the executable depends directly on **five** Qt5 libs: `libQt5Core.so.5`, `libQt5Gui.so.5`, `libQt5Network.so.5`, `libQt5WebSockets.so.5`, `libQt5Widgets.so.5`. Everything else in `ldd` (libGL, libpng, libicu, libharfbuzz, libxcb, etc.) is either a transitive dependency of those or the C/runtime (libc, libstdc++, ld-linux). Paths in `ldd` are the runtime Qt libs (e.g. `/lib/x86_64-linux-gnu/` = system Qt). If linked to Qt statically there are no `libQt5*` lines. **Which Qt (static):** determined at build time (qt5-static or `-q`).
+
+**Explicit link list vs ldd:** In `zero-qt-wallet.pro` no Qt libraries are listed in `LIBS`. Qt is declared only as **QT += core gui network widgets websockets** (five modules); qmake adds the corresponding `-lQt5Core -lQt5Gui -lQt5Network -lQt5WebSockets -lQt5Widgets`. The only library explicitly in `LIBS` is **libsodium** (`-L$$PWD/res/ -lsodium` on Unix; vendored `res/libsodium.a`). So the five Qt libs in `ldd` match the five `QT +=` modules; all other `ldd` entries are transitive (from Qt or system) or runtime.
 
 ### macOS
 
@@ -135,7 +164,7 @@ For distribution without notarization. Script: clean → qmake → make → copy
 
 To pin version: `-v X.Y.Z`. To capture log: `-L`.
 
-Output: `artifacts/ZeroWallet.app`, `artifacts/macOS-zerowallet-vX.Y.Z.dmg`. The script prints DMG format and size (e.g. `DMG: UDZO, 24MB`); format should be **UDZO** (compressed). If the DMG is unexpectedly large or format is not UDZO, ensure zerod in `ZERO_DIR` was built release and stripped. If create-dmg fails, the app is already in `artifacts/`; re-run with `CREATE_DMG_VERBOSE=1` to see full output.
+Output: `artifacts/ZeroWallet.app`, `artifacts/macOS-zerowallet-vX.Y.Z.dmg`. Use `-T`/`--tgz` to also create `artifacts/macOS-zerowallet-vX.Y.Z.tgz`. The script prints DMG format and size (e.g. `DMG: UDZO, 24MB`); format should be **UDZO** (compressed). If the DMG is unexpectedly large or format is not UDZO, ensure zerod in `ZERO_DIR` was built release and stripped. If create-dmg fails, the app is already in `artifacts/`; re-run with `CREATE_DMG_VERBOSE=1` to see full output.
 
 **Test before distribute:** (replace X.Y.Z with the version just built)
 ```bash
@@ -199,7 +228,7 @@ xcrun stapler staple artifacts/macOS-zerowallet-vX.Y.Z.dmg
 
 ### GPG (all platforms)
 
-Run `./src/scripts/signbinaries.sh -v X.Y.Z` (version required for output filenames); produces `sha256sum-vX.Y.Z.txt` and `*.sig` in `artifacts/`, packaged as `signatures-vX.Y.Z.zip`. Verification: `sha256sum -c sha256sum-vX.Y.Z.txt`; `gpg --verify <file.sig> <file>`. Import key from `public_key.asc` on GitHub. See `res/SIGNATURES_README`.
+Run `./src/scripts/signbinaries.sh` (version from `-v X.Y.Z` or `src/version.h`); produces `sha256sum-vX.Y.Z.txt` and `*.sig` in `artifacts/`, packaged as `signatures-vX.Y.Z.zip`. Verification: `sha256sum -c sha256sum-vX.Y.Z.txt`; `gpg --verify <file.sig> <file>`. Import key from `public_key.asc` on GitHub. See `res/SIGNATURES_README`.
 
 ### Package verification
 
