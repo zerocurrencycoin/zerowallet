@@ -347,7 +347,7 @@ bool ConnectionLoader::startEmbeddedZcashd() {
     if (ezcashd != nullptr) {
         if (ezcashd->state() == QProcess::NotRunning) {
             if (!processStdErrOutput.isEmpty()) {
-                QMessageBox::critical(main, QObject::tr("zerod error"), "zerod said: " + processStdErrOutput,
+                QMessageBox::critical(main, QObject::tr("zerod error"), "reported: " + processStdErrOutput,
                                       QMessageBox::Ok);
             }
             return false;
@@ -360,16 +360,13 @@ bool ConnectionLoader::startEmbeddedZcashd() {
     QDir appPath(QCoreApplication::applicationDirPath());
 #ifdef Q_OS_LINUX
     auto zcashdProgram = appPath.absoluteFilePath("zerod");
-    if (!QFile(zcashdProgram).exists()) {
-        zcashdProgram = appPath.absoluteFilePath("zerod");
-    }
 #elif defined(Q_OS_DARWIN)
     auto zcashdProgram = appPath.absoluteFilePath("zerod");
 #else
     auto zcashdProgram = appPath.absoluteFilePath("zerod.exe");
 #endif
 
-    if (!QFile(zcashdProgram).exists()) {
+    if (!QFile::exists(zcashdProgram)) {
         // qDebug() << "Can't find zerod at " << zcashdProgram;  // suppressed in release (message handler in main.cpp); uncomment to debug
         main->logger->write("Can't find zerod at " + zcashdProgram);
         return false;
@@ -396,12 +393,12 @@ bool ConnectionLoader::startEmbeddedZcashd() {
     });
 
 #ifdef Q_OS_LINUX
-    ezcashd->start(zcashdProgram);
+    ezcashd->start(zcashdProgram, QStringList());
 #elif defined(Q_OS_DARWIN)
-    ezcashd->start(zcashdProgram);
+    ezcashd->start(zcashdProgram, QStringList());
 #else
     ezcashd->setWorkingDirectory(appPath.absolutePath());
-    ezcashd->start("zerod.exe");
+    ezcashd->start(zcashdProgram, QStringList());
 #endif // Q_OS_LINUX
 
 
@@ -768,8 +765,13 @@ void Connection::doRPC(const json& payload, const std::function<void(json)>& cb,
         }
 
         auto parsed = json::parse(reply->readAll(), nullptr, false);
-        if (parsed.is_discarded()) {
-            ne(reply, "Unknown error");
+        if (parsed.is_discarded() || !parsed.is_object()) {
+            ne(reply, json::object());
+            return;
+        }
+        if (parsed.contains("error") && !parsed["error"].is_null()) {
+            ne(reply, parsed);
+            return;
         }
 
         cb(parsed["result"]);
@@ -789,6 +791,19 @@ void Connection::doRPCWithDefaultErrorHandling(const json& payload, const std::f
 void Connection::doRPCIgnoreError(const json& payload, const std::function<void(json)>& cb) {
     doRPC(payload, cb, [=] (auto, auto) {
         // Ignored error handling
+    });
+}
+
+void Connection::doRPCIgnoreErrorSafe(const json& payload, const std::function<void(const json&)>& cb) {
+    doRPCIgnoreError(payload, [=](const json& reply) {
+        try {
+            if (reply.is_null()) {
+                return;
+            }
+            cb(reply);
+        } catch (...) {
+            // Poll UI: leave fields stale rather than abort
+        }
     });
 }
 

@@ -279,13 +279,23 @@ void Recurring::removeRecurringInfo(QString hash) {
 
 
 void Recurring::readFromStorage() {
+    payments.clear();
+
     QFile file(writeableFile());
-    file.open(QIODevice::ReadOnly);
+    if (!file.exists()) {
+        return;
+    }
+    if (!file.open(QIODevice::ReadOnly)) {
+        return;
+    }
 
     QTextStream in(&file);
     auto jsondoc = QJsonDocument::fromJson(in.readAll().toUtf8());
+    file.close();
 
-    payments.clear();
+    if (!jsondoc.isArray()) {
+        return;
+    }
 
     for (auto k : jsondoc.array()) {
         auto p = RecurringPaymentInfo::fromJson(k.toObject());

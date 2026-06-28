@@ -109,6 +109,8 @@ public:
                const std::function<void(QNetworkReply*, const json&)>& ne);
     void doRPCWithDefaultErrorHandling(const json& payload, const std::function<void(json)>& cb);
     void doRPCIgnoreError(const json& payload, const std::function<void(json)>& cb) ;
+    /** Optional RPC: ignore transport/RPC errors; swallow exceptions in cb (poll UI). */
+    void doRPCIgnoreErrorSafe(const json& payload, const std::function<void(const json&)>& cb);
 
     void showTxError(const QString& error);
 
@@ -154,8 +156,10 @@ public:
 
                     (*responses)[item] = json::object();    // Empty object
                 } else {
-                    if (parsed.is_discarded()) {
-                        (*responses)[item] = json::object();    // Empty object
+                    if (parsed.is_discarded() || !parsed.is_object()) {
+                        (*responses)[item] = json::object();
+                    } else if (parsed.contains("error") && !parsed["error"].is_null()) {
+                        (*responses)[item] = json::object();
                     } else {
                         (*responses)[item] = parsed["result"];
                     }

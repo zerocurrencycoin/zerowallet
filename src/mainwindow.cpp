@@ -113,14 +113,8 @@ MainWindow::MainWindow(QWidget *parent) :
     // Validate Address
     QObject::connect(ui->actionValidate_Address, &QAction::triggered, this, &MainWindow::validateAddress);
 
-/*    // Connect mobile app
-    QObject::connect(ui->actionConnect_Mobile_App, &QAction::triggered, this, [=] () {
-        if (rpc->getConnection() == nullptr)
-            return;
-
-        AppDataServer::getInstance()->connectAppDialog(this);
-    });
-*/
+    // Mobile / WebSocket companion: disabled (no Zero mobile client). See UpdateWallet.md.
+    // Legacy code remains in websockets.cpp but is not reachable from the UI.
 
     // Address Book
     QObject::connect(ui->action_Address_Book, &QAction::triggered, this, &MainWindow::addressBook);
@@ -163,8 +157,6 @@ MainWindow::MainWindow(QWidget *parent) :
 
     restoreSavedStates();
 
-    // Mobile connect: optional, off by default. Websockets only start when user
-    // explicitly opens Connect Mobile dialog (connectAppDialog).
 }
 
 void MainWindow::createWebsocket(QString wormholecode) {
@@ -883,9 +875,13 @@ void MainWindow::postToZBoard() {
     if (rpc->getConnection() == nullptr)
         return;
 
+    auto balances = rpc->getAllBalances();
+    if (!balances)
+        return;
+
     // Fill the from field with sapling addresses.
-    for (auto i = rpc->getAllBalances()->keyBegin(); i != rpc->getAllBalances()->keyEnd(); i++) {
-        if (Settings::getInstance()->isSaplingAddress(*i) && rpc->getAllBalances()->value(*i) > 0) {
+    for (auto i = balances->keyBegin(); i != balances->keyEnd(); i++) {
+        if (Settings::getInstance()->isSaplingAddress(*i) && balances->value(*i) > 0) {
             zb.fromAddr->addItem(*i);
         }
     }
@@ -1439,6 +1435,7 @@ void MainWindow::setupTransactionsTab() {
 
         if (!memo.isEmpty()) {
             QMessageBox mb(QMessageBox::Information, tr("Memo"), memo, QMessageBox::Ok, this);
+            mb.setTextFormat(Qt::PlainText);
             mb.setTextInteractionFlags(Qt::TextSelectableByMouse | Qt::TextSelectableByKeyboard);
             mb.exec();
         }
@@ -1487,6 +1484,7 @@ void MainWindow::setupTransactionsTab() {
         if (!memo.isEmpty()) {
             menu.addAction(tr("View Memo"), [=] () {
                 QMessageBox mb(QMessageBox::Information, tr("Memo"), memo, QMessageBox::Ok, this);
+                mb.setTextFormat(Qt::PlainText);
                 mb.setTextInteractionFlags(Qt::TextSelectableByMouse | Qt::TextSelectableByKeyboard);
                 mb.exec();
             });
@@ -1723,7 +1721,7 @@ void MainWindow::setupReceiveTab() {
     // View all addresses goes to "View all private keys"
     QObject::connect(ui->btnViewAllAddresses, &QPushButton::clicked, [=] () {
         // If there's no RPC, return
-        if (!getRPC())
+        if (!getRPC() || !getRPC()->getAllTAddresses() || !getRPC()->getAllBalances())
             return;
 
         QDialog d(this);
@@ -1815,7 +1813,11 @@ void MainWindow::setupReceiveTab() {
         }
 
         ui->rcvLabel->setText(label);
-        ui->rcvBal->setText(Settings::getZECUSDDisplayFormat(rpc->getAllBalances()->value(addr)));
+        auto balances = rpc->getAllBalances();
+        if (balances)
+            ui->rcvBal->setText(Settings::getZECUSDDisplayFormat(balances->value(addr)));
+        else
+            ui->rcvBal->clear();
         ui->txtReceive->setPlainText(addr);
         ui->qrcodeDisplay->setQrcodeString(addr);
         if (rpc->getUsedAddresses()->value(addr, false)) {
@@ -1875,6 +1877,9 @@ void MainWindow::setupReceiveTab() {
 void MainWindow::updateTAddrCombo(bool checked) {
     if (checked) {
         auto utxos = this->rpc->getUTXOs();
+        auto balances = rpc->getAllBalances();
+        if (!utxos || !balances)
+            return;
 
         // Save the current address so we can restore it later
         auto currentTaddr = ui->listReceiveAddresses->currentText();
@@ -1889,7 +1894,7 @@ void MainWindow::updateTAddrCombo(bool checked) {
         std::for_each(utxos->begin(), utxos->end(), [=, &addrs](auto& utxo) {
             auto addr = utxo.address;
             if (Settings::isTAddress(addr) && !addrs.contains(addr)) {
-                auto bal = rpc->getAllBalances()->value(addr);
+                auto bal = balances->value(addr);
                 ui->listReceiveAddresses->addItem(addr, bal);
 
                 addrs.insert(addr);
@@ -1925,7 +1930,7 @@ void MainWindow::updateTAddrCombo(bool checked) {
         if (!currentTaddr.isEmpty() && Settings::isTAddress(currentTaddr)) {
             // Make sure the current taddr is in the list
             if (!addrs.contains(currentTaddr)) {
-                auto bal = rpc->getAllBalances()->value(currentTaddr);
+                auto bal = balances->value(currentTaddr);
                 ui->listReceiveAddresses->addItem(currentTaddr, bal);
             }
             ui->listReceiveAddresses->setCurrentText(currentTaddr);

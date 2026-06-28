@@ -368,80 +368,140 @@ void RPC::getAllData(const std::function<void(json)>& cb) {
 }
 
 /**
- * Method to get all the private keys for both z and t addresses. It will make 2 batch calls,
- * combine the result, and call the callback with a single list containing both the t-addr and z-addr
- * private keys
+ * Export all private keys: 3-path TZU order (T account t-addrs, Z addrs, U unspent-only t-addrs).
+ * Paths run sequentially so U can compare against T. T requires params [""] on getaddressesbyaccount.
+ * On a new empty wallet all three paths return [] — expected; U notice only when U-only funded t-addrs exist.
  */
 void RPC::getAllPrivKeys(const std::function<void(QList<QPair<QString, QString>>)> cb) {
     if (conn == nullptr) {
-        // No connection, just return
         return;
     }
 
-    // A special function that will call the callback when two lists have been added
-    auto holder = new QPair<int, QList<QPair<QString, QString>>>();
-    holder->first = 0;  // This is the number of times the callback has been called, initialized to 0
-    auto fnCombineTwoLists = [=] (QList<QPair<QString, QString>> list) {
-        // Increment the callback counter
-        holder->first++;
+    struct PrivKeyExportState {
+        int pathsDone = 0;
+        QList<QPair<QString, QString>> keys;
+        QSet<QString> tAddrsFromAccount;
+        QSet<QString> unspentOnlyAddrs;
+    };
 
-        // Add all
-        std::copy(list.begin(), list.end(), std::back_inserter(holder->second));
+    auto state = new PrivKeyExportState();
 
-        // And if the caller has been called twice, do the parent callback with the
-        // collected list
-        if (holder->first == 2) {
-            // Sort so z addresses are on top
-            std::sort(holder->second.begin(), holder->second.end(),
-                        [=] (auto a, auto b) { return a.first > b.first; });
+    auto fnFinish = [=] () {
+        if (!state->unspentOnlyAddrs.isEmpty()) {
+            auto addrs = QStringList(state->unspentOnlyAddrs.values()).join(", ");
+            main->logger->write(
+                QObject::tr("Private key export: %1 transparent address(es) recovered via listunspent only (not in getaddressesbyaccount \"\"): %2")
+                    .arg(state->unspentOnlyAddrs.size())
+                    .arg(addrs));
+            QMessageBox::information(main, QObject::tr("Export notice"),
+                QObject::tr("Included %1 transparent address key(s) found only via listunspent (not listed under the default account):\n\n%2")
+                    .arg(state->unspentOnlyAddrs.size())
+                    .arg(addrs));
+        }
 
-            cb(holder->second);
-            delete holder;
+        std::sort(state->keys.begin(), state->keys.end(),
+                  [=] (auto a, auto b) { return a.first > b.first; });
+
+        cb(state->keys);
+        delete state;
+    };
+
+    auto fnCombinePathKeys = [=] (QList<QPair<QString, QString>> list) {
+        state->pathsDone++;
+        std::copy(list.begin(), list.end(), std::back_inserter(state->keys));
+
+        if (state->pathsDone == 3) {
+            fnFinish();
         }
     };
 
-    // A utility fn to do the batch calling
-    auto fnDoBatchGetPrivKeys = [=](json getAddressPayload, std::string privKeyDumpMethodName) {
-        conn->doRPCWithDefaultErrorHandling(getAddressPayload, [=] (json resp) {
-            QList<QString> addrs;
-            for (auto addr : resp.get<json::array_t>()) {
-                addrs.push_back(QString::fromStdString(addr.get<json::string_t>()));
-            }
+    auto fnRunKeyBatch = [=] (const QList<QString>& addrs, const std::string& dumpMethod,
+                              std::function<void()> then) {
+        if (addrs.isEmpty()) {
+            fnCombinePathKeys({});
+            then();
+            return;
+        }
 
-            // Then, do a batch request to get all the private keys
-            conn->doBatchRPC<QString>(
-                addrs,
-                [=] (auto addr) {
-                    json payload = {
-                        {"jsonrpc", "1.0"},
-                        {"id", "someid"},
-                        {"method", privKeyDumpMethodName},
-                        {"params", { addr.toStdString() }},
-                    };
-                    return payload;
-                },
-                [=] (QMap<QString, json>* privkeys) {
-                    QList<QPair<QString, QString>> allTKeys;
-                    for (QString addr: privkeys->keys()) {
-                        allTKeys.push_back(
-                            QPair<QString, QString>(
-                                addr,
-                                QString::fromStdString(privkeys->value(addr).get<json::string_t>())));
+        conn->doBatchRPC<QString>(
+            addrs,
+            [=] (auto addr) {
+                json payload = {
+                    {"jsonrpc", "1.0"},
+                    {"id", "someid"},
+                    {"method", dumpMethod},
+                    {"params", { addr.toStdString() }},
+                };
+                return payload;
+            },
+            [=] (QMap<QString, json>* privkeys) {
+                QList<QPair<QString, QString>> pathKeys;
+                for (QString addr : privkeys->keys()) {
+                    const auto& val = privkeys->value(addr);
+                    if (!val.is_string()) {
+                        main->logger->write(
+                            QObject::tr("Private key export: dumpprivkey/z_exportkey failed for %1").arg(addr));
+                        continue;
                     }
-
-                    fnCombineTwoLists(allTKeys);
-                    delete privkeys;
+                    pathKeys.push_back(QPair<QString, QString>(
+                        addr, QString::fromStdString(val.get<std::string>())));
                 }
-            );
+                fnCombinePathKeys(pathKeys);
+                delete privkeys;
+                then();
+            }
+        );
+    };
+
+    auto fnFetchStringAddresses = [=] (const json& payload, const std::string& dumpMethod,
+                                       bool trackDefaultAccountTAddrs, std::function<void()> then) {
+        conn->doRPCIgnoreErrorSafe(payload, [=] (json resp) {
+            QList<QString> addrs;
+            if (resp.is_array()) {
+                for (const auto& item : resp) {
+                    if (!item.is_string()) {
+                        continue;
+                    }
+                    QString a = QString::fromStdString(item.get<std::string>());
+                    addrs.push_back(a);
+                    if (trackDefaultAccountTAddrs) {
+                        state->tAddrsFromAccount.insert(a);
+                    }
+                }
+            }
+            fnRunKeyBatch(addrs, dumpMethod, then);
         });
     };
 
-    // First get all the t and z addresses.
+    auto fnFetchUnspentAddresses = [=] (const json& payload) {
+        conn->doRPCIgnoreErrorSafe(payload, [=] (json resp) {
+            QList<QString> addrs;
+            if (resp.is_array()) {
+                for (const auto& item : resp) {
+                    if (!item.is_object() || !item.contains("address") || !item["address"].is_string()) {
+                        continue;
+                    }
+                    QString a = QString::fromStdString(item["address"].get<std::string>());
+                    if (!Settings::isTAddress(a)) {
+                        continue;
+                    }
+                    if (!state->tAddrsFromAccount.contains(a)) {
+                        state->unspentOnlyAddrs.insert(a);
+                        if (!addrs.contains(a)) {
+                            addrs.push_back(a);
+                        }
+                    }
+                }
+            }
+            fnRunKeyBatch(addrs, "dumpprivkey", []() {});
+        });
+    };
+
     json payloadT = {
         {"jsonrpc", "1.0"},
         {"id", "someid"},
         {"method", "getaddressesbyaccount"},
-        {"params", {""} }
+        {"params", json::array_t{""}}
     };
 
     json payloadZ = {
@@ -450,8 +510,19 @@ void RPC::getAllPrivKeys(const std::function<void(QList<QPair<QString, QString>>
         {"method", "z_listaddresses"}
     };
 
-    fnDoBatchGetPrivKeys(payloadT, "dumpprivkey");
-    fnDoBatchGetPrivKeys(payloadZ, "z_exportkey");
+    json payloadU = {
+        {"jsonrpc", "1.0"},
+        {"id", "someid"},
+        {"method", "listunspent"},
+        {"params", json::array_t{0}}
+    };
+
+    // TZU: sequential so U only exports t-addrs not already on the default account
+    fnFetchStringAddresses(payloadT, "dumpprivkey", true, [=] () {
+        fnFetchStringAddresses(payloadZ, "z_exportkey", false, [=] () {
+            fnFetchUnspentAddresses(payloadU);
+        });
+    });
 }
 
 
@@ -611,7 +682,7 @@ void RPC::getInfoThenRefresh(bool force) {
             {"method", "zeronodestats"}
         };
 
-        conn->doRPCIgnoreError(payload, [=](const json& reply) {
+        conn->doRPCIgnoreErrorSafe(payload, [=](const json& reply) {
             auto chainStats = reply["chainStats"].get<json::object_t>();
             auto nodeCount = reply["nodeCount"].get<json::object_t>();
 
@@ -635,7 +706,9 @@ void RPC::getInfoThenRefresh(bool force) {
             if (totalNodes !=0) {
                 double znPayment = chainStats["zeronodepayment"].get<double>();
                 dailyIncome = (720/totalNodes) * znPayment;
-                roi = ((dailyIncome * 365)/10000) * 100;
+                // Annual ROI % on 10,000 ZER locked
+                // roi = ((dailyIncome * 365)/10000) * 100;
+                roi = (dailyIncome * 365)/100;
             }
             ui->currentRoi->setText(QString::number(roi, 'f', 2) + "%");
             ui->dailyIncome->setText(QString::number(dailyIncome, 'f', 8));
@@ -650,7 +723,7 @@ void RPC::getInfoThenRefresh(bool force) {
             {"method", "getnetworksolps"}
         };
 
-            conn->doRPCIgnoreError(payload, [=](const json& reply) {
+            conn->doRPCIgnoreErrorSafe(payload, [=](const json& reply) {
                 qint64 solrate = reply.get<json::number_unsigned_t>();
 
                 ui->numconnections->setText(QString::number(connections));
@@ -664,7 +737,7 @@ void RPC::getInfoThenRefresh(bool force) {
             {"method", "getnetworkinfo"}
         };
 
-        conn->doRPCIgnoreError(payload, [=](const json& reply) {
+        conn->doRPCIgnoreErrorSafe(payload, [=](const json& reply) {
             QString clientname    = QString::fromStdString( reply["subversion"].get<json::string_t>() );
             qint64 nodeVersion    = reply["version"].get<json::number_unsigned_t>();
             qint64 protocolversion    = reply["protocolversion"].get<json::number_unsigned_t>();
@@ -684,7 +757,7 @@ void RPC::getInfoThenRefresh(bool force) {
         };
 
 
-        conn->doRPCIgnoreError(payload, [=](const json& reply) {
+        conn->doRPCIgnoreErrorSafe(payload, [=](const json& reply) {
             auto supply = reply["supply"].get<double>();
 
             ui->chainValue->setText(QString::number(supply, 'f', 8));
@@ -697,7 +770,7 @@ void RPC::getInfoThenRefresh(bool force) {
             {"method", "getinfo"}
         };
 
-        conn->doRPCIgnoreError(payload, [=](const json& reply) {
+        conn->doRPCIgnoreErrorSafe(payload, [=](const json& reply) {
             auto walletversion = reply["walletversion"].get<double>();
 
             ui->walletVersion->setText(QString::number(walletversion, 'f', 0));
@@ -710,7 +783,7 @@ void RPC::getInfoThenRefresh(bool force) {
             {"method", "getmininginfo"}
         };
 
-        conn->doRPCIgnoreError(payload, [=](const json& reply) {
+        conn->doRPCIgnoreErrorSafe(payload, [=](const json& reply) {
             auto generate = reply["generate"].get<json::boolean_t>();
             if (generate) {
                 ui->mining->setText("Node is mining");
@@ -726,7 +799,7 @@ void RPC::getInfoThenRefresh(bool force) {
             {"method", "getblockchaininfo"}
         };
 
-        conn->doRPCIgnoreError(payload, [=](const json& reply) {
+        conn->doRPCIgnoreErrorSafe(payload, [=](const json& reply) {
             auto progress    = reply["verificationprogress"].get<double>();
             bool isSyncing   = progress < 0.9999; // 99.99%
             int  blockNumber = reply["blocks"].get<json::number_unsigned_t>();
@@ -1304,7 +1377,7 @@ void RPC::watchTxStatus() {
         {"method", "z_getoperationstatus"},
     };
 
-    conn->doRPCIgnoreError(payload, [=] (const json& reply) {
+    conn->doRPCIgnoreErrorSafe(payload, [=] (const json& reply) {
         // There's an array for each item in the status
         for (auto& it : reply.get<json::array_t>()) {
             // If we were watching this Tx and its status became "success", then we'll show a status bar alert
@@ -1413,10 +1486,11 @@ void RPC::checkForUpdate(bool silent) {
                     }
                 }
             }
+        } catch (const std::exception& e) {
+            qDebug() << QString("Exception checking for updates!");
         }
         catch (...) {
-            // If anything at all goes wrong, just set the price to 0 and move on.
-            qDebug() << QString("Caught something nasty");
+            qDebug() << QString("Caught something nasty checking for updates");
         }
     });
 }
