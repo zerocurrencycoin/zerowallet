@@ -8,7 +8,7 @@ Project document for history, directions, design decisions, planning, issue trac
 
 **Content policy:** Prefer moving content to user-facing docs unless undecided, controversial, sensitive to coin perceptions, or commercial. See §Content policy below. Active items from this document: [TODO](TODO.md).
 
-**Quick find:** [macOS release: sign, strip, DMG gotchas and fixes](#macos-release-pitfalls-and-solutions) · [Release message handler and qDebug](#release-message-handler-and-qdebug) · [Linux Qt packaging and modules](#linux-qt-packaging-options-and-modules)
+**Quick find:** [Zcash proving parameters (params download)](#zcash-proving-parameters-params-download) · [Error handling and crash prevention](#error-handling-and-crash-prevention) · [Remaining upstream fixes (STAB, P1, P2)](#remaining-upstream-fixes-stab-p1-p2) · [macOS release: sign, strip, DMG gotchas and fixes](#macos-release-pitfalls-and-solutions) · [Release message handler and qDebug](#release-message-handler-and-qdebug) · [Linux Qt packaging and modules](#linux-qt-packaging-options-and-modules)
 
 ---
 
@@ -51,7 +51,7 @@ Project document for history, directions, design decisions, planning, issue trac
 *Copy of the end-group sent to Zero repo UpdateZero.md for routing. Merge of group at the end for review.*
 
 - **→ ZeroCoin.md (Zero repo):** Consolidate history, consensus params, subsidy, halving, zeronodes, supply, ops; MAX_MONEY vs supply; “3888 ZER” clarification.
-- **→ Subsidy.md (Zero repo):** §11.3 founders value fix; §15.5 P2P alert decision.
+- **→ Subsidy.md (Zero repo):** §11.3 founders value fix.
 - **→ README.md (Zero repo):** Clarify “Stable supply is 3888 ZER” (total supply vs emission rate).
 - **→ doc/tor.md (Zero repo):** subver MagicBean → Ambrym.
 - **→ zerowallet:** No transfer; zerowallet scope unchanged.
@@ -60,7 +60,7 @@ Project document for history, directions, design decisions, planning, issue trac
 
 ## Branch
 
-- **Main line**: `zerowallet-merge`. Future work: branch from and merge into `zerowallet-merge`.
+- **Main line**: `zerowallet-merge`. Experimental upstream ports: `upstream-port` (build/validate before commit).
 
 ---
 
@@ -130,10 +130,6 @@ SilentDragon/master ← ALTERNATE UPDATE SOURCE
 
 **Version:** Newer than Safewallet/SilentDragon (2015–2023 license, `userData` param, `SendMode`). Upstream files in `.gitignore`: `.github/`, `examples/`, `CMakeLists.txt`, etc. — not needed for build.
 
-### Zero / Zcash Divergence (Advice)
-
-Zero still has full P2P alert code (alertkeys.h, sendalert.cpp, alert_tests.cpp). Zcash removed it Aug 2025. This belongs in a Zero full node document (e.g. Subsidy.md §15.5 or UpdateZero), not in zerowallet docs.
-
 ### Subsidy.md (Zero Full Node Repo)
 
 **Subsidy.md** in Zero full node repo root — project document (like UpdateWallet). Documents block subsidy, halving, founders reward (7.5%), zeronode payments (20–40%), consensus constants. **§15 Addresses and Keys in Code** — wallet-relevant:
@@ -178,13 +174,333 @@ macOS injects items into the Edit menu ("Start Dictation", "Emoji & Symbols", "W
 
 **Proposed helper:** `defaultFileDialogDir()` returning `QStandardPaths::writableLocation(QStandardPaths::HomeLocation)`.
 
+### Payment URI (`zero:`) parsing
+
+**Code:** `Settings::parseURI()` in `settings.cpp` (ported from safewallet `ef8b97a` / [zecwallet #204](https://github.com/ZcashFoundation/zecwallet/issues/204)).
+
+**Format:** `zero:<address>?amt=<amount>&memo=<payload>` (also `amount`, `msg`, `message` for amount/memo keys). Address is extracted with the same regex as before; the query string uses **`QUrlQuery`**, not manual `split("&")` / `split("=")`.
+
+**Base64 memos:** Shielded memos are often base64 (with `=` padding). The old parser split on every `=`, which broke memos or rejected the whole URI. `QUrlQuery` treats only the first `=` per pair as the separator, so **base64 and percent-encoded memo values are supported**.
+
+**Query keys (case-sensitive):** Lookup uses `QUrlQuery::hasQueryItem` / `queryItemValue` with **literal** key names: `amt`, `amount`, `memo`, `msg`, `message`. Unlike the pre-`QUrlQuery` code, keys are **not** lowercased before match — `Memo=` or `AMT=` will not match. Use lowercase keys in URIs (normal for Zcash-style payment URIs).
+
+**Errors vs silence:**
+
+| Situation | Old behavior | Current behavior |
+|-----------|--------------|------------------|
+| Unknown query key (e.g. `label=foo`) | Ignored | Ignored |
+| Malformed pair without `=` | **`ans.error` set; whole URI fails** | Qt/`QUrlQuery` skips; address (+ other valid keys) may still parse |
+| Memo with `=` inside value | Often failed or truncated | Parsed correctly |
+| Address-only `zero:…` (no `?`) | OK | OK (`?` stripped only when present) |
+
+**Display:** `paymentURIPretty()` still runs `QUrl::fromPercentEncoding` on memo for display; `queryItemValue` already returns decoded text from `parseURI`.
+
+**Consumers:** Second-instance URI forwarding (`SingleApplication`), send/receive prefill, transaction memos containing `zero:…`, request dialog.
+
+**Related security:** Memo **HTML phishing** is separate — `QMessageBox` uses `Qt::PlainText` and tooltips use `toHtmlEscaped()` (`mainwindow.cpp`, `txtablemodel.cpp`).
+
+### Zcash proving parameters (params download)
+
+Single reference for param files, search paths, download behavior, Pirate/SevenSeas comparison, and open questions. **Cryptography runs in zerod**, not the Qt wallet.
+
+#### Who loads what
+
+| Component | Loads params for proving? | Role |
+|-----------|---------------------------|------|
+| **zerod** | **Yes** — Sprout + Sapling at startup (`ZC_LoadParams` / `pzcashParams`) | Shielded verify/prove; exits with error if files missing |
+| **zerowallet** | **No** | Preflight: `verifyParams()` → optional `downloadParams()` → then start/connect zerod |
+| **zero-cli** | Same as zerod when run standalone | Uses node param dir |
+
+Wallet download success does **not** guarantee zerod finds files unless both use the **same directory** (default: user home — see below).
+
+#### Required files (all five)
+
+| File | Size (approx.) | Source URL |
+|------|----------------|------------|
+| `sapling-spend.params` | ~48 MB | `https://z.cash/downloads/sapling-spend.params` |
+| `sapling-output.params` | ~3 MB | `https://z.cash/downloads/sapling-output.params` |
+| `sprout-proving.key` | ~910 MB | `https://z.cash/downloads/sprout-proving.key` |
+| `sprout-verifying.key` | ~1.5 KB | `https://z.cash/downloads/sprout-verifying.key` |
+| `sprout-groth16.params` | ~3.6 MB | `https://z.cash/downloads/sprout-groth16.params` |
+
+All Qt wallets in the fork chain download from **z.cash** only (no IPFS/mirror in wallet code). **PirateOcean** node ships `zcutil/fetch-params.sh` / `fetch-params.bat` / NSIS installer with **wget + optional IPFS** fallback — wallet does not use that script.
+
+#### Directory paths (platform)
+
+| OS | Runtime dir (`ZC_GetParamsDir` — PirateOcean / Zcash lineage) | Wallet `zcashParamsDir()` (`connection.cpp`) |
+|----|----------------------------------------------------------------|-----------------------------------------------|
+| Linux | `~/.zcash-params` | `~/.zcash-params` — **same** |
+| macOS | `~/Library/Application Support/ZcashParams` | `~/Library/Application Support/ZcashParams` — **same** |
+| Windows | `%APPDATA%\ZcashParams` | `%APPDATA%\ZcashParams` (via `AppDataLocation/../../ZcashParams`) — **same** |
+
+Wallet creates the directory if missing before download. **No `-paramsdir`** is passed when starting embedded zerod (`connection.cpp` 398–405).
+
+#### Search path: zerod vs zerowallet
+
+| Layer | Where it looks | zerowallet today | safewallet | SevenSeas (Pirate Qt) |
+|-------|----------------|------------------|------------|------------------------|
+| **zerod** | `ZC_GetParamsDir()` only (PirateOcean: `util.cpp` `ZC_GetBaseParamsDir`) — **home paths above**; no cwd/DMG fallback in PirateOcean | Same as Zero lineage (confirm in Zero repo) | safecoind comment says keep in sync with wallet DMG paths — **node may search more** | komodod/pirated — home only |
+| **Wallet `verifyParams()`** | Gates first connect | **Home only** — all 5 files must exist | Home **or** cwd `..` / `../safecoin` / `/Applications/.../MacOS` / `./safewallet.app/...` — **sapling only** for bundle paths (`4d48322`) | Home only — all 5 files |
+| **Wallet `downloadParams()`** | Target write dir | Always **`zcashParamsDir()`** (home) | Always home (`37e7905`) | Always home |
+| **Release bundle** | Beside binary | **Not bundled** (`mkrelease-mac.sh` has no params copy) | `mkmacdmg.sh` copies sapling `.params` into `Contents/MacOS/` | No bundle copy in SevenSeas scripts |
+
+**Gap:** safewallet `verifyParams()` can return true when sapling files sit in `Contents/MacOS/` but **sprout** files are only in home — and zerod still needs all five under `ZC_GetParamsDir()`. Bundle-only sapling does not fully satisfy zerod unless sprout is also present in home or node searches beside binary.
+
+**Embedded zerod cwd:** On Linux/macOS, `QProcess::start(zerod)` does **not** set working directory to `Contents/MacOS` (Windows sets cwd to app dir). Inherited cwd is whatever launched ZeroWallet — so “params beside binary” only helps if **zerod** implements cwd-relative search, not wallet `verifyParams()`.
+
+#### First-connect flow (zerowallet)
+
+```
+doAutoConnect()
+  → verifyParams() [home, 5 files]
+  → if false: downloadParams() [z.cash → home, .part rename]
+  → autoDetectZcashConf() / start embedded zerod
+  → zerod: ZC_LoadParams() from ZC_GetParamsDir()
+```
+
+PirateOcean error if node files missing (`init.cpp`): *“Cannot find the starter Zcash network parameters…”* pointing at `ZC_GetParamsDir()` and `fetch-params.sh`.
+
+#### Pirate / SevenSeas settings (wallet — not node)
+
+**SevenSeas** (`~/Work/ZK/ZKs/SevenSeas`) is the Pirate-chain Qt wallet; **PirateOcean** is the full node. Params behavior matches zerowallet (home download, 5 files, same URLs). **First-run `PIRATE.conf`** differs from zerowallet `zero.conf`:
+
+| Key | zerowallet | SevenSeas |
+|-----|------------|-----------|
+| `deletetx` / retention | `1`, `keeptxnum=1`, `keeptxfornblocks=1` | — |
+| `consolidation` | `1`, fee, addresses UI | — |
+| `rpcallow` | — | `127.0.0.1` |
+| `addressindex` | — | — |
+| `rpcworkqueue` | `256` | — |
+| Params UI / settings | None — automatic on connect | None — same |
+
+SevenSeas has **no** Settings entries for params path, DeleteTx, or consolidation. Operator `deletetx` for Pirate is **manual** in `PIRATE.conf` (community docs), same pattern as noted in §DeleteTx.
+
+**PirateOcean node** (for release/ops, not wallet port): `zcutil/fetch-params.sh`, Windows NSIS `install.nsi`, and `fetch-params.bat` all target the same home `ZcashParams` / `.zcash-params` paths as the wallets.
+
+#### Open questions (params — decide before STAB-4 / release work)
+
+1. **macOS DMG:** Bundle all five params beside `zerod`, bundle sapling-only, or rely on first-run download only? safewallet bundles **sapling only** in `mkmacdmg.sh`.
+2. **Wallet ↔ node coordination:** If params are bundled in `.app/Contents/MacOS/`, should wallet **copy** them to home on first run, or should embedded zerod get **`-paramsdir=<MacOS>`**?
+3. **Zero node search path:** Does zerod (Zero repo) search cwd / binary dir like safewallet’s comment implies for safecoind? PirateOcean does **not** — wallet DMG fallbacks are useless without matching node code.
+4. **verifyParams strictness:** zerowallet requires all 5 in home; safewallet accepts sapling-only beside bundle. Align with download list or relax gate?
+5. **Offline / mirror:** Wallet only uses HTTPS z.cash; no resume UX beyond `.part` files. Use Pirate-style IPFS fallback or ship params in tarball?
+6. **Sprout still required?** All five still downloaded though Sprout is legacy; zerod still loads sprout keys at startup in PirateOcean.
+7. **Symlinks:** `verifyParams()` uses `QFile(...).exists()` for param files; `QFile::exists()` (STAB-2) applies to **zerod binary** lookup, not params today.
+
+#### Wallet upstream scope (params)
+
+| Action | Priority | Notes |
+|--------|----------|-------|
+| Keep home-only **download** (`37e7905`) | Done | Already true |
+| Port safewallet multi-path `verifyParams()` (STAB-4) | **Low / defer** | Does not fix zerod without node + release coordination |
+| Bundle params in `mkrelease-mac.sh` | **Zero release** | With zerod search or wallet copy/`-paramsdir` |
+| Pass `-paramsdir` to embedded zerod | **Design decision** | Only if bundling beside binary |
+
+See also §Remaining upstream fixes (STAB, P1, P2).
+
+### Error handling and crash prevention
+
+How the wallet avoids crashes from RPC/network/JSON failures, what upstream fixed, and what remains on `upstream-port`.
+
+#### Defense layers (architecture)
+
+| Layer | Mechanism | Location |
+|-------|-----------|----------|
+| **RPC transport** | `doRPC` / `doRPCWithDefaultErrorHandling` / `doRPCIgnoreError` | `connection.cpp`, `connection.h` |
+| **Shutdown** | `shutdownInProgress` skips late callbacks | `Connection::doRPC`, `doBatchRPC` |
+| **Batch RPC** | Empty `responses` on network/parse failure; timer waits for all replies | `connection.h` `doBatchRPC` |
+| **Optional RPC** | `doRPCIgnoreError` — failure → **no success callback** (silent) | Daemon tab polls, export address fetch |
+| **User RPC** | `doRPCWithDefaultErrorHandling` — shows `showTxError` | Send, import, export key dump |
+| **External HTTP** | `try` / `catch (...)` around JSON parse | `refreshZECPrice`, ZBoard fetch |
+| **Null data guards** | `conn == nullptr`, `getAllBalances() != nullptr` before dereference | `rpc.cpp`, `mainwindow.cpp`, `viewalladdresses.cpp` |
+| **JSON typing** | nlohmann `json::parse(..., nullptr, false)` + `is_discarded()` | RPC replies, price API |
+
+**Crash pattern:** callbacks that call `reply["field"].get<T>()` without guards when `result` is null, wrong shape, or missing fields.
+
+#### RPC failure scenarios and handling (reference)
+
+**`doRPC` core** (`connection.cpp`) — all wrappers use this:
+
+| Situation | `cb` (success) | `ne` (error handler) | Typical wrapper |
+|-----------|----------------|----------------------|-----------------|
+| Network failure (refused, timeout, TLS) | Not called | Called | Show or ignore per wrapper |
+| HTTP body not JSON / not object | Not called | Called | Same |
+| HTTP 200, JSON-RPC `"error": {...}` | Not called | Called | Same |
+| HTTP 200, valid `"result"` | Called with `result` | Not called | — |
+| `shutdownInProgress` | Not called | Not called | — |
+
+**`doRPCWithDefaultErrorHandling`** — user-initiated RPC (send, import, single-key export, `getinfo` connect path with custom `ne` elsewhere):
+
+- On failure: `showTxError` with RPC message or `QNetworkReply` string.
+- Success `cb` only on valid result.
+- **Use when:** user must know something failed.
+
+**`doRPCIgnoreError`** — background / optional / multi-path aggregation:
+
+- On failure: silent (no dialog).
+- Success `cb` may never run; UI stays stale.
+- **Use when:** polling daemon tab, export address **list** fetch (T/Z/U), migration status.
+- **Still needs:** null/shape checks or `try/catch` inside `cb` — ignoring transport errors does not make `result` safe to `.get<>()`.
+
+**`doBatchRPC`** (`connection.h`) — parallel posts, timer until `responses.size() == totalSize`:
+
+| Situation | Behavior today | Risk |
+|-----------|----------------|------|
+| `payloads.isEmpty()` | Returns immediately; **no `cb`** | Export handles via empty-path counter (KEY-1) |
+| Per-item network error | Stores `json::object()` for that key | Export skips non-string key with log |
+| Per-item JSON-RPC error | Stores `parsed["result"]` (may be null) | `.get<string>()` can throw if not guarded |
+| Reply never arrives | Timer loops forever | Hang (export stall) |
+| Duplicate parse logic | Does not use fixed `doRPC` | JSON-RPC error not filtered like `doRPC` |
+
+**Phased hardening plan (decided):**
+
+| Phase | What | When |
+|-------|------|------|
+| **Now (done)** | `doRPC` return + JSON-RPC error gate; `checkForUpdate` catch; KEY-1 TZU export; critical `getAllBalances` guards | `upstream-port` |
+| **Next** | STAB-1/2; `doRPCIgnoreErrorSafe` on poll RPCs; `doBatchRPC` JSON-RPC error gate | **Done** (`upstream-port`) |
+| **Soon** | `doBatchRPC` batch timeout; optional `getinfo` main-path try/catch | |
+| **Later** | Unified `Connection::doRPCEx(payload, onSuccess, RpcErrorPolicy)` | See §Postponed backlog |
+
+**Unified approach (target):** one implementation (`doRPC`), policy enum `{ ShowDialog, Ignore, Custom }`, optional `safeResult` helper for callbacks. **Pragmatic:** keep three wrappers as thin facades over `doRPC` until phase 4; do not block STAB/ daemon fixes on full unification.
+
+#### Private-key export: T `[""]` and path U
+
+**T — `getaddressesbyaccount` with `params: [""]`:** **Certain for Zero.** zerod help text and your CLI: omitted params → error; `""` = default account. zerowallet used `[""]` before KEY-1. safewallet `8febf47` (omit params) is **wrong for Zero** — do not merge.
+
+**Path U — real or hypothetical?**
+
+| Category | Notes |
+|----------|--------|
+| **Not a race** | TZU runs sequentially; U compares after T completes. |
+| **Not empty-wallet behavior** | Fresh wallet: all paths `[]` — normal, no U notice. |
+| **Real but uncommon** | t-addr has UTXOs in `listunspent` but not listed under `getaddressesbyaccount ""` — e.g. `importprivkey` via CLI to a **non-default account**, WIF import with wrong RPC args (see P2-wif), restored `wallet.zero` from older tooling, addresses funded before rescan/account labeling settled. |
+| **Why keep U** | Low cost when empty; prevents **silent incomplete export** in those cases; notice only when U-only addrs exist. |
+| **Not for** | Sprout/chain archaeology, parallel RPC bugs, or minconf `-2` vs `0` on empty wallet (unproven). |
+
+#### `ezcashd` vs `ezerod` naming
+
+| | |
+|--|--|
+| **Binary** | `zerod` / `zerod.exe` |
+| **Code** | `QProcess* ezcashd`, `setEZcashd`, `getEZcashD` — zecwallet lineage |
+| **Recommendation** | **Keep `ezcashd` for now** on `upstream-port`. Rename to `embeddedZerod` / `zerodProcess` is clarity-only, wide diff (`connection.cpp`, `rpc.h`, comments), no functional gain. Optional dedicated cleanup PR later; not mixed with STAB/security ports. |
+
+#### P2-wif (`cd4832d`) — reasons deferred
+
+`importTPrivKey` today passes `(privkey, rescan?"yes":"no")` as `importprivkey` params — second arg is **account label**, not rescan (`rpc.cpp` 296–301).
+
+| Reason to defer | Detail |
+|-----------------|--------|
+| **Import path unclear** | `doImport` treats non-`SK`/`secret` lines as t-keys (`mainwindow.cpp` 993–997) — may be WIF or other formats; fix assumes WIF → `importprivkey` with `""` account. |
+| **Rescan semantics** | safewallet `cd4832d` drops rescan from RPC call (`{ privkey, "" }` only); wallet still sets `rescan` flag on **last** key in batch — behavior change needs test plan. |
+| **Low exposure** | Settings paste-import is uncommon vs receive/send; wrong import mis-labels keys but may not crash. |
+| **When to fix** | Before advertising “import WIF from clipboard” or if QA hits import failures. One-line RPC param fix + manual test. |
+
+#### `getAllBalances` guards — sendtab
+
+| Site | Guard? | OK? |
+|------|--------|-----|
+| `updateFromCombo` | Yes (202–203) | **Yes** — gates combo population |
+| `maxAmountChecked` | Yes (463) | **Yes** |
+| `setDefaultPayFrom` / `inputComboTextChanged` / `confirmTx` | No | **OK for now** — only run after combo filled from `updateFromCombo` / user selection; `balancesReady()` gates first-time send. Optional one-line guards = defense in depth, not critical. |
+
+#### z-board
+
+Legacy **Zcash-era bulletin board** (Help → z-board.net): post short messages via shielded tx + memo to forum addresses (`mainwindow.cpp` `postToZBoard`, `zboard.ui`). Fetches topics over **HTTP** `http://z-board.net/listTopics` (`rpc.cpp` 1611). Third-party service; may be dead or untrusted today. Documented as postponed: HTTPS or disable (`TODO.md`, §Detected Errors). Unrelated to export/RPC hardening.
+
+#### Upstream crash fixes (safewallet) vs zerowallet
+
+| Commit | Area | Fix | zerowallet |
+|--------|------|-----|------------|
+| `9549801` | `checkForUpdate` | `catch (const std::exception&)` before `catch (...)` | **Done** |
+| `86c8c58` | theme/currency `e.what()` | Skip — zerowallet uses `catch (...)` without `what()` | **Skip** |
+| KEY-1 / `82aa00a` / `2339993` | TZU export | **Done** |
+| `09e25c9` | Receive tab balances | **Done** (+ other guards) |
+| safewallet daemon try/catch | `getnodeinfo` | `doRPCIgnoreErrorSafe` on poll RPCs | **Done** |
+
+#### Local gaps (remaining)
+
+| Issue | Status |
+|-------|--------|
+| `doRPC` parse/error gate | **Done** |
+| Daemon tab / poll RPCs | **Done** — `doRPCIgnoreErrorSafe` |
+| `doBatchRPC` JSON-RPC error on batch items | **Done** |
+| `doBatchRPC` timeout | **Postponed** |
+| `getInfoThenRefresh` main `getinfo` success cb | Optional try/catch |
+| sendtab extra guards | Optional |
+
+#### Port priority (crash prevention)
+
+1. ~~STAB-1 + STAB-2~~ **Done**  
+2. ~~P1-daemon / `doRPCIgnoreErrorSafe`~~ **Done**  
+3. ~~`doBatchRPC` error filtering~~ **Done**  
+4. Optional: `getinfo` main path, sendtab guards  
+5. See §Postponed backlog: P2-wif, unified `doRPCEx`, z-board
+
+### Remaining upstream fixes (STAB, P1, P2)
+
+Status on branch `upstream-port` unless noted. Build/run before commit.
+
+#### P0 (next)
+
+| ID | Commits | Files | What | Status |
+|----|---------|-------|------|--------|
+| **KEY-1** | `8febf47`, `fb07f35`, `82aa00a`, `2339993` (ideas) | `rpc.cpp` | **3-path TZU `getAllPrivKeys`:** T `getaddressesbyaccount` **`[""]`** (required by zerod), Z `z_listaddresses`, U `listunspent` `0` for addrs not on T; sequential TZU; `doRPCIgnoreError`; U recovery notice | **Done** on `upstream-port` |
+
+#### P1 — stability and hardening
+
+| ID | Commit | File(s) | What | zerowallet today | Port action |
+|----|--------|---------|------|------------------|-------------|
+| **STAB-1** | `5652c56` | `connection.cpp` | `start(prog, QStringList())` all platforms | **Done** |
+| **STAB-2** | `f9bb79d` | `connection.cpp` | `QFile::exists` for zerod binary | **Done** |
+| **STAB-3** | `37e7905` | `connection.cpp` | Download params to user home only; drop `/usr/share` fallback | Home-only `zcashParamsDir()`; no `/usr/share` | **Done** |
+| **STAB-4** | `4d48322`+ | `connection.cpp` (safewallet) | DMG/cwd sapling lookup in `verifyParams()` | Home-only, all 5 files | **Defer** — see §Zcash proving parameters |
+| **P1-mem** | `9549801` | `rpc.cpp` | `checkForUpdate`: catch `std::exception` before `catch (...)` | **Done** (`upstream-port`) | — |
+| **P1-exc** | `86c8c58` | `mainwindow.cpp` | Theme/currency: do not call `e.what()` | Uses `catch (...)` without `what()` | **Skip** |
+| **P1-rpc** | (local) | `connection.cpp` | `return` after bad parse; skip `cb` on JSON-RPC `error` | **Done** — safewallet **same bug** (`isNull` then `cb`, no return) | — |
+| **P1-daemon** | (local) | `connection.cpp`, `rpc.cpp` | `doRPCIgnoreErrorSafe` — try/catch + null guard on poll callbacks | **Done** |
+
+#### P2 — UX and import
+
+| ID | Commit | File(s) | What | zerowallet today | Port action |
+|----|--------|---------|------|------------------|-------------|
+| **P2-sync** | `b9f1ea3` | `connection.cpp` | After RPC connect: delay **3s→5s** before `doRPCSetConnection`; loading poll **6s→10s** | Success path: **no** delay before `doRPCSetConnection` (478); poll **1s** (505) | **Optional** — different from safewallet; evaluate if splash/RPC races occur |
+| **P2-send** | `5c06218` | `mainwindow.cpp`, `mainwindow.ui`, `rpc.cpp` | Hide **Send** until fully synced or tx confirmed | `lblSyncWarning` only (`rpc.cpp` 796–797); Send stays enabled | **Optional UX** — reduces unsynced sends |
+| **P2-wif** | `cd4832d` | `rpc.cpp` | `importprivkey` account `""` | Wrong RPC shape | **Postponed** — POST-WIF |
+
+#### Not in STAB table (do not confuse)
+
+- **`b9f1ea3` is not STAB-1** — timer delays only, not spaces-in-path.
+- **SEC-1, SEC-2** — merged (memo phishing, `QUrlQuery`).
+- **DeleteTx `1`/`1` vs zerod `200`/`10000`** — zerowallet product choice, not safewallet port; see §DeleteTx.
+
+#### Suggested port order
+
+1. **KEY-1** (P0) — functional gap for export  
+2. **STAB-1** + **STAB-2** (P1) — daemon launch reliability  
+3. **P2-wif** — if import-from-clipboard is in test plan  
+4. **P1-mem** / **P1-exc** — quick hardening  
+5. **P2-sync** / **P2-send** — only if QA shows race or user confusion  
+6. Params **release/node** decisions (§ open questions) — parallel track in Zero repo, not wallet STAB-4
+
+#### Validation tied to remaining fixes
+
+| Fix | Test |
+|-----|------|
+| KEY-1 | Wallet with unlabeled/imported funded t-addr: export includes it via U + notice; fresh empty wallet: all RPCs `[]`, export empty, no notice |
+| STAB-1 | Install under path with spaces; embedded zerod starts |
+| STAB-2 | Broken symlink at `zerod` path → clean “not found” (not false positive) |
+| P2-wif | Import WIF via Settings; key appears in default account; rescan behavior as expected |
+| P2-send | While `verificationprogress` &lt; 99.9%, Send hidden (if ported) |
+| Params | Fresh machine: wallet downloads 5 files to home; embedded zerod starts without param error |
+
 ### zerod Features: Document and Test Coverage
 
 | Feature | zerod config / RPC | zerowallet code | Test coverage |
 |---------|--------------------|-----------------|---------------|
 | **rescan** | `rescan=1` in zero.conf; restart zerod | `rpc.cpp` remove rescan after use; `mainwindow.cpp` import keys with rescan; `connection.cpp` rescan detection | Manual: import key, external zerod restart |
 | **reindex** | `reindex=1` in zero.conf; restart zerod | `rpc.cpp` remove reindex after use; Settings Reindex button writes to conf, restarts wallet | Manual: Settings → Reindex, restart |
-| **deletetx** | `deletetx=1` in zero.conf | `mainwindow.cpp` 734–747 toggle; `connection.cpp` 670, 707; `settings.cpp` 144, 243 | Manual: Settings → Wallet Config |
+| **deletetx** | `deletetx=1` (+ `keeptxnum`, `keeptxfornblocks`) in zero.conf | `mainwindow.cpp` 732–747 toggle; `connection.cpp` 201–203 (first-run defaults), 667–668; `settings.ui` chkDeleteTx | Manual: Settings → Wallet Config → enable; restart embedded zerod. **Not** a wallet UI to delete one transaction — zerod prunes old wallet data. See §DeleteTx and §lblSyncWarning below. |
 | **consolidation** | `consolidation=1`, `consolidationtxfee`, `consolidationaddresses` | `mainwindow.cpp` 543–635, 753–764; `connection.cpp` 206–208, 673–682; `settings.ui` 306, 323, 404 | Manual: enable consolidation, set fee, add addresses |
 | **Custom fields** | consolidation addresses list | `settings.consolidationAddressTable`; `ConsolodationAddressModel`; context menu Copy/Delete | Manual: add/remove addresses |
 | **shield change** | zerod behavior | `websockets.cpp` 688: TODO Respect autoshield change setting | Not implemented |
@@ -192,6 +508,55 @@ macOS injects items into the Edit menu ("Start Dictation", "Emoji & Symbols", "W
 **Gaps:** No automated tests. Shield change setting not wired. Rescan/reindex require zerod restart; external zerod needs manual `-rescan`/`-reindex`.
 
 **Zero test and doc support:** Zero repo ([zerocurrencycoin/Zero](https://github.com/zerocurrencycoin/Zero)) has `doc/`, `contrib/`, `qa/`. `zerod -?` lists command-line options. Sample configs: `contrib/zero.conf`, `contrib/debian/examples/zero.conf`. Reindex, rescan, deletetx, consolidation are zerod config options; Zero's own test coverage and documentation for these live in the Zero repo (e.g. `qa/` RPC tests, UpdateZero.md if present). zerowallet does not duplicate Zero's option docs; consult Zero for authoritative behavior and tests.
+
+### DeleteTx (zerod feature, wallet toggle)
+
+**What it is:** A **zerod** wallet-maintenance option (Komodo/Zero lineage, Zero v3.1.0+), not a “delete this transaction” button in the GUI.
+
+When `deletetx=1`, zerod periodically removes old spent notes/TXOs and outgoing transactions whose inputs are gone, shrinking `wallet.zero` and improving performance. Companion options:
+
+| Option | zerowallet first-run default | Typical production (Zero/Pirate docs) |
+|--------|------------------------------|----------------------------------------|
+| `deletetx` | `1` | `1` |
+| `keeptxnum` | `1` since wallet added feature (2020) | **200** (zerod default if omitted); Pirate ops often **1000** |
+| `keeptxfornblocks` | `1` since wallet added feature (2020) | **10000** (zerod default if omitted) |
+
+**History (this repo):** Commit `05f935b` (Cryptoforge, 2020-11-12, “update settings to include DeleteTx and Consolidation”) added `deletetx=1`, `keeptxnum=1`, `keeptxfornblocks=1` to first-run `zero.conf` and the Settings toggle (which writes the same `1`/`1` values). Before that, autogenerated conf had no DeleteTx keys. **200 / 10000 never appeared in zerowallet source** — they are documented in [Zero v3.1.0 release notes](https://github.com/zerocurrencycoin/Zero/releases/tag/v3.1.0) as zerod daemon defaults when options are omitted, and in Komodo/Hush/Pirate operator guides. Wallet chose `1`/`1` deliberately (minimal retention); consider aligning with zerod defaults in a future change.
+
+**Wallet role:** On first `zero.conf` creation (`connection.cpp`), zerowallet writes the defaults above. Settings → Wallet Config → **Enable DeleteTx** adds/removes `deletetx=1` in `zero.conf` (embedded zerod only). Requires zerod restart to take effect. No per-tx delete in the transactions table.
+
+**Upstream:** safewallet and SevenSeas do **not** expose DeleteTx in their autogenerated confs. Pirate community docs recommend `deletetx=1` manually in `PIRATE.conf`. Zero is the authority.
+
+### lblSyncWarning
+
+Red labels on **Send** and **Receive** tabs (`mainwindow.ui`: `lblSyncWarning`, `lblSyncWarningReceive`):
+
+> “Your node is still syncing, balances may not be updated”
+
+Toggled in `rpc.cpp` `getInfoThenRefresh()` when `verificationprogress < 0.999` (`lblSyncWarning->setVisible(isSyncing)`). Hidden on startup in `mainwindow.cpp`. Informs the user that balances may be stale while IBD/sync is in progress — distinct from DeleteTx.
+
+### Autogenerated `.conf` comparison (first-run wizard)
+
+| Key | zerowallet `zero.conf` | safewallet `safecoin.conf` | SevenSeas `PIRATE.conf` |
+|-----|------------------------|----------------------------|---------------------------|
+| Path | `~/.zero/zero.conf` (platform variants) | `~/.safecoin/safecoin.conf` | `~/.komodo/PIRATE/PIRATE.conf` |
+| `server` | `1` | `1` | `1` |
+| `rpcuser` | `zero` | `safecoin` | `sevenseas` |
+| `rpcpassword` | random 20 chars | random | random |
+| `rpcport` | `23811` | `8771` | `45453` |
+| P2P `port` | — | `8770` | — (daemon CLI args on embed) |
+| `rpcworkqueue` | `256` | `256` | — |
+| `txindex` | `1` | `1` | `1` |
+| `addressindex` | — | `1` | — |
+| `deletetx` / retention | `1`, `keeptxnum=1`, `keeptxfornblocks=1` | — | — |
+| `consolidation` | `1`, `consolidationtxfee=10000` | — | — |
+| `fastsync` | disabled in UI | optional from wizard | — |
+| `rpcallow` / bind | — | — | `rpcallow=127.0.0.1` |
+| `datadir` / `proxy` | optional from wizard | optional | optional |
+
+All three download Sapling/Sprout params from `z.cash` into the user home params dir (`~/.zcash-params` on Linux).
+
+**RPC deployment (decision):** Postpone TLS/HTTPS for wallet↔zerod. Recommended model: wallet and zerod on the **same machine**, RPC to `127.0.0.1` only. Document in user-facing README when remote RPC is discouraged.
 
 ---
 
@@ -263,105 +628,179 @@ Summary of issues we hit with macOS build, sign, strip, and DMG, what we did, an
 
 ## Upstream Update Strategy
 
+**Branch for experimental ports:** `upstream-port` off main line. Merge only after build + validation checklist. No commit until mkdev/mkrelease succeeds locally.
+
+**Reference clones:** `~/Work/ZK/ZKs/safewallet`, `SilentDragon`, `SevenSeas` (Pirate Qt wallet).
+
 ### Current Status
 
 | Item | Value |
 |------|-------|
 | **Common ancestor with safewallet** | `6ec2115e94d61082466c8d1004be9333b0a7e1ab` |
-| zerowallet | 19 commits ahead |
-| safewallet | 197 commits ahead |
+| safewallet ahead of ancestor | ~310 commits (many SAFE branding) |
+| SevenSeas vs safewallet merge-base | `2bd0b47` (shared zecwallet-era history) |
 
-### Key Changes in zerowallet
+### Priority (Jun 2026)
 
-**Zero-Specific Modifications (Commit `f3bf68c`)** — Major rebranding from SAFE to Zero affecting 83 files:
-- **Branding:** Logo, CSS themes, translations, icons
-- **Configuration:** Network settings, RPC parameters
-- **UI:** Labels, dialogs, node management (zeronodes vs safenodes)
-- **Build:** Scripts, packaging, release workflows
+| Priority | Area | Source |
+|----------|------|--------|
+| **P0** | Memo phishing (`PlainText` + `toHtmlEscaped`), payment URI `QUrlQuery` | **Done** on `upstream-port` — see §Payment URI (`zero:`) parsing |
+| **P0** | Private-key export: 3-path `getAllPrivKeys` + empty-list handling | safewallet `8febf47`, `30899ac`, `82aa00a` — §Remaining upstream fixes |
+| **P1** | Daemon launch: spaces in path, `QFile::exists` symlinks | STAB-1, STAB-2 — §Remaining upstream fixes |
+| **P1** | Params: home download done; bundle/search → Zero node + release | §Zcash proving parameters (open questions) |
+| **P1** | Memory/exception hardening | P1-mem, P1-exc — §Remaining upstream fixes |
+| **P2** | Sync poll delays, hide Send until synced, WIF import | P2-sync, P2-send, P2-wif — §Remaining upstream fixes |
+| **Review** | Build/cross-compile fixes | safewallet + SevenSeas build scripts; separate review |
+| **Postponed** | See §Postponed backlog | WIF import, unified RPC, z-board, infra, UI |
+| **Deprioritized** | Mobile / WebSocket (deprecated path) | See §Mobile and WebSocket |
 
-**Recent Improvements (19 commits since fork)**
-1. UI Fixes: Balance view updates, tab improvements
-2. Features: DeleteTx, Consolidation settings, new RPC methods
-3. Development: version bumps
-4. Dependencies: libsodium 1.0.21 update
+### Postponed backlog (no scheduled work)
 
-### Safewallet Upstream Improvements (197 commits)
+Organized by area. Track here and in [TODO](TODO.md); do not mix into active upstream-port unless explicitly promoted.
 
-**Critical Security & Stability**
-- Address validation fixes for private key export
-- Parameter download improvements (ZCash params to home directory)
-- Build system enhancements for cross-platform compatibility
-- Memory management improvements
-- Websocket stability fixes
+| ID | Item | Trigger to revisit | Notes |
+|----|------|-------------------|--------|
+| **POST-RPC** | Unified `Connection::doRPCEx` / `RpcErrorPolicy` enum | Next large `connection.cpp` refactor | Phase 4; keep `doRPCWithDefaultErrorHandling` / `doRPCIgnoreError` / `doRPCIgnoreErrorSafe` as thin wrappers until then |
+| **POST-WIF** | P2-wif `cd4832d` — `importprivkey` `{ key, "" }` not rescan as 2nd arg | QA on Settings paste-import or WIF docs | `importTPrivKey` in `rpc.cpp`; batch rescan semantics need test plan — §P2-wif |
+| **POST-ZBOARD** | z-board.net HTTP API + post UI | Disable feature, or HTTPS/mirror if service still exists | Help → z-board.net; `getZboardTopics` HTTP `listTopics`; MITM risk — §z-board |
+| **POST-TLS** | TLS/HTTPS wallet↔zerod | Remote RPC requirement | Use same-host `127.0.0.1` today |
+| **POST-CRED** | Plain-text RPC creds in `QSettings` | Security audit | OS keychain / encrypt |
+| **POST-DOCKER** | Docker `ubuntu:16.04` → `24.04`; OpenSSL 1.0.2 → 1.1.1 | CI image refresh | `src/scripts/docker/Dockerfile` |
+| **POST-UI** | Market data tab; translation upstream merge; Midnight theme | Product request | safewallet-only cosmetics |
+| **POST-PARAMS** | macOS param bundle / `-paramsdir` / STAB-4 | Zero release + zerod search path decision | §Zcash proving parameters |
+| **POST-BATCH** | `doBatchRPC` completion timeout | Export hang reports | Timer polls forever if reply lost |
+| **POST-NAME** | Rename `ezcashd` → `embeddedZerod` | Dedicated cleanup PR | Cosmetic; binary already `zerod` |
+| **POST-SEND** | Extra `getAllBalances` guards on sendtab | Defense in depth only | Low risk today — §getAllBalances guards |
 
-**New Features**
-- Theme system enhancements (Midnight theme, better CSS)
-- Transaction handling improvements
-- Multi-language support expansions
-- Market data integration
-- Mobile app connectivity improvements
+### Private-key export: 3-path vs 2-path
 
-**SilentDragon Upstream (Active Development)**
-- TLS support for hushd connections
-- Translation system improvements
-- Security enhancements
-- Performance optimizations
+**2-path (SevenSeas / old zerowallet):** `getaddressesbyaccount` `[""]` + `z_listaddresses` only.
 
-### Cherry-Picks (Verify Commits Exist)
+1. **T** — `getaddressesbyaccount` with **`params: [""]`** only (zerod **rejects** omitted params; safewallet `8febf47` omit-params is wrong for Zero)
+2. **Z** — `z_listaddresses` → `z_exportkey`
+3. **U** — `listunspent` with **`minconf: 0`** (same as `getTransparentUnspent`). Runs **after** T so only t-addrs **not** in T are exported; logger + dialog **only if** U finds such addrs.
+
+Sequential TZU; `doRPCIgnoreError` on address fetches; empty paths still advance counter; failed key dumps skipped with log.
+
+**Fresh / empty wallet:** On a brand-new wallet (no t/z addrs, no UTXOs, no keys yet), all three RPCs legitimately return `[]` — that is not a minconf or TZU bug. Export finishes with an empty key list and **no** U notice. Re-test U recovery on a wallet that has funded t-addrs visible in `listunspent` but missing from `getaddressesbyaccount ""` (e.g. after import without account label).
+
+**Zero RPC note:** `getaddressesbyaccount` **without** params errors on zerod; must pass `[""]` for the default account (safewallet `8febf47` omit-params does not apply).
+
+### Spaces in application path (why Linux/Windows, not macOS today)
+
+safewallet `5652c56`: `ezcashd->start(program, QStringList())` instead of `start(program)`.
+
+On **Qt 5**, the single-argument `QProcess::start(const QString &command)` parses `command` as a **shell command line** (splits on spaces). If the app lives under a path like `/Applications/My Wallet/zerowallet.app/.../zerod`, the path can be split incorrectly. The two-argument form `start(program, QStringList())` executes `program` directly with no shell parsing.
+
+**macOS today:** Typical `.app` bundles use `Contents/MacOS/zerod` with no spaces in the executable path; risk is lower but the fix is still correct for installs under `Application Support/...` with spaces. **Windows:** `setWorkingDirectory` + `start(program, QStringList())` — **STAB-1 done** (`connection.cpp`).
+
+### How to review upstream commits before merge
 
 ```bash
-git remote add safewallet https://github.com/Fair-Exchange/safewallet.git
-git remote add silentdragon https://github.com/MyHush/SilentDragon.git
+# In zerowallet, with remotes:
+git remote add safewallet https://github.com/Fair-Exchange/safewallet.git  # once
+git fetch safewallet
 
-# Security
-git cherry-pick 30899ac  # listunspent for private key export
-git cherry-pick 37e7905  # ZCash params download fix
+# Show patch for one commit (prefer over blind cherry-pick):
+git show safewallet/master:<path>   # e.g. src/rpc.cpp
+git diff HEAD safewallet/master -- src/rpc.cpp src/mainwindow.cpp
 
-# Stability
-git cherry-pick 82aa00a  # handle empty lists on unspent queries
-git cherry-pick 2339993  # address null results order
+# Commits since fork (filter noise):
+git log --oneline 6ec2115..safewallet/master --no-merges -- src/rpc.cpp src/connection.cpp src/mainwindow.cpp src/settings.cpp src/txtablemodel.cpp
 
-# Build
-git cherry-pick b9f1ea3  # account for spaces in application path
+# Compare with Pirate wallet (SevenSeas):
+git -C ~/Work/ZK/ZKs/safewallet fetch ../SevenSeas master:sevenseas/master
+git log --oneline sevenseas/master..safewallet/master --no-merges | head
 ```
+
+**Workflow:** (1) Visual review in editor (§Reviewing upstream commits in VS Code/Cursor). (2) Apply on `upstream-port`. (3) **Build and run** before any commit. (4) Validation checklist. (5) One commit per logical fix.
+
+### Reviewing upstream commits in VS Code / Cursor
+
+| Goal | Tool | How |
+|------|------|-----|
+| Browse upstream history | **GitLens** | Repositories → `safewallet` remote → Commits on `safewallet/master`; click commit for per-file diff. |
+| Graph + cherry-pick | **Git Graph** | View graph → right-click commit → Cherry Pick; or `git cherry-pick -n <sha>` for no-commit apply. |
+| Compare branches | Built-in | Command Palette → **Git: Compare References…** → `HEAD` vs `safewallet/master`. |
+| Upstream file at tip | GitLens / `git show` | `git show safewallet/master:src/rpc.cpp` in editor; split with local file. |
+| Inspect before commit | `cherry-pick -n` | Patch in Source Control view; build; then commit or `cherry-pick --abort`. |
+| Merge conflicts | **Merge Editor** | Only if merging; 3-pane resolve. Prefer `-n` cherry-picks here. |
+
+### Private keys: export, import, WIF
+
+| Topic | Convenience | Accuracy | Security |
+|-------|-------------|----------|----------|
+| **Export all keys** | One dialog | **TZU 3-path** (T `[""]`, Z, U); U-only addrs get notice | Plaintext in dialog/file — user must protect output |
+| **Import paste** | Multi-line | `importTPrivKey` uses 2nd param as **account**, not rescan — WIF/rescan wrong | High risk; clipboard exposure |
+| **WIF** | Interop with other wallets | Fix: `importprivkey` + `""` account (safewallet `cd4832d`) — **P2** | Treat like seed phrase |
+
+### Recommended ports (manual; do not blind cherry-pick series)
+
+| ID | Commits / source | Files | Notes |
+|----|------------------|-------|-------|
+| SEC-1 | SevenSeas `f9c7206` or safewallet `212b0e4` | `mainwindow.cpp`, `txtablemodel.cpp` | **Merged** — `PlainText`, `toHtmlEscaped` |
+| SEC-2 | safewallet `ef8b97a` | `settings.cpp` | **Merged** — `QUrlQuery`; see §Payment URI (`zero:`) parsing |
+| KEY-1 | safewallet bundle | `rpc.cpp`, maybe `connection.h` | Full `getAllPrivKeys` 3-path |
+| STAB-1 | `5652c56` | `connection.cpp` | `start(prog, QStringList())` all platforms |
+| STAB-2 | `f9bb79d` | `connection.cpp` | `QFile::exists` for daemon binary |
+| STAB-3 | `37e7905` | `connection.cpp` | Confirm no `/usr/share` fallback (likely already) |
+| STAB-4 | `4d48322`+ | `connection.cpp` (safewallet) | **Low priority for wallet** — DMG/cwd lookup targets **zerod** proving; see §Zcash params. Wallet only downloads to home. |
+
+**Not** `b9f1ea3` in the “spaces” slot — that commit only increases RPC poll timers (3s→5s, 6s→10s).
+
+### Validation after each port
+
+| Check | How |
+|-------|-----|
+| Build | `./src/scripts/mkdev.sh` or platform mkrelease |
+| Connect | Embedded zerod starts; RPC to `127.0.0.1` |
+| Sync warning | `lblSyncWarning` visible while `verificationprogress` &lt; 99.9% |
+| Export keys | All t- and z-addrs listed; include unlabeled t-addr case |
+| Payment URI | `zero:…?memo=` with **base64** memo (contains `=`); lowercase keys only; malformed extra params must not fail whole URI |
+| Memo dialog | HTML in memo displays as plain text |
+| Params | Fresh install: wallet downloads to `~/.zcash-params` (or macOS `ZcashParams`); **zerod** must find same files at runtime — test embedded start, not wallet-only paths |
+| Path with spaces | Install under directory with space; embedded zerod starts (after STAB-1) |
+| Regression | Testing Checklist §Recent Fixes + §Major Functionality |
 
 ### Merge Conflict Strategy
 
-1. **Branding Files** (High conflict): CSS themes, logos, icons — Solution: Manual merge keeping Zero branding
-2. **Configuration** (Medium conflict): Network parameters, RPC settings — Solution: Zero-specific values take precedence
-3. **UI Labels** (Medium conflict): Node management, currency names — Solution: Zero terminology preferred
-4. **Build Scripts** (Low conflict): Release workflows, packaging — Solution: Merge improvements, adapt paths
+1. **Branding** (CSS, logos, `.ts`) — keep Zero; do not take upstream branding commits.
+2. **Configuration** — Zero ports, RPC 23811, `zero.conf` keys.
+3. **UI labels** — zeronodes, ZER, Zero terminology.
+4. **Build scripts** — merge improvements; adapt `ZERO_DIR`, artifact names.
 
-### Automated Merge Process
+### Mobile and WebSocket (deprecated)
+
+**History:** zecwallet Qt (~2019) shipped a phone **companion**: local WebSocket on port 8237, optional **wormhole** relay (`wormhole.zecqtwallet.com`) so a phone could proxy balances, tx list, and sends via the desktop node. Inherited by SilentDragon/safewallet; modern Zcash mobile uses **Electron/light clients**, not this protocol.
+
+**Why deprioritized:** No Zero mobile app; wormhole is third-party Zcash infrastructure; `AnyIPv4` listener adds attack surface without benefit.
+
+**Now:** Connect Mobile **removed from UI** (Apps menu gone; Validate Address under Edit). `websockets.cpp` still built but **unreachable**. May delete later; QtWebSockets link dependency remains until then.
+
+### Glossary (upstream / Pirate UI)
+
+| Term | Meaning |
+|------|---------|
+| **WIF** | Wallet Import Format — base58 private key (`5`/`K`/`L`…). See §Private keys: export, import, WIF. |
+| **NTZ** | **Notarization** (Komodo): `getinfo` fields `notarized`, `notarizedhash`, `notarizedtxid` — cross-chain notarization to KMD. SevenSeas **hushd/zerod tab** shows these (`a8b4a76`). **Not in zerowallet** (Zero may expose via `getinfo` but UI does not). |
+| **netinfo** | SevenSeas `getnetworkinfo` RPC for P2P connection details on daemon tab (`c773131`). zerowallet daemon tab uses different `getinfo` fields only. |
+
+### Midnight theme (safewallet only — reference)
+
+safewallet `res/css/midnight.css` (Charles Sharpe, MIT): flat dark Qt stylesheet — background `#111`, text `#fff`, inputs `#222`, gold focus border `#9d8400`, gradient tabs. Selected in Settings theme dropdown (`midnight`). zerowallet has `zero`, `matrix`, `light`, `blue`, `dark`, etc., but **not** Midnight. Preview: open `~/Work/ZK/ZKs/safewallet/res/css/midnight.css` or run safewallet and select Midnight in settings.
+
+### Automated merge (not recommended wholesale)
 
 ```bash
-git checkout -b upstream-integration
-git merge safewallet/master
-
-# Resolve conflicts systematically:
-# 1. Accept upstream for security/stability
-# 2. Keep Zero branding in UI/config
-# 3. Merge build improvements
-# 4. Test thoroughly
+git checkout upstream-port
+# Prefer file-scoped manual ports (table above), not:
+# git merge safewallet/master
 ```
 
-### Selective Merging (Medium Priority)
-
-**Theme System Updates:** Merge midnight theme and CSS improvements; keep Zero branding intact.
-
-**Translation System:** Merge improved translation handling; update build scripts; maintain Zero-specific language files.
-
-### Feature Integration (Low Priority)
-
-**Market Data Integration:** Evaluate need for market tab; adapt to Zero-specific requirements; test with Zero network endpoints.
-
-**Mobile Connectivity:** Optional, off by default — do not auto-start websockets on app launch; only when user opens Connect Mobile. Wormhole considered broken until verified with Zero mobile apps. AnyIPv4 accepts any host; for same-LAN-only, would need subnet filtering on peer address.
-
-### Upstream Gaps (Not Yet Documented Elsewhere)
+### Upstream Gaps
 
 - RPC logging in safewallet/SilentDragon
-- Alert system deprecation in upstream
-- zerowallet-specific divergence notes beyond branding
+- zerowallet-specific: DeleteTx `1`/`1` defaults vs zerod `200`/`10000`, consolidation UI, zeronode tab
 
 ---
 
@@ -633,7 +1072,7 @@ From `zero-qt-wallet.pro`: `QT += core gui network`, then `QT += widgets` and `Q
 | gui | Qt5Gui | Painting, fonts, images, OpenGL abstraction. |
 | network | Qt5Network | QNetworkAccessManager, RPC HTTP, param downloads. |
 | widgets | Qt5Widgets | UI (windows, dialogs, buttons, tables). |
-| websockets | Qt5WebSockets | Mobile “Direct Connection” (WSServer), wormhole. |
+| websockets | Qt5WebSockets | Legacy mobile path (deprecated; see §Mobile) |
 
 We do *not* use (and `build-qt-static.sh` skips or does not enable): webengine, Qt Quick/QML (beyond what widgets may pull), Qt Multimedia, Qt SQL, etc. MXE build uses `qtbase qtwebsockets` only. SingleApplication is vendored (not a Qt module).
 
@@ -690,21 +1129,21 @@ Both scripts use a separate output dir so they do not overwrite `qt5-static/` fr
 
 ## Version Upgrade Plan
 
-| Package | Plan Current | Target | Verified Current | Notes |
-|---------|---------------|--------|------------------|-------|
-| libsodium | 1.0.18 | 1.0.21 | **1.0.21** | Done. Plan "current" stale. |
-| nlohmann/json | 3.6.1 | 3.12.0 | 3.6.1 | Single-header; 3.12.0 backward-compatible; deprecations only (4.0 prep). |
-| SingleApplication | 3.0.14 | 3.5.4 | 3.0.14 | Usage unchanged in 3.5.x. Submodule or copy. |
-| Qt | 5.9.1 | 5.15.17 | 5.15.18 | Target 5.15.17 (last open-source). |
-| Docker | ubuntu:16.04 | ubuntu:24.04 | ubuntu:16.04 | `src/scripts/docker/Dockerfile`. |
-| OpenSSL | 1.0.2r | 1.1.1w | 1.0.2r | Dockerfile only. 1.0.2 EOL. 1.1.1 API changes; Qt static build may need `-openssl-linked`. |
-| Nayuki QR-Code | (blank) | v1.8.0 | unversioned (~v1.0–1.4) | zerowallet has 6 files; v1.8.0 unified (qrcodegen.hpp/cpp). API identical. Replace 6 with 2, update .pro and include. |
+| Package | Plan Current | Target | **Repo actual** | Notes |
+|---------|---------------|--------|-----------------|-------|
+| libsodium | 1.0.18 | 1.0.21 | **1.0.21** | Done. `fbuild-libsodium.sh`, vendored `res/libsodium.a`. |
+| nlohmann/json | 3.6.1 | 3.12.0 | 3.6.1 | Single-header; low-risk bump. |
+| SingleApplication | 3.0.14 | 3.5.4 | 3.0.14 | Vendored copy. |
+| Qt | 5.9.1 | 5.15.17+ | **5.15.18** | Release: `build-qt-static.sh` → `qt5-static/`. Dev: system Qt 5.15.3–5.15.13 OK. APP_VERSION **4.0.0** (`version.h`) is wallet release, not Qt version. |
+| Docker | ubuntu:16.04 | ubuntu:24.04 | ubuntu:16.04 | **Postponed** — see §Postponed. |
+| OpenSSL | 1.0.2r | 1.1.1w | 1.0.2r | Dockerfile only; postponed with Docker bump. |
+| Nayuki QR | (blank) | v1.8.0 | unversioned | Replace 6 files with 2 when upgraded. |
 
-### Discrepancies
+### Discrepancies (resolved vs doc)
 
-- **libsodium:** Plan says 1.0.18; repo is 1.0.21.
-- **Qt:** Target 5.15.17; cherry-pick 5.15.19 (commercial-only) fixes if needed.
-- **Travis:** Obsoleted. Removed `.travis.yml`.
+- **libsodium:** Repo at 1.0.21 — no open question; scripts and `BUILD.md` agree.
+- **Qt:** Static release builds **5.15.18** from tarball. Last open-source LTS line is 5.15.18; 5.15.19 is commercial-only (cherry-pick only if critical — §Qt 5.15.19 Cherry-Pick). No need to change Qt version for current release unless a security fix requires it.
+- **Travis:** Removed `.travis.yml`.
 
 ---
 
@@ -716,7 +1155,7 @@ Both scripts use a separate output dir so they do not overwrite `qt5-static/` fr
 |----------|-------|----------|
 | ~~`src/connection.cpp:116-123`~~ | ~~Memory leak~~ Fixed: `randomPassword()` now uses `std::string` (RAII) | — |
 | ~~`src/connection.cpp:119`~~ | ~~Buffer index~~ Fixed: `charsetLen = sizeof(charset) - 1` | — |
-| `src/websockets.cpp:28` | WebSocket binds `QHostAddress::AnyIPv4`; mobile is separate device so LocalHost would block it | — |
+| ~~`src/websockets.cpp:28`~~ | ~~Mobile WebSocket~~ Deprecated; UI removed (§Mobile) | — |
 | ~~`src/connection.cpp:115`~~ | ~~Password length 10~~ Fixed: 20 chars, expanded charset (alphanum + `!@#$%^&*()_+-=[]{}|\:;"'<>?,./~`) | — |
 | `src/settings.cpp:242-243` | RPC credentials stored plain text | Medium |
 | `src/rpc.cpp:1538` | HTTP instead of HTTPS for external API calls | Medium |
@@ -725,13 +1164,11 @@ Both scripts use a separate output dir so they do not overwrite `qt5-static/` fr
 
 **signbinaries:** See [BUILD](BUILD.md) §GPG Signatures. `signbinaries.sh` auto-detects (sha256sum / shasum -a 256); run from `artifacts/`.
 
-**WebSocket binding:** Single listen in `websockets.cpp:28` — `WSServer` for mobile "Direct Connection" on port 8237 (hardcoded, `mainwindow.cpp:180`). Address: `QHostAddress::AnyIPv4` (accepts connections from any IP, not just same LAN). LocalHost would block mobile entirely (mobile is a separate device; LocalHost only allows same-machine processes). To restrict to same LAN, would need subnet filtering on peer address. **Recommendation:** Mobile connect optional, off by default — do not auto-start websockets on app launch; only start when user explicitly opens Connect Mobile dialog. **Wormhole relay:** When user checks "Allow connections over the internet via ZeroWallet wormhole", desktop connects to `wss://wormhole.zecqtwallet.com:443` and registers a code; mobile can connect via relay when not on same LAN. **Wormhole status:** Consider broken until verified working with Zero mobile apps. **Once connected, phone does:** getInfo (balances), getTransactions, sendTx — companion app proxies through desktop wallet to zerod.
-
 **Weak password:** `randomPassword()` generates RPC password when wallet creates `zero.conf` (`connection.cpp:197`). Used for zerod RPC auth (`rpcuser=zero`, `rpcpassword=<generated>`). zerod reads from config; no separate zerod password strategy. Fixed: now 20 chars, charset includes `!@#$%^&*()_+-=[]{}|\:;"'<>?,./~`.
 
 **Plain text credentials:** `settings.cpp:241-242` stores `rpcuser`/`rpcpassword` in `QSettings` (macOS: `~/Library/Preferences` plist). **Upstream (safewallet):** Same pattern — `QSettings` for rpcuser/rpcpassword. **Recommendation:** Use OS credential store (Keychain, libsecret) or encrypt before storage; upstream has no fix to cherry-pick.
 
-**HTTP:** Only `rpc.cpp:1537` — `http://z-board.net/listTopics` (ZBoard topics fetch). CoinGecko and GitHub use HTTPS. **Upstream:** safewallet uses HTTPS for explorer/price URLs. **Risk:** HTTP-only is acceptable when traffic stays on same desktop (local RPC, local fetches). Real issue when used across the internet (e.g. remote RPC, relayed traffic) — no confidentiality or integrity. **Recommendation:** Switch to HTTPS if z-board.net supports it; else document risk or make fetch optional.
+**HTTP:** Only `rpc.cpp` — `http://z-board.net/listTopics` (ZBoard). CoinGecko and GitHub use HTTPS. **TLS for zerod RPC:** postponed; use same-machine `127.0.0.1` (see §Autogenerated `.conf` comparison). **z-board:** document risk or disable if HTTPS unavailable.
 
 **randomPassword RAII (implemented):** `std::string` vs `std::unique_ptr<char[]>` — both avoid leaks. `std::string` is simpler: no manual allocation, no explicit delete, idiomatic C++. `std::unique_ptr<char[]>` gives explicit RAII over a raw buffer but adds boilerplate. Recommendation: `std::string` (chosen).
 
@@ -820,7 +1257,7 @@ No package-manager installs for library upgrades — all vendored. For build pre
 
 1. ~~**Memory leak**~~ Fixed: `randomPassword()` uses `std::string` (RAII).
 2. ~~**Buffer index**~~ Fixed: `charsetLen = sizeof(charset) - 1`.
-3. **WebSocket binding** (`src/websockets.cpp:28`): Listens on AnyIPv4. LocalHost not applicable (mobile is separate device). Mobile connect now optional, off by default.
+3. ~~**WebSocket binding**~~ Mobile UI removed; code unreachable (see §Mobile). Revisit if QtWebSockets can be dropped from build.
 
 ### Medium Severity
 
@@ -832,7 +1269,7 @@ No package-manager installs for library upgrades — all vendored. For build pre
 
 1. ~~Fix memory leak~~ Done
 2. ~~Fix buffer index~~ Done
-3. ~~Mobile connect off by default~~ Done
+3. ~~Mobile connect~~ UI removed
 4. ~~Increase password length~~ Done
 5. HTTPS for external APIs (z-board.net)
 
@@ -845,7 +1282,6 @@ No package-manager installs for library upgrades — all vendored. For build pre
 - Theme system (Midnight, CSS) — keep Zero branding
 - Translation improvements
 - Market data — evaluate for Zero
-- Mobile connectivity — test with Zero mobile apps
 
 ### From Upstream (SilentDragon)
 
@@ -877,20 +1313,19 @@ Run before release. zerod must be running and synced (or testnet). Prereq: fresh
 | 3 | **Help / About:** Dialogs open as proper windows (not tool windows); can move, minimize | |
 | 4 | **Import Address Book / Choose data dir:** File dialog opens with correct default path | |
 | 5 | **First run (zero.conf):** Wallet creates `zero.conf` with `rpcuser=zero`, `rpcpassword` 20 chars; zerod accepts credentials | |
-| 6 | **Mobile connect:** Off by default; Connect Mobile not opened until user explicitly opens it | |
-| 7 | **Single instance:** Second launch → primary window raised; payment URI forwarded if passed as arg | |
+| 6 | **Single instance:** Second launch → primary window raised; payment URI forwarded if passed as arg | |
 
 ### Major Functionality
 
 | # | Test | Pass |
 |---|------|------|
-| 8 | **Connect:** zerod running → wallet connects; status shows synced or syncing | |
-| 9 | **Receive:** New shielded address → `z_getnewaddress` succeeds; address in dropdown | |
-| 10 | **Send:** Send tab → enter amount, address, memo → send succeeds | |
-| 11 | **Settings:** Wallet Config, Consolidation addresses → add, copy, delete (context menu) | |
-| 12 | **Address Book:** Add, edit, delete entries | |
-| 13 | **Recurring:** Create recurring payment; list shows entry | |
-| 14 | **Backup:** Backup wallet.zero → file saved | |
-| 15 | **Turnstile:** If shown, completes without hang | |
-| 16 | **DeleteTx:** Settings → DeleteTx option; transaction delete works | |
-| 17 | **QR payment URI:** Open `zero:...` URI → primary window handles; payment prefilled | |
+| 7 | **Connect:** zerod running → wallet connects; status shows synced or syncing | |
+| 8 | **Receive:** New shielded address → `z_getnewaddress` succeeds; address in dropdown | |
+| 9 | **Send:** Send tab → enter amount, address, memo → send succeeds | |
+| 10 | **Settings:** Wallet Config, Consolidation addresses → add, copy, delete (context menu) | |
+| 11 | **Address Book:** Add, edit, delete entries | |
+| 12 | **Recurring:** Create recurring payment; list shows entry | |
+| 13 | **Backup:** Backup wallet.zero → file saved | |
+| 14 | **Turnstile:** If shown, completes without hang | |
+| 15 | **DeleteTx:** Settings → Enable DeleteTx; restart embedded zerod; verify pruning (not per-tx GUI). Note `keeptxnum`/`keeptxfornblocks` in `zero.conf`. | |
+| 16 | **QR payment URI:** `zero:…` with `amt` and base64 `memo`; unknown query keys ignored; open from second instance or OS handler | |

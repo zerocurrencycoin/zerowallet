@@ -6,30 +6,67 @@ Selection of items and issues from project documentation ([UpdateWallet](UpdateW
 
 ## Active
 
+### Upstream ports (`upstream-port`)
+
+- Build/run smoke test before first commit.
+- Params open questions → Zero repo / release (§Zcash proving parameters).
+- Optional: `getinfo` main-path try/catch; sendtab balance guards.
+
 ### Version upgrades (UpdateWallet §Version Upgrade Plan)
+
 - nlohmann/json: 3.6.1 → 3.12.0 (low risk/effort).
 - SingleApplication: 3.0.14 → 3.5.4 (submodule or copy).
 - Nayuki QR-Code: unversioned → v1.8.0 (replace 6 files with 2; update .pro).
-- Qt: 5.15.18 current; 5.15.19 commercial-only cherry-pick only if critical.
-- Docker: ubuntu:16.04 → 24.04 (Dockerfile); OpenSSL 1.0.2 → 1.1.1 (medium risk/effort).
+- Qt: **5.15.18** in static release — no bump unless critical; 5.15.19 commercial-only.
+- libsodium: **1.0.21** — done.
 
-### Security / behavior (UpdateWallet §Detected Errors, §Security Vulnerability Report)
-- Credentials: rpcuser/rpcpassword in QSettings plain text (`settings.cpp:242-243`). Target: OS credential store or encrypt.
-- HTTP: `rpc.cpp:1538` z-board.net listTopics over HTTP. Prefer HTTPS if supported; else document risk.
+### Security / behavior (active, not postponed)
 
-### Futures and wants (UpdateWallet §Futures and Wants)
-- Theme (Midnight, CSS), translations — keep Zero branding.
-- Market data — evaluate for Zero.
-- Mobile connectivity — verify with Zero mobile apps; Wormhole status TBD.
-- TLS for zerod connections (upstream SilentDragon).
-- Cross-compilation: MXE containers, 32-bit Windows, ARM64.
+- Credentials: rpcuser/rpcpassword in QSettings plain text (`settings.cpp`) → see **POST-CRED** when prioritized.
+- RPC: same-host `127.0.0.1` model documented.
 
 ### Build / cross-reference
-- Verify ZERO_DIR layout: mkrelease default `../Zero/src` vs zero_linux/src, zero_win/src output dirs in Zero repo.
+
+- Review safewallet/SevenSeas build script fixes separately from P0 ports.
+- Verify ZERO_DIR layout: mkrelease default `../Zero/src` vs platform output dirs.
 
 ---
 
-## Completed
+## Postponed backlog
+
+Full table: [UpdateWallet §Postponed backlog](UpdateWallet.md#postponed-backlog-no-scheduled-work).
+
+| ID | Summary |
+|----|---------|
+| **POST-RPC** | Unified `doRPCEx` / `RpcErrorPolicy` (replace three wrappers in one refactor) |
+| **POST-WIF** | P2-wif: `importprivkey` with account `""`, not rescan as 2nd arg (`cd4832d`) |
+| **POST-ZBOARD** | z-board.net: HTTP `listTopics`, post UI — disable or HTTPS |
+| **POST-TLS** | TLS for wallet↔zerod |
+| **POST-CRED** | Encrypt / keychain for RPC creds in QSettings |
+| **POST-DOCKER** | Docker 16→24; OpenSSL 1.0.2→1.1.1 |
+| **POST-UI** | Market tab, translations merge, Midnight theme |
+| **POST-PARAMS** | macOS param bundle, STAB-4, `-paramsdir` |
+| **POST-BATCH** | `doBatchRPC` completion timeout |
+| **POST-NAME** | Rename `ezcashd` variable to `embeddedZerod` |
+| **POST-SEND** | Extra sendtab `getAllBalances` guards |
+
+### Deprioritized
+
+- Mobile / WebSocket — UI removed (§Mobile).
+
+---
+
+## Completed (`upstream-port`)
+
+- SEC-1/2: memo phishing, `QUrlQuery`.
+- KEY-1: TZU private-key export (`getAllPrivKeys`).
+- STAB-1/2: `QProcess::start(prog, QStringList())`, `QFile::exists(zerod)`.
+- STAB-3: params download to home.
+- RPC: `doRPC` parse/JSON-RPC error gate; `checkForUpdate` exception catch.
+- RPC: `doRPCIgnoreErrorSafe` on poll paths; `doBatchRPC` JSON-RPC error on batch items.
+- `getAllBalances` guards: Receive, view-all, Z-board from, `updateTAddrCombo`.
+
+### Earlier completed
 
 - **qt-report.sh:** Unified message format; unknown platform single warn; Linux summary conditional (qt5-static/MXE).
 - **Linux release:** `-S`/`--systemqt` for system Qt; resolve_qt, static-link check skip.
@@ -37,4 +74,4 @@ Selection of items and issues from project documentation ([UpdateWallet](UpdateW
 - **BUILD.md:** System status, artifacts, Linux release Qt, build outcomes, binary check, signing.
 - **mkrelease-mac:** `-T`/`--tgz`; explicit `|| err` for critical steps.
 - **Helpers:** fbuild sourcing (qt-report, install_mxe, mkrelease, mkdev); check_file, get_app_from_h; LICENSE removed from packages.
-- **CHANGELOG.md, ZeroChain.md, ZeroCoin.md, SCOPE.md:** Release prep and scope.
+- **libsodium 1.0.21** vendored and build scripts updated.
