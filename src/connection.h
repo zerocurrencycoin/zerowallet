@@ -90,6 +90,13 @@ private:
 };
 
 /**
+ * Run an RPC success callback; swallow exceptions and ignore null results.
+ * Shared by doRPCIgnoreErrorSafe and orchestrator paths (e.g. poll getinfo).
+ * Full error-policy unification → POST-RPC (doRPCEx / RpcErrorPolicy).
+ */
+void invokeRpcCallbackSafe(const std::function<void(const json&)>& cb, const json& reply);
+
+/**
  * Represents a connection to a zcashd. It may even start a new zcashd if needed.
  * This is also a UI class, so it may show a dialog waiting for the connection.
 */

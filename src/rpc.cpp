@@ -619,6 +619,7 @@ void RPC::getInfoThenRefresh(bool force) {
 
     static bool prevCallSucceeded = false;
     conn->doRPC(payload, [=] (const json& reply) {
+        invokeRpcCallbackSafe([=] (const json& reply) {
         prevCallSucceeded = true;
         // Testnet?
         if (!reply["testnet"].is_null()) {
@@ -883,6 +884,8 @@ void RPC::getInfoThenRefresh(bool force) {
             main->statusLabel->setToolTip(tooltip);
             main->statusIcon->setToolTip(tooltip);
         });
+
+        }, reply);
 
     }, [=](QNetworkReply* reply, const json&) {
         // zerod has probably disappeared.

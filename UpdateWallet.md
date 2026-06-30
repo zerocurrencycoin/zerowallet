@@ -358,10 +358,23 @@ How the wallet avoids crashes from RPC/network/JSON failures, what upstream fixe
 |-------|------|------|
 | **Now (done)** | `doRPC` return + JSON-RPC error gate; `checkForUpdate` catch; KEY-1 TZU export; critical `getAllBalances` guards | `upstream-port` |
 | **Next** | STAB-1/2; `doRPCIgnoreErrorSafe` on poll RPCs; `doBatchRPC` JSON-RPC error gate | **Done** (`upstream-port`) |
-| **Soon** | `doBatchRPC` batch timeout; optional `getinfo` main-path try/catch | |
-| **Later** | Unified `Connection::doRPCEx(payload, onSuccess, RpcErrorPolicy)` | See §Postponed backlog |
+| **Soon** | `doBatchRPC` batch timeout | **Postponed** — POST-BATCH |
+| **Soon (done)** | `invokeRpcCallbackSafe` on main poll `getinfo` success path | **Done** — not `doRPCIgnoreErrorSafe` (see §RPC error handling) |
+| **Later** | Unified `Connection::doRPCEx(payload, onSuccess, RpcErrorPolicy)` | See §Postponed backlog **POST-RPC** |
 
 **Unified approach (target):** one implementation (`doRPC`), policy enum `{ ShowDialog, Ignore, Custom }`, optional `safeResult` helper for callbacks. **Pragmatic:** keep three wrappers as thin facades over `doRPC` until phase 4; do not block STAB/ daemon fixes on full unification.
+
+**`invokeRpcCallbackSafe` (partial step, done):** free function in `connection.cpp` — null guard + `catch (...)` around success callbacks. Used by `doRPCIgnoreErrorSafe` and the **orchestrator** `getInfoThenRefresh` main `getinfo` success lambda.
+
+| Path | Transport/RPC errors | Success callback exceptions |
+|------|---------------------|----------------------------|
+| User RPC (`doRPCWithDefaultErrorHandling`) | Dialog | Propagate (user should see failure) |
+| Poll / optional (`doRPCIgnoreErrorSafe`) | Ignored | Swallowed (`invokeRpcCallbackSafe`) |
+| Main poll `getinfo` (`getInfoThenRefresh`) | `doRPC` + `ne` → `noConnection()` + connection dialog | Swallowed (`invokeRpcCallbackSafe`) |
+
+**Why main `getinfo` is not `doRPCIgnoreErrorSafe`:** it is the refresh heartbeat; disconnect must surface via the existing `ne` handler. Only the **success** body needs the same exception shield as poll UI (malformed/partial `getinfo` on edge startup must not abort the timer thread).
+
+**POST-RPC:** fold `invokeRpcCallbackSafe` into `doRPCEx` as composable `SafeCallback` policy; no fourth public wrapper until that refactor.
 
 #### Private-key export: T `[""]` and path U
 
@@ -426,16 +439,16 @@ Legacy **Zcash-era bulletin board** (Help → z-board.net): post short messages 
 | Daemon tab / poll RPCs | **Done** — `doRPCIgnoreErrorSafe` |
 | `doBatchRPC` JSON-RPC error on batch items | **Done** |
 | `doBatchRPC` timeout | **Postponed** |
-| `getInfoThenRefresh` main `getinfo` success cb | Optional try/catch |
-| sendtab extra guards | Optional |
+| `getInfoThenRefresh` main `getinfo` success cb | **Done** — `invokeRpcCallbackSafe`; see §RPC error handling |
+| sendtab extra guards | Optional — **POST-SEND** |
 
 #### Port priority (crash prevention)
 
 1. ~~STAB-1 + STAB-2~~ **Done**  
 2. ~~P1-daemon / `doRPCIgnoreErrorSafe`~~ **Done**  
 3. ~~`doBatchRPC` error filtering~~ **Done**  
-4. Optional: `getinfo` main path, sendtab guards  
-5. See §Postponed backlog: P2-wif, unified `doRPCEx`, z-board
+4. ~~Optional: `getinfo` main path~~ **Done** (`invokeRpcCallbackSafe`); sendtab guards → POST-SEND  
+5. See §Postponed backlog: P2-wif, unified `doRPCEx` (**POST-RPC**), z-board
 
 ### Remaining upstream fixes (STAB, P1, P2)
 
@@ -660,7 +673,7 @@ Organized by area. Track here and in [TODO](TODO.md); do not mix into active ups
 
 | ID | Item | Trigger to revisit | Notes |
 |----|------|-------------------|--------|
-| **POST-RPC** | Unified `Connection::doRPCEx` / `RpcErrorPolicy` enum | Next large `connection.cpp` refactor | Phase 4; keep `doRPCWithDefaultErrorHandling` / `doRPCIgnoreError` / `doRPCIgnoreErrorSafe` as thin wrappers until then |
+| **POST-RPC** | Unified `Connection::doRPCEx` / `RpcErrorPolicy` enum | Next large `connection.cpp` refactor | Phase 4; `invokeRpcCallbackSafe` is interim shared helper (poll Safe + main `getinfo`); fold into `SafeCallback` policy — §RPC error handling |
 | **POST-WIF** | P2-wif `cd4832d` — `importprivkey` `{ key, "" }` not rescan as 2nd arg | QA on Settings paste-import or WIF docs | `importTPrivKey` in `rpc.cpp`; batch rescan semantics need test plan — §P2-wif |
 | **POST-ZBOARD** | z-board.net HTTP API + post UI | Disable feature, or HTTPS/mirror if service still exists | Help → z-board.net; `getZboardTopics` HTTP `listTopics`; MITM risk — §z-board |
 | **POST-TLS** | TLS/HTTPS wallet↔zerod | Remote RPC requirement | Use same-host `127.0.0.1` today |

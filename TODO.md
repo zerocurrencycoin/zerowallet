@@ -10,7 +10,7 @@ Selection of items and issues from project documentation ([UpdateWallet](UpdateW
 
 - Build/run smoke test before first commit.
 - Params open questions → Zero repo / release (§Zcash proving parameters).
-- Optional: `getinfo` main-path try/catch; sendtab balance guards.
+- Optional: sendtab balance guards → **POST-SEND**.
 
 ### Version upgrades (UpdateWallet §Version Upgrade Plan)
 
@@ -38,7 +38,7 @@ Full table: [UpdateWallet §Postponed backlog](UpdateWallet.md#postponed-backlog
 
 | ID | Summary |
 |----|---------|
-| **POST-RPC** | Unified `doRPCEx` / `RpcErrorPolicy` (replace three wrappers in one refactor) |
+| **POST-RPC** | Unified `doRPCEx` / `RpcErrorPolicy`; absorb `invokeRpcCallbackSafe` as `SafeCallback` policy | `connection.cpp` refactor |
 | **POST-WIF** | P2-wif: `importprivkey` with account `""`, not rescan as 2nd arg (`cd4832d`) |
 | **POST-ZBOARD** | z-board.net: HTTP `listTopics`, post UI — disable or HTTPS |
 | **POST-TLS** | TLS for wallet↔zerod |
@@ -64,6 +64,7 @@ Full table: [UpdateWallet §Postponed backlog](UpdateWallet.md#postponed-backlog
 - STAB-3: params download to home.
 - RPC: `doRPC` parse/JSON-RPC error gate; `checkForUpdate` exception catch.
 - RPC: `doRPCIgnoreErrorSafe` on poll paths; `doBatchRPC` JSON-RPC error on batch items.
+- RPC: `invokeRpcCallbackSafe` on main poll `getinfo` (`getInfoThenRefresh`); shared with `doRPCIgnoreErrorSafe`.
 - `getAllBalances` guards: Receive, view-all, Z-board from, `updateTAddrCombo`.
 
 ### Earlier completed

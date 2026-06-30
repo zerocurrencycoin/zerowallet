@@ -794,16 +794,20 @@ void Connection::doRPCIgnoreError(const json& payload, const std::function<void(
     });
 }
 
+void invokeRpcCallbackSafe(const std::function<void(const json&)>& cb, const json& reply) {
+    try {
+        if (reply.is_null()) {
+            return;
+        }
+        cb(reply);
+    } catch (...) {
+        qDebug() << "RPC callback exception (result ignored)";
+    }
+}
+
 void Connection::doRPCIgnoreErrorSafe(const json& payload, const std::function<void(const json&)>& cb) {
     doRPCIgnoreError(payload, [=](const json& reply) {
-        try {
-            if (reply.is_null()) {
-                return;
-            }
-            cb(reply);
-        } catch (...) {
-            // Poll UI: leave fields stale rather than abort
-        }
+        invokeRpcCallbackSafe(cb, reply);
     });
 }
 
