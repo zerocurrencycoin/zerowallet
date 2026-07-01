@@ -15,6 +15,9 @@ For release preparation: see [CHANGELOG.md](CHANGELOG.md) (versioned changes), [
 | **Options** | Env overrides CLI. Key: `QT_PREFIX`, `RUN_TRANSLATIONS`, `USE_SYSTEM_QT`, `MXE_PATH`, `ZERO_DIR`, `SKIP_STRIP`, `SKIP_SIGN`, `MAKE_TGZ`, `LOG_FILE`, `JOBS`. Long options: `--systemqt`, `--nostrip`, `--tgz`, `-t`/`--translate`. |
 | **Helpers** | `fbuild.sh`: SCRIPT_DIR, REPO_ROOT, err/warn/notice/step_done, check_file, check_zero_binaries, resolve_qt, get_app_from_h, resolve_version, parse_mkrelease_args, etc. qt-report, install_mxe, mkrelease.sh, mkdev.sh source fbuild; signbinaries uses get_app_from_h when APP_VERSION unset. |
 | **Reporting** | `./src/scripts/qt-report.sh` — Qt setup per platform (repo path, qmake/qt5-static/MXE, one-line summary). |
+| **Validation** | Linux dev+release ✅ · Windows dev+release (MXE on Linux) ✅ · **macOS: not yet validated** — see [macOS validation](#macos-validation). |
+| **Versioning** | `src/version.h` is the single source of truth; qmake imports it; `-v` writes it. No git/PREV. See [UpdateWallet §Versioning](UpdateWallet.md#versioning-srcversionh-is-the-single-source-of-truth). |
+| **Logging** | Every build writes a timestamped log by default; `-L` overrides path. See [Logging](#logging). |
 
 ## Quick Start
 
@@ -131,15 +134,18 @@ Windows target (`mkrelease-win`): MXE still builds `zerowallet.exe`; `-t` only r
 | Flag | Env | Default | Description |
 |------|-----|---------|-------------|
 | `-z`, `--zero` | `ZERO_DIR` | `../Zero/src` | Directory with zerod binaries; see [ZERO_DIR](#zero_dir) below |
-| `-v`, `--version` | `APP_VERSION` | from `version.h` / git | Release version (X.Y.Z). Override when not using default. See [APP_VERSION](#app_version) below. |
-| `-p`, `--prev` | `PREV_VERSION` | derived from `-v` or `version.h` | Previous version (Linux/Windows sed). Not used by macOS. See [PREV](#prev) below. |
+| `-v`, `--version` | `APP_VERSION` | from `version.h` | Release version (X.Y.Z). Writes `version.h`. Default reads it. See [APP_VERSION](#app_version). |
 | `-q`, `--qt` | `QT_PREFIX` | see Qt table | Qt prefix (mkdev / Linux release link; `-t` host Qt) |
 | `-S`, `--systemqt` | `USE_SYSTEM_QT` | — | Linux release with system Qt (dynamic link). Default: static Qt (qt5-static or -q). |
-| `-P`, `--nostrip` | — | — | Skip stripping release binaries (larger artifacts; symbols kept). Default: strip on Linux, macOS, Windows. |
+| `-P`, `--nostrip` | — | — | Skip stripping release binaries (larger artifacts; symbols kept). Default: strip on Linux (host `strip`), macOS (host `strip`), Windows (MXE `…-static-strip`). |
 | `-N`, `--no-sign` | — | — | Ad-hoc sign only (macOS; no developer identity). App is always signed so it runs; default uses `CODESIGN_IDENTITY` or ad-hoc. |
-| `-L`, `--log` | `LOG_FILE` | script-specific | Capture build/release log (e.g. `logs/mkrelease-mac.log`). mkdev and mkrelease support `-L` or `-L=PATH`. |
+| `-L`, `--log` | `LOG_FILE` | timestamped | Override the log path. Default: `logs/<script>-<timestamp>.log`, always written (see [Logging](#logging)). |
+| `-t`, `--translate` | `RUN_TRANSLATIONS` | off | Rebuild `.ts` → `.qm` before packaging (default: reuse committed `res/*.qm`). |
 | `-T`, `--tgz` | `MAKE_TGZ` | — | Also create .tgz of app bundle (macOS only). |
 | `-m`, `--mxe` | `MXE_PATH` | — | MXE `usr/bin` (Windows only) |
+| `-j`, `--jobs` | `JOBS` | `min(CPUs,4)` | Parallel make jobs. Env `JOBS` wins over `-j`; e.g. `JOBS=16` for a big host. |
+
+Note: `-p`/`PREV_VERSION` is removed. `version.h` is the single source of truth; `-v` writes it. See [Versioning](UpdateWallet.md#versioning-srcversionh-is-the-single-source-of-truth).
 
 ### APP_VERSION
 
@@ -155,9 +161,20 @@ Canonical tag format `vN.N.N` is trivial to recognize; `git describe --tags --ab
 
 **mkrelease only** (not mkdev). Directory containing built `zerod` and `zero-cli` (or `.exe` on Windows). **Default:** `../Zero/src`. If that directory is missing or empty, fallback by platform: **mac** → `../ZeroMac/src`, **linux** → `../ZeroLinux/src`, **win** → `../ZeroWin/src`. Override with `-z` or `ZERO_DIR`. Release scripts copy zerod binaries into artifacts; zerowallet source does not include zerod. **Stripping:** Linux, macOS, and Windows strip packaged copies by default; originals in `ZERO_DIR` unchanged; `-P`/`--nostrip` to skip.
 
-### PREV
+---
 
-Linux and Windows scripts use `sed` to replace the previous version with the new one in `zero-qt-wallet.pro`, `README.md`, and (Linux) `src/scripts/control` before packaging. macOS does not: `mkrelease-mac.sh` reads `version.h` for the DMG name only and does not modify those files.
+## Logging {#logging}
+
+Every mkdev/mkrelease/build-qt-static run writes a **timestamped log by default** —
+`logs/<script>-<YYYYMMDD-HHMMSS>.log` (e.g. `logs/mkrelease-linux-20260701-083220.log`).
+All output (stdout+stderr, every command) is `tee`d there and to the terminal via
+`init_logging` (in `fbuild.sh`); the first line printed is `Log: <path>`. Prior runs are
+never overwritten. `-L PATH` / `LOG_FILE` overrides the path; `-L` with no value uses the
+fixed `logs/<script>.log` name.
+
+`logs/` is gitignored and **not pruned** — files accumulate (a full `build-qt-static` log is
+~30 MB). Clear manually when needed (`rm logs/*.log`); automatic rotation is not yet
+implemented.
 
 ---
 
@@ -176,6 +193,45 @@ Build zerod: `cd ../Zero && ./zcutil/build.sh`. Then run `./src/scripts/mkreleas
 **Prerequisites:** `brew install create-dmg qt@5`. zerod built in Zero repo. `ZERO_DIR` defaults to `../Zero/src` if non-empty, else `../ZeroMac/src`; override with `-z` when Zero is elsewhere.
 
 **Tooling:** Qt from Homebrew (`$(brew --prefix qt@5)`). `macdeployqt` copies Qt frameworks/plugins into the app bundle. `create-dmg` builds the DMG. `codesign` signs the app (ad-hoc or Developer ID). `xcrun notarytool` and `xcrun stapler` for notarization.
+
+#### macOS validation {#macos-validation}
+
+**Status:** macOS is **not yet validated** on the `port-linuxwin` line. Linux and Windows
+(cross-build) are confirmed; the mac scripts were refactored in the same pass but not run on a
+Mac. Pick up macOS testing here.
+
+**Environment check first** (cheap, no build):
+
+```bash
+./src/scripts/qt-report.sh            # confirms Homebrew qt@5 found + version
+brew list create-dmg qt@5            # both must be installed
+ls ../Zero*/src/zerod ../Zero*/src/zero-cli   # zerod built for mac
+```
+
+**Then run, smallest scope first:**
+
+```bash
+./src/scripts/mkdev-mac.sh -c         # dev: builds ZeroWallet.app; open it
+open ZeroWallet.app
+./src/scripts/mkrelease-mac.sh        # release: signed .app + DMG in artifacts/
+```
+
+**What changed on this line that specifically needs a Mac to confirm** (all untested off-Linux):
+
+| Area | Change to verify | Where |
+|------|------------------|-------|
+| `detect_jobs` | `sysctl -n hw.ncpu` path (Linux uses `nproc`); cap at 4; `JOBS=16` env override | `fbuild.sh` |
+| `init_logging` | timestamped `logs/mkdev-mac-*.log`; `exec >(tee)` under macOS bash 3.2 (use Homebrew bash if odd) | `fbuild.sh` |
+| version.h write | `write_version_h` uses `sed -i.bak -E` — confirm BSD sed accepts it, no `.bak` left | `fbuild.sh` |
+| clean block | `make distclean` then `rm -rf ZeroWallet.app` — confirm bundle fully removed | `mkdev-mac.sh` |
+| cp/mv | the 14 `\|\| err` guards were removed; a real permission failure should still abort (set -e) | `mkrelease-mac.sh` |
+| create-dmg | the two verbose/quiet branches were merged into **one** invocation — confirm DMG still builds | `mkrelease-mac.sh` |
+| stat | `stat -f %z` (BSD) for sizes | `mkrelease-mac.sh` |
+| libsodium | `sodium_archive_kind` classifies a **Mach-O** archive as `unix` (Linux only saw ELF) | `fbuild-libsodium.sh` |
+
+**Report back:** exit code, `artifacts/macOS-zerowallet-vX.Y.Z.dmg` presence, and confirm
+`version.h` is unchanged after a plain release (no `-v`). If `detect_jobs` or `init_logging`
+misbehave under the stock `/bin/bash` (3.2), retry under `brew install bash`.
 
 ---
 

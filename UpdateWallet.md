@@ -148,6 +148,26 @@ Cryptoforge, Martin, OleksandrBlack, miodrag, Duke Leto, David Mercer, Aditya Ku
 
 ## Design Decisions / Documented Behavior
 
+### Versioning: `src/version.h` is the single source of truth
+
+**Decision (2026-07):** `src/version.h` (`#define APP_VERSION "X.Y.Z"`) is the one place a
+release version is defined. The `.pro` imports it into qmake's `VERSION`
+(`VERSION = $$system(grep ... src/version.h)`, used for Info.plist / exe metadata); C++ reads
+the same value via the `APP_VERSION` macro. To release, edit `version.h` (or pass `-v X.Y.Z`,
+which writes it back via a keyed sed on the `APP_VERSION` line — no old value needed).
+
+**Removed:** the former git-tag lookup + auto-bump (it silently built `version.h+1` when the
+header matched the latest tag, and crashed `mkrelease` under `set -e` on branches with no
+reachable tag), the `.pro`/README version rewrite (`apply_version_sed`), and the `-p`/
+`PREV_VERSION` flag. README is no longer edited by scripts.
+
+**Note — `check_version_mismatch` is now effectively a no-op.** It warns when `version.h` does
+not contain `APP_VERSION`, but `resolve_version` now guarantees they match (it reads or writes
+`version.h`), so the warning can never fire. It is retained as a harmless guard in the three
+`mkrelease-*` scripts. **Recommended action:** remove `check_version_mismatch` (definition in
+`fbuild.sh` and the three call sites) in a future cleanup, or repurpose it to validate against
+an external expectation (e.g. a tag or CI variable) if such a check is ever wanted.
+
 ### Context Menu: Copy / Delete Address (Settings > Wallet Config)
 
 **Location:** Settings → Wallet Config tab → Consolidation Addresses table (column "Sapling Address").
@@ -1055,7 +1075,7 @@ zip -r Windows-zerowallet-v$APP_VERSION.zip release/zerowallet-v$APP_VERSION/
 
 ## How zerod Gets Bundled
 
-zerod built separately, copied into zerowallet package. **ZERO_DIR** = directory containing built zerod/zero-cli (or .exe); default `../Zero/src`. Zero repo build: Linux `./zcutil/build.sh` → `zero_linux/src/`; Windows `./zcutil/build-win.sh` → `zero_win/src/`. Scripts use **QT_PREFIX** (not QT_STATIC) for Qt path in mkdev/mkrelease. For script reference, flags (`-z`, `-v`, `-p`, `-q`, `-P`/`-N`, `-m`, `-L`), APP_VERSION/PREV, stripping, signing, and platform notes see [BUILD](BUILD.md) §Script Reference, §Unified Arguments, §ZERO_DIR, §APP_VERSION, §PREV, §Platform Notes. CI plans: ~/Work/ZK/CI/README.md.
+zerod built separately, copied into zerowallet package. **ZERO_DIR** = directory containing built zerod/zero-cli (or .exe); default `../Zero/src`. Zero repo build: Linux `./zcutil/build.sh` → `zero_linux/src/`; Windows `./zcutil/build-win.sh` → `zero_win/src/`. Scripts use **QT_PREFIX** (not QT_STATIC) for Qt path in mkdev/mkrelease. For script reference, flags (`-z`, `-v`, `-q`, `-P`/`-N`, `-m`, `-L`), APP_VERSION (from `version.h`), stripping, signing, and platform notes see [BUILD](BUILD.md) §Script Reference, §Unified Arguments, §ZERO_DIR, §APP_VERSION, §Platform Notes. CI plans: ~/Work/ZK/CI/README.md.
 
 ---
 
@@ -1128,7 +1148,7 @@ Two scripts in `src/scripts/` let you try modular download and skip-extra build 
 
 Both scripts use a separate output dir so they do not overwrite `qt5-static/` from the main build-qt-static.sh.
 
-**Release flow:** Build zerod: `cd ../Zero && ./zcutil/build.sh`. Then either (1) static Qt: if `qt5-static/` does not exist, run `./src/scripts/build-qt-static.sh`, then `./src/scripts/mkrelease-linux.sh` (or `-q /path/to/qt5-static` to use another prefix); or (2) system Qt: `./src/scripts/mkrelease-linux.sh -S` (no build-qt-static needed). Version comes from `version.h` (and git); to pin use `-v X.Y.Z -p X.Y.(Z-1)`.
+**Release flow:** Build zerod: `cd ../Zero && ./zcutil/build.sh`. Then either (1) static Qt: if `qt5-static/` does not exist, run `./src/scripts/build-qt-static.sh`, then `./src/scripts/mkrelease-linux.sh` (or `-q /path/to/qt5-static` to use another prefix); or (2) system Qt: `./src/scripts/mkrelease-linux.sh -S` (no build-qt-static needed). Version comes from `version.h`; to pin use `-v X.Y.Z` (writes `version.h`). See §Versioning under Design Decisions.
 
 **Output:** `artifacts/linux-zerowallet-vX.Y.Z.tgz` (staged in `bin/tgz/linux-zerowallet-vX.Y.Z/`), `artifacts/linux-zerowallet-vX.Y.Z.deb` (staged in `bin/deb/zerowallet-vX.Y.Z/`: DEBIAN/control, usr/local/bin/, README.md, pixmaps, .desktop). Binaries stripped unless `-P`. Package verification: `./src/scripts/package-verify.sh --linux artifacts/linux-zerowallet-vX.Y.Z.tgz`.
 

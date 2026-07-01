@@ -6,6 +6,32 @@ Selection of items and issues from project documentation ([UpdateWallet](UpdateW
 
 ## Active
 
+### Build scripts — `port-linuxwin` (status 2026-07-01)
+
+Ported the mac-working build scripts to Linux + Windows and hardened them. On branch
+`port-linuxwin` (off `upstream-port`); commits pushed to `origin/port-linuxwin`.
+
+**Done + validated:**
+
+- Linux dev + release (static Qt, `.tgz` + `.deb`) — built, exit 0, artifacts. ✅
+- Windows dev + release (MXE cross-build on Linux) — `.exe` + `.zip`, stripped. ✅
+- `-j`/`JOBS`: default `min(CPUs,4)`, `-j` overrides, env `JOBS` wins. ✅
+- Versioning: `version.h` single source of truth; qmake imports it; `-v` writes it;
+  git/auto-bump/`-p`/`apply_version_sed` removed. ✅ (see [UpdateWallet §Versioning](UpdateWallet.md#versioning-srcversionh-is-the-single-source-of-truth))
+- libsodium `sodium_archive_kind`: all 4 transitions (missing→build, match→reuse,
+  unix↔win wrong-target→rebuild) verified. ✅
+- Logging unified: `init_logging`, timestamped, full-capture, single method. ✅
+- `set -e` exit-code bug (`[ ] && { }` trailing) fixed; standardized to `if..fi`. ✅
+- mkdev-linux: `sudo apt-get install` → **check-and-hint** (no auto-sudo). ✅
+- Dead code removed (`sodium_archive_ok`, `resolve_zero_dirs_linuxwin`, `info`, dup URL_BASE).
+
+**Next:**
+
+- **macOS: validate** — not yet run on a Mac. Follow [BUILD §macOS validation](BUILD.md#macos-validation).
+  Then mark done and merge `port-linuxwin` → `upstream-port`.
+- `check_version_mismatch` is now a no-op — remove or repurpose ([UpdateWallet §Versioning](UpdateWallet.md#versioning-srcversionh-is-the-single-source-of-truth)).
+- Logs accumulate (no rotation) — postponed.
+
 ### Upstream ports (`upstream-port`)
 
 - Build/run smoke test before first commit.

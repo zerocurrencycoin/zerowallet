@@ -13,15 +13,16 @@ parse_mkdev_args "logs/mkdev-linux.log" "$@"
 init_logging
 notice "CONFIG=${CONFIG} -j${JOBS}"
 
+# Check (don't auto-install) the dev Qt packages, matching mkdev-mac/win: hint the admin
+# rather than running sudo (which hangs in CI and surprises the user). The dpkg check is cheap.
+missing=""
 for pkg in qtbase5-dev qtbase5-dev-tools libqt5websockets5-dev libqt5svg5-dev; do
-  if ! dpkg -l "$pkg" 2>/dev/null | grep -q ^ii; then
-    notice "Installing $pkg..."
-    sudo apt-get install -y "$pkg"
-  fi
+  dpkg -l "$pkg" 2>/dev/null | grep -q ^ii || missing="${missing} ${pkg}"
 done
+[ -n "$missing" ] && err "Missing Qt dev packages:${missing}. Install: sudo apt install${missing}"
 
 resolve_qt linux dev
-[ -z "${QMAKE:-}" ] && err "qmake not found. Install qtbase5-dev-tools."
+[ -z "${QMAKE:-}" ] && err "qmake not found. Install: sudo apt install qtbase5-dev-tools"
 
 notice 'Checking libsodium (Unix)...'
 res/libsodium/buildlibsodium.sh || err 'libsodium check/build failed'

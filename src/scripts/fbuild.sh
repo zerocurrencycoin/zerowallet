@@ -251,10 +251,14 @@ qt_translation_dir() {
 }
 
 # Resolve QT_PREFIX and QMAKE for build. Call after parsing -q/--qt.
-# Usage: resolve_qt <platform> <mode>
-#   platform: linux|mac|win
-#   mode: dev|release
-# Sets: QT_PREFIX (except linux dev), QMAKE, PATH (mac/win)
+# Usage: resolve_qt <platform> <mode>   platform: linux|mac|win   mode: dev|release
+#
+# Qt source per platform + build type:
+#   linux dev      system qmake from PATH (or -q). Dynamic link.
+#   linux release  static qt5-static/ (or -q); -S/USE_SYSTEM_QT -> system qmake, dynamic.
+#   mac  dev/rel   Homebrew qt@5 (brew --prefix, or -q). macdeployqt bundles Qt.
+#   win  dev/rel   MXE static Qt (resolve_path_win); cross-build on Linux host only.
+# Sets: QT_PREFIX (except linux dev), QMAKE, PATH (mac/win).
 resolve_qt() {
   local plat="$1" mode="$2"
   case "$plat" in
