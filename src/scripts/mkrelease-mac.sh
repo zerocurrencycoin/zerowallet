@@ -17,7 +17,7 @@ export PATH="$PATH:/usr/local/bin"
 
 resolve_version
 check_version_mismatch
-# macOS does not modify version files (zero-qt-wallet.pro, README.md); DMG name from version.h only.
+# DMG name from APP_VERSION (version.h is the source of truth).
 
 check_zero_binaries mac
 

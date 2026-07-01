@@ -15,8 +15,6 @@ resolve_qt win release
 resolve_version
 check_version_mismatch
 
-apply_version_sed
-
 check_zero_binaries win
 
 rm -rf bin/*

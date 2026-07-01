@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # shellcheck shell=bash
 # Copyright 2026 Zero Developers
-# Validates fbuild.sh: option/env precedence, resolve_zero_dir, version helpers, apply_version_sed.
+# Validates fbuild.sh: option/env precedence, resolve_zero_dir, version helpers, write_version_h.
 # Usage: Run from repo root: ./src/scripts/ftest.sh
 # set -e: exit on first command failure. set -u: exit on use of unset variable. set -o pipefail: pipeline fails if any stage fails.
 set -e -u -o pipefail
@@ -76,7 +76,7 @@ parse_mkdev_args "logs/mkdev.log" -L 2>/dev/null || true
 run_test assert_eq "$LOG_FILE" "/env/log.txt"
 
 echo '[ftest] env overrides CLI (parse_mkrelease_args)'
-unset ZERO_DIR APP_VERSION PREV_VERSION QT_PREFIX MXE_PATH SKIP_STRIP SKIP_SIGN RUN_TRANSLATIONS JOBS LOG_FILE
+unset ZERO_DIR APP_VERSION QT_PREFIX MXE_PATH SKIP_STRIP SKIP_SIGN RUN_TRANSLATIONS JOBS LOG_FILE
 export ZERO_DIR="/env/zero"
 parse_mkrelease_args "logs/mkrelease.log" -z /cli/zero 2>/dev/null || true
 run_test assert_eq "$ZERO_DIR" "/env/zero"
@@ -84,10 +84,6 @@ run_test assert_eq "$ZERO_DIR" "/env/zero"
 export APP_VERSION="9.9.9"
 parse_mkrelease_args "logs/mkrelease.log" -v 1.0.0 2>/dev/null || true
 run_test assert_eq "$APP_VERSION" "9.9.9"
-
-export PREV_VERSION="8.8.8"
-parse_mkrelease_args "logs/mkrelease.log" -p 0.0.1 2>/dev/null || true
-run_test assert_eq "$PREV_VERSION" "8.8.8"
 
 export QT_PREFIX="/env/qt"
 parse_mkrelease_args "logs/mkrelease.log" -q /cli/qt 2>/dev/null || true
@@ -170,32 +166,48 @@ mkdir -p "$tmpdir/Zero"
 rm -rf "$tmpdir"
 
 echo '[ftest] version helpers'
-run_test assert_eq "$(patch_plus1 1.0.0)" "1.0.1"
-run_test assert_eq "$(patch_plus1 2.1.9)" "2.1.10"
-run_test assert_eq "$(patch_minus1 1.0.1)" "1.0.0"
-run_test assert_eq "$(patch_minus1 1.0.0)" "1.0.0"
 valid_semver 1.0.0 && run_test true || run_test false
 valid_semver 1.0 && run_test false || run_test true
 valid_semver "x.y.z" && run_test false || run_test true
 
-echo '[ftest] apply_version_sed: portable sed, no .bak left'
+echo '[ftest] write_version_h: keyed sed on version.h, no .bak left'
 tmpdir="$(mktemp -d 2>/dev/null)" || tmpdir="/tmp/ftest.$$"
-mkdir -p "$tmpdir"
-echo "prev 1.2.3 prev" > "$tmpdir/zero-qt-wallet.pro"
-echo "prev 1.2.3 prev" > "$tmpdir/README.md"
+mkdir -p "$tmpdir/src"
+echo '#define APP_VERSION "1.2.3"' > "$tmpdir/src/version.h"
 (
   cd "$tmpdir"
-  PREV_VERSION="1.2.3" APP_VERSION="1.2.4" REPO_ROOT="$tmpdir" \
+  REPO_ROOT="$tmpdir" \
   bash -c '
-    SCRIPT_DIR="'"$SCRIPT_DIR"'"
     . "'"$SCRIPT_DIR"'/fmessage.sh" 2>/dev/null
     . "'"$SCRIPT_DIR"'/fbuild.sh" 2>/dev/null
     step_done() { :; }
-    apply_version_sed 2>/dev/null
+    write_version_h "4.5.6"
   '
 )
-grep -q "1.2.4" "$tmpdir/zero-qt-wallet.pro" && grep -q "1.2.4" "$tmpdir/README.md" || { rm -rf "$tmpdir"; run_test false; }
-[ ! -f "$tmpdir/zero-qt-wallet.pro.bak" ] && [ ! -f "$tmpdir/README.md.bak" ] && run_test true || run_test false
+# New version written by key, old value (1.2.3) gone, no .bak left.
+grep -q '#define APP_VERSION "4.5.6"' "$tmpdir/src/version.h" \
+  && ! grep -q "1.2.3" "$tmpdir/src/version.h" \
+  && [ ! -f "$tmpdir/src/version.h.bak" ] \
+  && run_test true || run_test false
+rm -rf "$tmpdir"
+
+echo '[ftest] resolve_version: reads version.h when no -v'
+tmpdir="$(mktemp -d 2>/dev/null)" || tmpdir="/tmp/ftest.$$"
+mkdir -p "$tmpdir/src"
+echo '#define APP_VERSION "7.8.9"' > "$tmpdir/src/version.h"
+got="$(
+  bash -c '
+    unset APP_VERSION   # ignore any leaked env from earlier precedence tests
+    . "'"$SCRIPT_DIR"'/fmessage.sh" 2>/dev/null
+    . "'"$SCRIPT_DIR"'/fbuild.sh" 2>/dev/null
+    REPO_ROOT="'"$tmpdir"'"   # override: fbuild.sh resets REPO_ROOT on source
+    step_done() { :; }
+    cd "'"$tmpdir"'"
+    resolve_version
+    echo "$APP_VERSION"
+  '
+)"
+run_test assert_eq "$got" "7.8.9"
 rm -rf "$tmpdir"
 
 echo '[ftest] help exits 0 and mentions options'

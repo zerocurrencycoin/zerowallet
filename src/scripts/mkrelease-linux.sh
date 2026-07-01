@@ -16,7 +16,6 @@ resolve_qt linux release
 
 resolve_version
 check_version_mismatch
-apply_version_sed
 
 check_zero_binaries linux
 

@@ -6,7 +6,7 @@
 #           analyze_build_log, log_capture, build_fail, check_file, check_zero_binaries,
 #           resolve_zero_dir, resolve_path_win, resolve_qt, version helpers (get_app_from_h, resolve_version, etc.),
 #           parse_mkdev_args, parse_mkrelease_args, show_mkdev_help, show_mkrelease_help,
-#           run_dotranslations, apply_version_sed
+#           run_dotranslations, write_version_h
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
@@ -118,7 +118,7 @@ show_mkdev_help() {
   echo "No -z with dev."
 }
 
-# Parse common mkrelease args. Sets ZERO_DIR, APP_VERSION, PREV_VERSION, QT_PREFIX, MXE_PATH, RUN_TRANSLATIONS, SKIP_STRIP, SKIP_SIGN, LOG_FILE, JOBS.
+# Parse common mkrelease args. Sets ZERO_DIR, APP_VERSION, QT_PREFIX, MXE_PATH, RUN_TRANSLATIONS, SKIP_STRIP, SKIP_SIGN, LOG_FILE, JOBS.
 # Precedence: environment variable overrides command-line option for every option.
 # Usage: parse_mkrelease_args "logs/mkrelease-linux.log" "$@"
 # shellcheck disable=SC2034
@@ -140,7 +140,6 @@ parse_mkrelease_args() {
         ;;
       --log=*) LOG_FILE="${LOG_FILE:-${1#--log=}}"; shift ;;
       -m|--mxe) MXE_PATH="${MXE_PATH:-$2}"; shift 2 ;;
-      -p|--prev) PREV_VERSION="${PREV_VERSION:-$2}"; shift 2 ;;
       -q|--qt) QT_PREFIX="${QT_PREFIX:-$2}"; shift 2 ;;
       -P|--nostrip) SKIP_STRIP="${SKIP_STRIP:-1}"; shift ;;
       -N|--no-sign) SKIP_SIGN="${SKIP_SIGN:-1}"; shift ;;
@@ -164,7 +163,6 @@ show_mkrelease_help() {
   echo "  -L, -L=PATH         [LOG_FILE] capture log (default: ${log})"
   echo "  --log, --log=PATH   [LOG_FILE] same as -L"
   echo "  -m, --mxe PATH      [MXE_PATH] MXE usr/bin (Windows target)"
-  echo "  -p, --prev V        [PREV_VERSION] default from version.h or git"
   echo "  -q, --qt PATH       [QT_PREFIX] Qt prefix (Linux release link; -t host Qt)"
   echo "  -S, --systemqt      [USE_SYSTEM_QT] Linux release with system Qt (dynamic link)"
   echo "  -P, --nostrip       [SKIP_STRIP] skip stripping binaries"
@@ -389,33 +387,26 @@ resolve_path_win() {
   fi
 }
 
-# Version helpers (mkrelease-linux)
+# Version: src/version.h is the single source of truth (qmake imports it via
+# VERSION=$$system(get-version), C++ uses the APP_VERSION macro). No git, no PREV.
 valid_semver() { [[ "$1" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; }
-get_app_from_h() { grep -E '^#define APP_VERSION "[0-9]+\.[0-9]+\.[0-9]+"' "$REPO_ROOT/src/version.h" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+'; }
-get_git_tag()  { (cd "$REPO_ROOT" && git describe --tags --abbrev=0 2>/dev/null | sed 's/^[vV]//' | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1); }
-patch_plus1()  { echo "$1" | awk -F. -v OFS=. '{$3++; print}'; }
-# Patch component never goes below 0; minor/major unchanged when patch would underflow.
-patch_minus1() { echo "$1" | awk -F. -v OFS=. '{c=$3-1; if(c<0)c=0; print $1,$2,c}'; }
+# No-match is a normal empty result, not an error: trailing '|| true' keeps a failing
+# grep from aborting the caller under set -e -o pipefail.
+get_app_from_h() { grep -E '^#define APP_VERSION "[0-9]+\.[0-9]+\.[0-9]+"' "$REPO_ROOT/src/version.h" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' || true; }
 
-# Resolve APP_VERSION and PREV_VERSION (mkrelease-linux logic). Call from repo root.
+# Resolve APP_VERSION from version.h (or -v/APP_VERSION override). Call from repo root.
+# With -v, write it back into version.h so the header stays the source of truth.
 resolve_version() {
   local app_h; app_h=$(get_app_from_h)
-  local git_v; git_v=$(get_git_tag)
   if [ -z "${APP_VERSION:-}" ]; then
     [ -z "$app_h" ] && err 'src/version.h has no valid #define APP_VERSION "X.Y.Z". Use -v.'
-    if [ -n "$git_v" ] && [ "$app_h" = "$git_v" ]; then
-      APP_VERSION=$(patch_plus1 "$app_h")
-      PREV_VERSION="${PREV_VERSION:-$git_v}"
-      notice "version.h unchanged (${app_h} == git tag); using -v ${APP_VERSION} -p ${git_v}"
-    else
-      APP_VERSION="$app_h"
-      PREV_VERSION="${PREV_VERSION:-$(patch_minus1 "$app_h")}"
-      [ -n "$git_v" ] && notice "version.h updated (${app_h}); using -v ${APP_VERSION} -p ${PREV_VERSION} (git: ${git_v})"
-    fi
+    APP_VERSION="$app_h"
   fi
   valid_semver "$APP_VERSION" || err "APP_VERSION invalid format (need X.Y.Z): ${APP_VERSION}"
-  [ -z "${PREV_VERSION:-}" ] && PREV_VERSION=$(patch_minus1 "$APP_VERSION")
-  valid_semver "$PREV_VERSION" || err "PREV_VERSION invalid format (need X.Y.Z): ${PREV_VERSION}"
+  if [ "$APP_VERSION" != "$app_h" ]; then
+    write_version_h "$APP_VERSION"
+    notice "version.h set to ${APP_VERSION} (was ${app_h:-none})"
+  fi
 }
 
 # Warn if version.h does not contain APP_VERSION (mismatch may be intentional).
@@ -423,10 +414,11 @@ check_version_mismatch() {
   grep -q "\"$APP_VERSION\"" src/version.h 2>/dev/null || warn "src/version.h does not contain APP_VERSION ${APP_VERSION}"
 }
 
-# Replace PREV_VERSION with APP_VERSION in zero-qt-wallet.pro and README.md. Run from repo root.
-# Portable sed -i: BSD (macOS) requires backup suffix; use .bak then remove.
-apply_version_sed() {
-  sed -i.bak "s/${PREV_VERSION}/${APP_VERSION}/g" zero-qt-wallet.pro && rm -f zero-qt-wallet.pro.bak
-  sed -i.bak "s/${PREV_VERSION}/${APP_VERSION}/g" README.md && rm -f README.md.bak
-  step_done 'Version files'
+# Write APP_VERSION into src/version.h by anchoring on the APP_VERSION key (never on the
+# old value, so no PREV needed). Portable sed -i: BSD (macOS) needs a backup suffix.
+write_version_h() {
+  local v="$1"
+  sed -i.bak -E "s/(#define APP_VERSION \")[0-9]+\.[0-9]+\.[0-9]+(\")/\1${v}\2/" src/version.h \
+    && rm -f src/version.h.bak
+  step_done 'version.h'
 }

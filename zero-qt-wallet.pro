@@ -6,6 +6,11 @@
 
 QT       += core gui network
 
+# Version: src/version.h is the single source of truth. Import APP_VERSION into
+# qmake's VERSION (used for Info.plist on macOS, DLL/exe metadata on Windows).
+# C++ reads the same value via the APP_VERSION macro from version.h.
+VERSION = $$system(grep -oE '[0-9]+\\.[0-9]+\\.[0-9]+' src/version.h)
+
 CONFIG += precompile_header
 
 PRECOMPILED_HEADER = src/precompiled.h
