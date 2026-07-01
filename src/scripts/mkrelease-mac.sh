@@ -20,8 +20,10 @@ check_version_mismatch
 check_zero_binaries mac
 
 make distclean >/dev/null 2>&1 || true
-# make distclean leaves the .app bundle behind; remove it explicitly.
-rm -rf zerowallet.app ZeroWallet.app bin/*
+# distclean leaves the .app bundle and the qmake cache behind; remove them explicitly.
+# Dropping .qmake.stash forces qmake to re-probe the SDK, so a release build never
+# inherits a stale cached SDK version (see BUILD.md Troubleshooting, "SDK has been changed").
+rm -rf zerowallet.app ZeroWallet.app bin/* .qmake.stash
 step_done 'Cleaning'
 
 section 'macOS'
@@ -70,13 +72,25 @@ rm -f artifacts/rw.*.macOS-zerowallet-v*.dmg "$DMG_OUT"
 # --hdiutil-quiet unless CREATE_DMG_VERBOSE; full output goes to the log either way.
 CREATE_DMG_EXTRA=()
 [ -z "${CREATE_DMG_VERBOSE:-}" ] && CREATE_DMG_EXTRA=(--hdiutil-quiet)
+# Heads-up for anyone reading the log: create-dmg's own progress lines that follow are normal
+# and non-fatal on modern macOS — a "2 second sleep" workaround, "hdiutil does not support
+# internet-enable" (removed in 10.15), and "Resource busy" on unmount. Success is judged by the
+# artifact, not this output.
+notice 'Building DMG (create-dmg progress below is normal: "2s sleep", "internet-enable", "Resource busy" are benign)'
+# Don't treat create-dmg's exit code as authoritative: it commonly exits nonzero on a
+# "Resource busy" race while unmounting the *finished* image (Spotlight/fseventsd holds the
+# volume). Capture the status, then judge success by the actual artifact (imageinfo below).
+CREATE_DMG_RC=0
 create-dmg --volname "ZeroWallet-v${APP_VERSION}" --volicon "res/logo.icns" \
   --window-pos 200 120 --window-size 800 400 --icon "ZeroWallet.app" 200 190 \
   --app-drop-link 600 185 --hide-extension "ZeroWallet.app" \
   --background res/dmgbg.png "${CREATE_DMG_EXTRA[@]}" "$DMG_OUT" artifacts/ZeroWallet.app \
-  || err 'create-dmg failed'
-[ ! -f "$DMG_OUT" ] && err 'DMG not created'
+  || CREATE_DMG_RC=$?
+# Real validity gate: the DMG must exist and be a readable image (hdiutil imageinfo succeeds).
 DMG_FORMAT=$(hdiutil imageinfo "$DMG_OUT" 2>/dev/null | sed -n 's/^Format:[[:space:]]*//p')
+[ -f "$DMG_OUT" ] && [ -n "$DMG_FORMAT" ] || err "create-dmg failed (exit ${CREATE_DMG_RC}); no valid DMG at ${DMG_OUT}"
+# DMG is valid; a nonzero create-dmg exit here was the benign unmount race — warn, don't abort.
+[ "$CREATE_DMG_RC" -ne 0 ] && warn "create-dmg exited ${CREATE_DMG_RC} but a valid DMG was produced (unmount race); continuing"
 DMG_SIZE=$(stat -f %z "$DMG_OUT" 2>/dev/null || stat -c %s "$DMG_OUT" 2>/dev/null)
 [ -n "$DMG_FORMAT" ] && [ -n "$DMG_SIZE" ] && notice "DMG: ${DMG_FORMAT}, $(( DMG_SIZE / 1024 / 1024 ))MB"
 step_done 'Building dmg'

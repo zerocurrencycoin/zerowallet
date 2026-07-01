@@ -27,8 +27,19 @@ Ported the mac-working build scripts to Linux + Windows and hardened them. On br
 
 **Next:**
 
-- **macOS: validate** — not yet run on a Mac. Follow [BUILD §macOS validation](BUILD.md#macos-validation).
-  Then mark done and merge `port-linuxwin` → `upstream-port`.
+- **macOS dev + release: validated** 2026-07-01 (arm64, Qt 5.15.18). `mkdev-mac.sh` bare + `-c`
+  exit 0; `mkrelease-mac.sh -T` exit 0 → signed DMG (UDZO) + tgz, `package-verify --mac` OK. Notes:
+  `logs/mac-validation-notes-2026-07-01.md`. ✅ **macOS validation complete — `port-linuxwin` is
+  ready to merge → `upstream-port`.**
+- **create-dmg false-failure (fixed 2026-07-01):** create-dmg finished a valid DMG but exited
+  nonzero on the unmount "Resource busy" race, aborting the run and skipping `-T`. `mkrelease-mac`
+  now gates on DMG validity (`hdiutil imageinfo`), not create-dmg's exit code; warns on the race.
+  Documented in [BUILD Troubleshooting](BUILD.md#troubleshooting). ✅
+- **SDK-cache handling (done 2026-07-01):** an Xcode SDK bump (26.2→26.5) made a reuse
+  `mkdev-mac` fail Qt's `sdk.mk` version check because `distclean` keeps `.qmake.stash`. Both
+  mac clean paths now wipe `.qmake.stash` (`mkrelease` always; `mkdev` under `-c`); documented
+  in [BUILD Troubleshooting](BUILD.md#troubleshooting). Design unchanged: `mkdev` reuses,
+  `mkrelease` cleans; no auto-retry (SDK bumps are ~twice/yr). ✅
 - `check_version_mismatch` is now a no-op — remove or repurpose ([UpdateWallet §Versioning](UpdateWallet.md#versioning-srcversionh-is-the-single-source-of-truth)).
 - Logs accumulate (no rotation) — postponed.
 
@@ -55,6 +66,27 @@ Ported the mac-working build scripts to Linux + Windows and hardened them. On br
 
 - Review safewallet/SevenSeas build script fixes separately from P0 ports.
 - Verify ZERO_DIR layout: mkrelease default `../Zero/src` vs platform output dirs.
+
+### Docs cleanup — UpdateWallet.md (2026-07-01 review)
+
+Fixed in this pass: PCH `__OPTIMIZE__` triplication (kept canonical in §macOS pitfalls, cross-compile
+copy → pointer); §Private-key export "3-path vs 2-path" collapsed to a pointer (was a near-verbatim
+restatement of §"T `[""]` and path U"); redundant DMG "Mitigation:" line removed; APP_VERSION stale
+`4.0.0` → `4.0.1`. (Note: `zerowallet-merge` line 63 is **not** stale — it's a real branch.)
+
+Remaining, not yet done (judgment calls — confirm intent before editing):
+
+- **KEY-1 / `8febf47` "omit-params wrong for Zero"** still stated in ~4 places (§"T `[""]`",
+  §Remaining upstream fixes KEY-1 row, §Priority P0 row, §Recommended ports). Table rows are fine
+  terse; consider one canonical prose spot + refs. Low risk, low value.
+- **`BUILD §…` deep links name section titles, not anchors** (e.g. "§macOS App Signing and
+  Distribution" line ~598) — titles that don't match BUILD's real anchors will rot. Convert to
+  real `#anchor` links or generic "BUILD §Troubleshooting".
+- **Cross-ref density:** 27 `see §`/`see BUILD` refs, 14 `BUILD §`. Mostly legit per content policy
+  (§Content policy), but a sweep to dedupe repeated "BUILD §Troubleshooting" pointers within a
+  single section would tighten it.
+- **Params content** (§Zcash proving parameters, §3-path, §open questions) overlaps across 3+
+  subsections; largest remaining consolidation target if the doc is trimmed further.
 
 ---
 

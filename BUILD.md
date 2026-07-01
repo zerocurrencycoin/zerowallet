@@ -15,7 +15,7 @@ For release preparation: see [CHANGELOG.md](CHANGELOG.md) (versioned changes), [
 | **Options** | Env overrides CLI. Key: `QT_PREFIX`, `RUN_TRANSLATIONS`, `USE_SYSTEM_QT`, `MXE_PATH`, `ZERO_DIR`, `SKIP_STRIP`, `SKIP_SIGN`, `MAKE_TGZ`, `LOG_FILE`, `JOBS`. Long options: `--systemqt`, `--nostrip`, `--tgz`, `-t`/`--translate`. |
 | **Helpers** | `fbuild.sh`: SCRIPT_DIR, REPO_ROOT, err/warn/notice/step_done, check_file, check_zero_binaries, resolve_qt, get_app_from_h, resolve_version, parse_mkrelease_args, etc. qt-report, install_mxe, mkrelease.sh, mkdev.sh source fbuild; signbinaries uses get_app_from_h when APP_VERSION unset. |
 | **Reporting** | `./src/scripts/qt-report.sh` — Qt setup per platform (repo path, qmake/qt5-static/MXE, one-line summary). |
-| **Validation** | Linux dev+release ✅ · Windows dev+release (MXE on Linux) ✅ · **macOS: not yet validated** — see [macOS validation](#macos-validation). |
+| **Validation** | Linux dev+release ✅ · Windows dev+release (MXE on Linux) ✅ · macOS **dev + release ✅** (2026-07-01, arm64, Qt 5.15.18; DMG UDZO + tgz, package-verify OK). |
 | **Versioning** | `src/version.h` is the single source of truth; qmake imports it; `-v` writes it. No git/PREV. See [UpdateWallet §Versioning](UpdateWallet.md#versioning-srcversionh-is-the-single-source-of-truth). |
 | **Logging** | Every build writes a timestamped log by default; `-L` overrides path. See [Logging](#logging). |
 
@@ -196,9 +196,11 @@ Build zerod: `cd ../Zero && ./zcutil/build.sh`. Then run `./src/scripts/mkreleas
 
 #### macOS validation {#macos-validation}
 
-**Status:** macOS is **not yet validated** on the `port-linuxwin` line. Linux and Windows
-(cross-build) are confirmed; the mac scripts were refactored in the same pass but not run on a
-Mac. Pick up macOS testing here.
+**Status:** macOS **dev + release validated** 2026-07-01 on the `port-linuxwin` line (arm64,
+Qt 5.15.18). `mkdev-mac.sh` (bare + `-c`) exit 0, arm64 `ZeroWallet.app`. `mkrelease-mac.sh -T`
+exit 0 → signed DMG (UDZO, 22MB) + tgz; `package-verify.sh --mac` OK. Details:
+`logs/mac-validation-notes-2026-07-01.md`. One fix landed during validation: create-dmg
+false-failure (see Troubleshooting, "create-dmg exits nonzero but DMG is fine").
 
 **Environment check first** (cheap, no build):
 
@@ -373,6 +375,8 @@ Default location: `~/mxe/usr/bin`. Override with `-m PATH` or `MXE_PATH`. Target
 | Issue | Platform | Solution |
 |-------|----------|----------|
 | `__OPTIMIZE__ predefined macro was enabled in PCH file but is currently disabled` | macOS | PCH built with different CONFIG (debug vs release). Run `./src/scripts/mkdev.sh -c -L` to force clean and rebuild. |
+| `The macosx platform SDK has been changed from version X to version Y` (then `make: *** No rule to make target 'ZeroWallet'` and `sdk.mk:NN: *** ^. Stop.`) | macOS | Xcode/SDK was updated since the last build. Qt caches the SDK version in `.qmake.stash` and refuses to reuse objects built against a different SDK (correct: mixed-SDK objects are unsafe). `distclean` does **not** remove the stash. **Fix:** `./src/scripts/mkdev-mac.sh -c` (its clean now wipes `.qmake.stash`, forcing a re-probe). `mkrelease-mac.sh` always cleans the stash, so release builds never hit this. A bare (reuse) `mkdev-mac.sh` is expected to fail this way once after an SDK bump — rerun with `-c`. Manual equivalent: `rm -f .qmake.stash && make distclean`. |
+| create-dmg exits nonzero but the DMG is fine ("Wait a moment for Resource busy…" during unmount) | macOS | Known create-dmg race: it finishes writing a valid image, then fails to detach because Spotlight/`fseventsd` holds the volume. `mkrelease-mac.sh` no longer treats create-dmg's exit code as fatal — it judges success by the artifact (`hdiutil imageinfo` must succeed) and only `warn`s on a nonzero exit with a valid DMG. If you see the WARN, the DMG is good. Intermittent. |
 | DMG not created / create-dmg fails | macOS | By default create-dmg runs with `--hdiutil-quiet`. To see full hdiutil/create-dmg stderr, re-run with `CREATE_DMG_VERBOSE=1 ./src/scripts/mkrelease-mac.sh`. Check disk space and "File exists" (remove existing `artifacts/macOS-zerowallet-v*.dmg`); app is in `artifacts/ZeroWallet.app` if create-dmg failed. |
 
 ---

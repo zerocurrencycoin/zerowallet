@@ -622,11 +622,10 @@ Summary of issues we hit with macOS build, sign, strip, and DMG, what we did, an
 | **hdiutil: convert failed - File exists** | `hdiutil convert` does not overwrite the output file. Leftover DMG or temp from a previous run. | Script **removes** `artifacts/macOS-zerowallet-v*.dmg` and `artifacts/rw.*.macOS-zerowallet-v*.dmg` **twice**: once at start (with other cleanup), once **immediately before** create-dmg. No manual rm needed in normal runs. |
 | **create-dmg very noisy** (Creating disk image…, Mounting…, Will sleep for 2 seconds…, etc.) | create-dmg and hdiutil print progress to stdout/stderr. | **Quieter by default:** script uses `--hdiutil-quiet` and redirects create-dmg stdout to `/dev/null`. On failure, **re-run with `CREATE_DMG_VERBOSE=1 ./src/scripts/mkrelease-mac.sh`** to see full hdiutil/create-dmg output. Documented in BUILD §Troubleshooting. |
 | **"hdiutil does not support internet-enable"** | Informational; internet-enable was removed in macOS 10.15. | Harmless; DMG is still built. Can appear on stderr even with `--hdiutil-quiet`. |
+| **"Will sleep for 2 seconds to workaround … 'Can't get disk (-1728)'"** | create-dmg's built-in pause before the Finder-layout AppleScript; `-1728` is an AppleScript "can't get object" race when the volume isn't ready yet. | Harmless; create-dmg's own workaround. `mkrelease-mac.sh` prints a `notice` before create-dmg so this and the other benign lines are expected in the log. |
 | **Unclear if DMG is compressed** / suspicious size | Need to confirm format (UDZO = zlib compressed). | After create-dmg, script runs `hdiutil imageinfo` and prints one line: `DMG: UDZO, N MB`. If format is not UDZO, something is wrong. |
 | **App missing if create-dmg fails** | Previously create-dmg was run before moving the app to artifacts. | Script **moves app to `artifacts/` first**, then runs create-dmg. If create-dmg fails, `artifacts/ZeroWallet.app` is still there. |
 | **Temp rw.*.dmg left behind on failure** | create-dmg creates read-write temp images. | Script does **not** promote or keep rw.* on success; cleanup on next run. On failure, leave rw.* for inspection; next run removes them. |
-
-**Mitigation:** BUILD §Troubleshooting row for "DMG not created / create-dmg fails" points to `CREATE_DMG_VERBOSE=1` and "File exists".
 
 ### Other macOS build / dev
 
@@ -634,6 +633,7 @@ Summary of issues we hit with macOS build, sign, strip, and DMG, what we did, an
 |--------|--------|---------------------------|
 | **PlugIns / ln failure in .pro** (e.g. "No such file or directory" for PlugIns) | qmake expanded `$$TARGET.app` to empty in some contexts, so path to app bundle was wrong. | **Use literal `ZeroWallet.app`** in `zero-qt-wallet.pro` for PlugIns path and clean-app-deploy (not `$$TARGET.app`). See BUILD §Troubleshooting for PCH. |
 | **PCH: __OPTIMIZE__ predefined macro was enabled in PCH file but is currently disabled** | PCH built with one CONFIG (debug vs release), then build switched. | Clean and rebuild: `./src/scripts/mkdev.sh -c -L`. Documented in BUILD §Troubleshooting. |
+| **`sdk.mk: *** ^` / "platform SDK has been changed"** after an Xcode update | qmake caches the SDK version in `.qmake.stash`; Qt refuses to reuse objects across SDK versions, and `make distclean` keeps the stash. | Both mac clean paths now `rm` `.qmake.stash` — `mkrelease-mac` always, `mkdev-mac` under `-c`. A reuse `mkdev-mac` fails once after an SDK bump; rerun `-c`. Design: mkdev reuses, mkrelease cleans; SDK bumps are ~twice/yr so no auto-retry. Full symptom/fix: BUILD §Troubleshooting. |
 
 ---
 
@@ -707,17 +707,11 @@ Organized by area. Track here and in [TODO](TODO.md); do not mix into active ups
 
 ### Private-key export: 3-path vs 2-path
 
-**2-path (SevenSeas / old zerowallet):** `getaddressesbyaccount` `[""]` + `z_listaddresses` only.
+**2-path (SevenSeas / old zerowallet):** `getaddressesbyaccount` `[""]` + `z_listaddresses`, no U.
+**3-path (zerowallet, KEY-1):** adds **U** — `listunspent` `minconf:0` for funded t-addrs not under `getaddressesbyaccount ""`.
 
-1. **T** — `getaddressesbyaccount` with **`params: [""]`** only (zerod **rejects** omitted params; safewallet `8febf47` omit-params is wrong for Zero)
-2. **Z** — `z_listaddresses` → `z_exportkey`
-3. **U** — `listunspent` with **`minconf: 0`** (same as `getTransparentUnspent`). Runs **after** T so only t-addrs **not** in T are exported; logger + dialog **only if** U finds such addrs.
-
-Sequential TZU; `doRPCIgnoreError` on address fetches; empty paths still advance counter; failed key dumps skipped with log.
-
-**Fresh / empty wallet:** On a brand-new wallet (no t/z addrs, no UTXOs, no keys yet), all three RPCs legitimately return `[]` — that is not a minconf or TZU bug. Export finishes with an empty key list and **no** U notice. Re-test U recovery on a wallet that has funded t-addrs visible in `listunspent` but missing from `getaddressesbyaccount ""` (e.g. after import without account label).
-
-**Zero RPC note:** `getaddressesbyaccount` **without** params errors on zerod; must pass `[""]` for the default account (safewallet `8febf47` omit-params does not apply).
+Full TZU mechanics, the `8febf47`-is-wrong-for-Zero note, and the fresh-empty-wallet vs
+funded-unlabeled test cases are in §Private-key export: T `[""]` and path U — not repeated here.
 
 ### Spaces in application path (why Linux/Windows, not macOS today)
 
@@ -1024,7 +1018,7 @@ zip -r Windows-zerowallet-v$APP_VERSION.zip release/zerowallet-v$APP_VERSION/
 | `windres: can't open file 'application.qrc'` | Verify resource files accessible; `x86_64-w64-mingw32-windres --version` |
 | Precompiled header issues | `CONFIG -= precompile_header` in mingw.pro (already done) |
 
-**macOS PCH:** `__OPTIMIZE__ predefined macro was enabled in PCH file but is currently disabled` — PCH built with different CONFIG (debug vs release). Fix: `./src/scripts/mkdev.sh -c -L`. See [BUILD](BUILD.md) §Troubleshooting.
+**macOS build issues** (PCH `__OPTIMIZE__`, SDK-changed, DMG, signing): see §macOS release: pitfalls and solutions, and [BUILD](BUILD.md) §Troubleshooting. Not repeated here — this section is Linux→Windows cross-compile.
 
 ### Performance Considerations
 
@@ -1167,7 +1161,7 @@ Both scripts use a separate output dir so they do not overwrite `qt5-static/` fr
 | libsodium | 1.0.18 | 1.0.21 | **1.0.21** | Done. `fbuild-libsodium.sh`, vendored `res/libsodium.a`. |
 | nlohmann/json | 3.6.1 | 3.12.0 | 3.6.1 | Single-header; low-risk bump. |
 | SingleApplication | 3.0.14 | 3.5.4 | 3.0.14 | Vendored copy. |
-| Qt | 5.9.1 | 5.15.17+ | **5.15.18** | Release: `build-qt-static.sh` → `qt5-static/`. Dev: system Qt 5.15.3–5.15.13 OK. APP_VERSION **4.0.0** (`version.h`) is wallet release, not Qt version. |
+| Qt | 5.9.1 | 5.15.17+ | **5.15.18** | Release: `build-qt-static.sh` → `qt5-static/`. Dev: system Qt 5.15.3–5.15.13 OK. APP_VERSION **4.0.1** (`version.h`) is wallet release, not Qt version. |
 | Docker | ubuntu:16.04 | ubuntu:24.04 | ubuntu:16.04 | **Postponed** — see §Postponed. |
 | OpenSSL | 1.0.2r | 1.1.1w | 1.0.2r | Dockerfile only; postponed with Docker bump. |
 | Nayuki QR | (blank) | v1.8.0 | unversioned | Replace 6 files with 2 when upgraded. |

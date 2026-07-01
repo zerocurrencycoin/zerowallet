@@ -19,8 +19,11 @@ resolve_qt mac dev
 
 if [ -n "${MKDEV_CLEAN:-}" ]; then
   make distclean 2>/dev/null || true
-  # make distclean leaves the .app bundle behind; remove it explicitly.
-  rm -rf ZeroWallet.app zerowallet.app
+  # distclean leaves the .app bundle and the qmake cache behind; remove them explicitly.
+  # Dropping .qmake.stash re-probes the SDK: this is the documented fix after an Xcode/SDK
+  # update, when a plain (reuse) build fails Qt's SDK-version check
+  # (see BUILD.md Troubleshooting, "SDK has been changed").
+  rm -rf ZeroWallet.app zerowallet.app .qmake.stash
   notice 'Cleaned (distclean)'
 fi
 
