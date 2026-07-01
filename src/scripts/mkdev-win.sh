@@ -10,6 +10,9 @@ ME="mkdev-win"
 cd "$REPO_ROOT"
 
 parse_mkdev_args "logs/mkdev-win.log" "$@"
+init_logging
+notice "CONFIG=${CONFIG} -j${JOBS} (Windows target, MXE cross-build on Linux)"
+
 resolve_qt win dev
 preflight_mkdev_win
 if [ -n "${MKDEV_CHECK_ONLY:-}" ]; then
@@ -17,25 +20,24 @@ if [ -n "${MKDEV_CHECK_ONLY:-}" ]; then
   exit 0
 fi
 
-notice "CONFIG=${CONFIG} -j${JOBS} (Windows target, MXE cross-build on Linux)"
-[ -n "${LOG_FILE:-}" ] && notice "Log: ${LOG_FILE}"
-
-notice 'Configuring...'
 if [ -n "${MKDEV_CLEAN:-}" ]; then
   make clean 2>/dev/null || true
+  # MXE build products make clean cannot reach: generated .pro, Makefile, output dirs.
   rm -f zero-qt-wallet-mingw.pro Makefile
   rm -rf debug release
   notice 'Cleaned (clean)'
 fi
 
 notice 'Building libsodium (Windows target)...'
-res/libsodium/buildlibsodium-win.sh 2>&1 | log_capture || err 'libsodium build failed'
-[ -n "${CONFIG:-}" ] || err 'CONFIG not set (parse_mkdev_args)'
+res/libsodium/buildlibsodium-win.sh || err 'libsodium build failed'
+# MXE MinGW chokes on the precompiled header; strip it from the generated .pro.
 sed "s/precompile_header/$CONFIG/g" zero-qt-wallet.pro | sed '/PRECOMPILED_HEADER/d' > zero-qt-wallet-mingw.pro
-$QMAKE zero-qt-wallet-mingw.pro CONFIG+="$CONFIG" 2>&1 | log_capture || err "qmake failed"
+
+notice 'Configuring...'
+$QMAKE zero-qt-wallet-mingw.pro CONFIG+="$CONFIG" || err "qmake failed"
 
 notice 'Building...'
-if make -j"$JOBS" 2>&1 | log_capture; then
+if make -j"$JOBS"; then
   :
 else
   build_fail 'build failed'

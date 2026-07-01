@@ -80,8 +80,7 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 resolve_jobs
-[ -n "${LOG_FILE:-}" ] && mkdir -p "$(dirname "${LOG_FILE}")"
-[ -n "${LOG_FILE:-}" ] && exec > >(tee -a "${LOG_FILE}") 2>&1
+init_logging
 
 [[ "$QT_MINOR" =~ ^[0-9]+$ ]] || err "QT_MINOR must be numeric: ${QT_MINOR}"
 [[ "$QT_PATCH" =~ ^[0-9]+$ ]] || err "QT_PATCH must be numeric: ${QT_PATCH}"

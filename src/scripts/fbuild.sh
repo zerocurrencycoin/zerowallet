@@ -2,8 +2,8 @@
 # Copyright 2026 Zero Developers
 # Shared build helpers for mkdev/mkrelease scripts.
 # Usage: ME="script-name"; . "$(dirname "$0")/fbuild.sh"
-# Provides: SCRIPT_DIR, REPO_ROOT, JOBS, err, warn, info, notice, step_done, section,
-#           analyze_build_log, log_capture, build_fail, check_file, check_zero_binaries,
+# Provides: SCRIPT_DIR, REPO_ROOT, JOBS, err, warn, notice, step_done, section,
+#           analyze_build_log, init_logging, build_fail, check_file, check_zero_binaries,
 #           resolve_zero_dir, resolve_path_win, resolve_qt, version helpers (get_app_from_h, resolve_version, etc.),
 #           parse_mkdev_args, parse_mkrelease_args, show_mkdev_help, show_mkrelease_help,
 #           run_dotranslations, write_version_h
@@ -53,9 +53,14 @@ analyze_build_log() {
   grep -iE "warning:" "$f" 2>/dev/null | tail -15 || echo "(none)" >&2
 }
 
-# Log capture: tee to LOG_FILE or cat. Used in mkdev scripts.
-log_capture() {
-  if [ -n "${LOG_FILE:-}" ]; then tee -a "${LOG_FILE}"; else cat; fi
+# Start logging: tee all output (stdout+stderr, every command) to LOG_FILE.
+# Default is a fresh timestamped file so prior runs are preserved; -L overrides the path.
+# Call once, right after parse_*_args.
+init_logging() {
+  LOG_FILE="${LOG_FILE:-$REPO_ROOT/logs/${ME}-$(date +%Y%m%d-%H%M%S).log}"
+  mkdir -p "$(dirname "$LOG_FILE")"
+  exec > >(tee -a "$LOG_FILE") 2>&1
+  notice "Log: ${LOG_FILE}"
 }
 
 # Call on build failure: analyze log if set, then err.
@@ -98,7 +103,6 @@ parse_mkdev_args() {
     esac
   done
   resolve_jobs
-  if [ -n "${LOG_FILE:-}" ]; then mkdir -p "$(dirname "$LOG_FILE")"; fi
 }
 
 show_mkdev_help() {
@@ -152,7 +156,6 @@ parse_mkrelease_args() {
     esac
   done
   resolve_jobs
-  if [ -n "${LOG_FILE:-}" ]; then mkdir -p "$(dirname "$LOG_FILE")"; fi
 }
 
 show_mkrelease_help() {

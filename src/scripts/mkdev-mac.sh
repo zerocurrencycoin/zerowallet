@@ -10,27 +10,25 @@ ME="mkdev-mac"
 cd "$REPO_ROOT"
 
 parse_mkdev_args "logs/mkdev-mac.log" "$@"
+init_logging
 notice "CONFIG=${CONFIG} -j${JOBS}"
-[ -n "${LOG_FILE:-}" ] && notice "Log: ${LOG_FILE}"
 
 resolve_qt mac dev
 [ -z "${QT_PREFIX:-}" ] && err "Qt not found. Run: brew install qt@5"
 [ -x "${QMAKE:-}" ] || err "qmake not found at ${QT_PREFIX:-}/bin/qmake"
 
-notice 'Configuring...'
 if [ -n "${MKDEV_CLEAN:-}" ]; then
   make distclean 2>/dev/null || true
-  rm -rf ZeroWallet.app zerowallet.app bin
+  # make distclean leaves the .app bundle behind; remove it explicitly.
+  rm -rf ZeroWallet.app zerowallet.app
   notice 'Cleaned (distclean)'
 fi
-$QMAKE zero-qt-wallet.pro CONFIG+="$CONFIG" CONFIG+=sdk_no_version_check 2>&1 | log_capture
+
+notice 'Configuring...'
+$QMAKE zero-qt-wallet.pro CONFIG+="$CONFIG" CONFIG+=sdk_no_version_check
 
 notice 'Building...'
-if make -j"$JOBS" 2>&1 | log_capture; then
-  :
-else
-  build_fail 'build failed'
-fi
+make -j"$JOBS" || build_fail 'build failed'
 
 if [ -d ZeroWallet.app ]; then
   notice 'Done. Run: open ZeroWallet.app'

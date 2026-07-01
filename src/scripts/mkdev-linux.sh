@@ -10,8 +10,8 @@ ME="mkdev-linux"
 cd "$REPO_ROOT"
 
 parse_mkdev_args "logs/mkdev-linux.log" "$@"
+init_logging
 notice "CONFIG=${CONFIG} -j${JOBS}"
-[ -n "${LOG_FILE:-}" ] && notice "Log: ${LOG_FILE}"
 
 for pkg in qtbase5-dev qtbase5-dev-tools libqt5websockets5-dev libqt5svg5-dev; do
   if ! dpkg -l "$pkg" 2>/dev/null | grep -q ^ii; then
@@ -24,23 +24,18 @@ resolve_qt linux dev
 [ -z "${QMAKE:-}" ] && err "qmake not found. Install qtbase5-dev-tools."
 
 notice 'Checking libsodium (Unix)...'
-res/libsodium/buildlibsodium.sh 2>&1 | log_capture || err 'libsodium check/build failed'
+res/libsodium/buildlibsodium.sh || err 'libsodium check/build failed'
 
-notice 'Configuring...'
 if [ -n "${MKDEV_CLEAN:-}" ]; then
   make distclean 2>/dev/null || true
-  rm -rf bin
-  rm -f zerowallet
   notice 'Cleaned (distclean)'
 fi
-$QMAKE zero-qt-wallet.pro CONFIG+="$CONFIG" 2>&1 | log_capture
+
+notice 'Configuring...'
+$QMAKE zero-qt-wallet.pro CONFIG+="$CONFIG"
 
 notice 'Building...'
-if make -j"$JOBS" 2>&1 | log_capture; then
-  :
-else
-  build_fail 'build failed'
-fi
+make -j"$JOBS" || build_fail 'build failed'
 
 [ -f zerowallet ] || err 'zerowallet binary not produced'
 notice 'Done. Run ./zerowallet'
