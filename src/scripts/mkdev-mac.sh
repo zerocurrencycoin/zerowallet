@@ -35,7 +35,10 @@ fi
 if [ -d ZeroWallet.app ]; then
   notice 'Done. Run: open ZeroWallet.app'
   ls -la ZeroWallet.app
-  [ -n "${RUN_AFTER_BUILD:-}" ] && { notice 'Launching ZeroWallet.app'; open ZeroWallet.app; }
+  if [ -n "${RUN_AFTER_BUILD:-}" ]; then
+    notice 'Launching ZeroWallet.app'
+    open ZeroWallet.app
+  fi
 else
   build_fail 'ZeroWallet.app not produced'
 fi

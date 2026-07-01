@@ -24,10 +24,10 @@ QT_PATCH="${QT_PATCH:-$DEFAULT_QT_PATCH}"
 QT_SRC_PREFIX="qt-everywhere-"
 QT_STATIC_DIR="${QT_STATIC_DIR:-qt5-static}"
 DEFAULT_LOG="$REPO_ROOT/logs/build-qt-static.log"
-URL_BASE="https://download.qt.io/archive/qt/${QT_MAJOR}.${QT_MINOR}"
 FORCE_ALL="${FORCE_ALL:-}"
 NO_PATCH="${NO_PATCH:-}"
 USE_EXISTING="${USE_EXISTING:-}"
+JOBS_CLI=""
 TARBALL_MIN="${TARBALL_MIN:-${TARBALL_MIN_BYTES:-$((600 * 1024 * 1024))}}"
 BUILD_SENTINEL_REL="qtnetworkauth/lib/libQt5NetworkAuth.a"
 
@@ -55,9 +55,9 @@ while [[ $# -gt 0 ]]; do
       exit 0
       ;;
     -f|--force) FORCE_ALL="${FORCE_ALL:-1}"; shift ;;
-    -j|--jobs) JOBS="${JOBS:-$2}"; shift 2 ;;
-    -j*) JOBS="${JOBS:-${1#-j}}"; shift ;;
-    --jobs=*) JOBS="${JOBS:-${1#--jobs=}}"; shift ;;
+    -j|--jobs) JOBS_CLI="$2"; shift 2 ;;
+    -j*) JOBS_CLI="${1#-j}"; shift ;;
+    --jobs=*) JOBS_CLI="${1#--jobs=}"; shift ;;
     -L) LOG_FILE="${LOG_FILE:-$DEFAULT_LOG}"; shift ;;
     -L=*) LOG_FILE="${LOG_FILE:-${1#-L=}}"; shift ;;
     --log)
@@ -79,6 +79,7 @@ while [[ $# -gt 0 ]]; do
     *) err "Unknown option: $1 (use -h for help)" ;;
   esac
 done
+resolve_jobs
 [ -n "${LOG_FILE:-}" ] && mkdir -p "$(dirname "${LOG_FILE}")"
 [ -n "${LOG_FILE:-}" ] && exec > >(tee -a "${LOG_FILE}") 2>&1
 
@@ -197,9 +198,9 @@ if ! select_qt_source_dir; then
   [ -d "$QT_SRC_DIR_OPEN_SOURCE" ] && QT_SRC_DIR="$QT_SRC_DIR_OPEN_SOURCE"
   [ -d "$QT_SRC_DIR_GENERIC" ] && QT_SRC_DIR="$QT_SRC_DIR_GENERIC"
 fi
-[ -z "$QT_SRC_DIR" ] && {
+if [ -z "$QT_SRC_DIR" ]; then
   err "Extracted Qt source dir not found for ${QT_VERSION}"
-}
+fi
 [ -f "$QT_SRC_DIR/qt.pro" ] || err "qt.pro missing in ${QT_SRC_DIR}"
 [ -x "$QT_SRC_DIR/configure" ] || err "configure missing in ${QT_SRC_DIR}"
 [ -f "$QT_SRC_DIR/README" ] || err "README missing in ${QT_SRC_DIR}"
@@ -259,7 +260,7 @@ if [ -n "$FORCE_ALL" ] || [ -n "$USE_EXISTING" ] || {
   [ ! -f "$BUILD_SENTINEL_REL" ]
 }; then
   notice 'Building (this takes 30-60 min)...'
-  make -j"${JOBS:-2}" || err 'Qt build failed'
+  make -j"$JOBS" || err 'Qt build failed'
 else
   notice "Build already complete (${BUILD_SENTINEL_REL})"
 fi

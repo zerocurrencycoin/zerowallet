@@ -31,7 +31,7 @@ run_dotranslations >/dev/null
 $QMAKE zero-qt-wallet.pro CONFIG+=release CONFIG+=sdk_no_version_check >/dev/null
 step_done 'Configuring'
 
-make -j"${JOBS:-2}" >/dev/null
+make -j"$JOBS" >/dev/null
 step_done 'Building'
 
 mkdir -p artifacts

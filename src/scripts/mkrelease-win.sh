@@ -28,22 +28,22 @@ run_dotranslations >/dev/null
 
 rm -f zero-qt-wallet-mingw.pro
 rm -rf release/
-sed "s/precompile_header/release/g" zero-qt-wallet.pro | sed "s/PRECOMPILED_HEADER.*//g" > zero-qt-wallet-mingw.pro
+sed "s/precompile_header/release/g" zero-qt-wallet.pro | sed '/PRECOMPILED_HEADER/d' > zero-qt-wallet-mingw.pro
 step_done 'Configuring'
 
 res/libsodium/buildlibsodium-win.sh >/dev/null
 step_done 'Building libsodium'
 
 $QMAKE zero-qt-wallet-mingw.pro CONFIG+=release >/dev/null
-make -j"${JOBS:-2}" >/dev/null
+make -j"$JOBS" >/dev/null
 step_done 'Building'
 
 PKGDIR="release/zerowallet-v${APP_VERSION}"
 mkdir -p "$PKGDIR"
 notice "ZERO_DIR=${ZERO_DIR} (zerod.exe: $(stat -c %s "${ZERO_DIR}/zerod.exe" 2>/dev/null) bytes)"
 cp -f release/zerowallet.exe             "$PKGDIR/" >/dev/null
-  cp -f "$ZERO_DIR/zerod.exe"             "$PKGDIR/" >/dev/null
-  cp -f "$ZERO_DIR/zero-cli.exe"          "$PKGDIR/" >/dev/null
+cp -f "$ZERO_DIR/zerod.exe"              "$PKGDIR/" >/dev/null
+cp -f "$ZERO_DIR/zero-cli.exe"           "$PKGDIR/" >/dev/null
 [ -z "${SKIP_STRIP:-}" ] && [ -n "${STRIP:-}" ] && "$STRIP" "$PKGDIR/zerowallet.exe" "$PKGDIR/zerod.exe" "$PKGDIR/zero-cli.exe"
 cp -f README.md                          "$PKGDIR/" >/dev/null
 

@@ -10,7 +10,31 @@
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
-JOBS="$(nproc 2>/dev/null || (sysctl -n hw.ncpu 2>/dev/null) || echo 2)"
+
+# Do NOT pre-seed JOBS here: a pre-set JOBS would make the -j flag's override a no-op.
+# Precedence is applied by resolve_jobs at end of parse.
+
+# CPU count, capped at 4. Linux: nproc; macOS: sysctl hw.ncpu; fallback 2.
+detect_jobs() {
+  local n
+  n="$(nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 2)"
+  [[ "$n" =~ ^[0-9]+$ ]] || n=2
+  [ "$n" -gt 4 ] && n=4
+  [ "$n" -lt 1 ] && n=2
+  echo "$n"
+}
+
+# Final JOBS precedence (matches every option's env-wins rule): pre-set JOBS (env) >
+# -j flag (JOBS_CLI) > detect_jobs (capped). Call at end of parse.
+resolve_jobs() {
+  if [ -n "${JOBS:-}" ]; then
+    :  # env (or caller) already set it — wins
+  elif [ -n "${JOBS_CLI:-}" ]; then
+    JOBS="$JOBS_CLI"
+  else
+    JOBS="$(detect_jobs)"
+  fi
+}
 
 # shellcheck disable=SC1091
 . "$SCRIPT_DIR/fmessage.sh"
@@ -50,13 +74,15 @@ parse_mkdev_args() {
   shift
   CONFIG="${CONFIG:-debug}"
   RUN_AFTER_BUILD=""
+  local JOBS_CLI=""
   while [[ $# -gt 0 ]]; do
     case "$1" in
       -c|--clean) MKDEV_CLEAN="${MKDEV_CLEAN:-1}"; shift ;;
+      -C|--check) MKDEV_CHECK_ONLY="${MKDEV_CHECK_ONLY:-1}"; shift ;;
       -h|--help) show_mkdev_help "$default_log"; exit 0 ;;
-      -j|--jobs) JOBS="${JOBS:-$2}"; shift 2 ;;
-      -j*) JOBS="${JOBS:-${1#-j}}"; shift ;;
-      --jobs=*) JOBS="${JOBS:-${1#--jobs=}}"; shift ;;
+      -j|--jobs) JOBS_CLI="$2"; shift 2 ;;
+      -j*) JOBS_CLI="${1#-j}"; shift ;;
+      --jobs=*) JOBS_CLI="${1#--jobs=}"; shift ;;
       -L) LOG_FILE="${LOG_FILE:-$REPO_ROOT/$default_log}"; shift ;;
       -L=*) LOG_FILE="${LOG_FILE:-${1#-L=}}"; shift ;;
       --log)
@@ -71,6 +97,7 @@ parse_mkdev_args() {
       *) shift ;;
     esac
   done
+  resolve_jobs
   if [ -n "${LOG_FILE:-}" ]; then mkdir -p "$(dirname "$LOG_FILE")"; fi
 }
 
@@ -80,7 +107,7 @@ show_mkdev_help() {
   echo "  -c, --clean         [MKDEV_CLEAN] force clean/distclean"
   echo "                      (default: incremental)"
   echo "  -h, --help          [--] show this help"
-  echo "  -j N, --jobs N      [JOBS] parallel jobs"
+  echo "  -j N, --jobs N      [JOBS] parallel jobs (default: min(CPUs,4); env JOBS wins)"
   echo "  -L, -L=PATH         [LOG_FILE] capture log (default: ${log})"
   echo "  --log, --log=PATH   [LOG_FILE] same as -L"
   echo "  -m, --mxe PATH      [MXE_PATH] MXE usr/bin (Windows target)"
@@ -91,19 +118,20 @@ show_mkdev_help() {
   echo "No -z with dev."
 }
 
-# Parse common mkrelease args. Sets ZERO_DIR, APP_VERSION, PREV_VERSION, QT_PREFIX, MXE_PATH, SKIP_TRANSLATIONS, SKIP_STRIP, SKIP_SIGN, LOG_FILE, JOBS.
+# Parse common mkrelease args. Sets ZERO_DIR, APP_VERSION, PREV_VERSION, QT_PREFIX, MXE_PATH, RUN_TRANSLATIONS, SKIP_STRIP, SKIP_SIGN, LOG_FILE, JOBS.
 # Precedence: environment variable overrides command-line option for every option.
 # Usage: parse_mkrelease_args "logs/mkrelease-linux.log" "$@"
 # shellcheck disable=SC2034
 parse_mkrelease_args() {
   local default_log="${1:-}"
   shift
+  local JOBS_CLI=""
   while [[ $# -gt 0 ]]; do
     case "$1" in
       -h|--help) show_mkrelease_help "$default_log"; exit 0 ;;
-      -j|--jobs) JOBS="${JOBS:-$2}"; shift 2 ;;
-      -j*) JOBS="${JOBS:-${1#-j}}"; shift ;;
-      --jobs=*) JOBS="${JOBS:-${1#--jobs=}}"; shift ;;
+      -j|--jobs) JOBS_CLI="$2"; shift 2 ;;
+      -j*) JOBS_CLI="${1#-j}"; shift ;;
+      --jobs=*) JOBS_CLI="${1#--jobs=}"; shift ;;
       -L) LOG_FILE="${LOG_FILE:-$REPO_ROOT/$default_log}"; shift ;;
       -L=*) LOG_FILE="${LOG_FILE:-${1#-L=}}"; shift ;;
       --log)
@@ -118,12 +146,13 @@ parse_mkrelease_args() {
       -N|--no-sign) SKIP_SIGN="${SKIP_SIGN:-1}"; shift ;;
       -S|--systemqt) USE_SYSTEM_QT="${USE_SYSTEM_QT:-1}"; shift ;;
       -T|--tgz) MAKE_TGZ="${MAKE_TGZ:-1}"; shift ;;
-      -t|--tran) SKIP_TRANSLATIONS="${SKIP_TRANSLATIONS:-1}"; shift ;;
+      -t|--translate|--tran) RUN_TRANSLATIONS="${RUN_TRANSLATIONS:-1}"; shift ;;
       -v|--version) APP_VERSION="${APP_VERSION:-$2}"; shift 2 ;;
       -z|--zero) ZERO_DIR="${ZERO_DIR:-$2}"; shift 2 ;;
       *) shift ;;
     esac
   done
+  resolve_jobs
   if [ -n "${LOG_FILE:-}" ]; then mkdir -p "$(dirname "$LOG_FILE")"; fi
 }
 
@@ -131,16 +160,16 @@ show_mkrelease_help() {
   local log="${1:-logs/mkrelease.log}"
   echo "Usage: ${ME} [options]"
   echo "  -h, --help          [--] show this help"
-  echo "  -j N, --jobs N      [JOBS] parallel jobs"
+  echo "  -j N, --jobs N      [JOBS] parallel jobs (default: min(CPUs,4); env JOBS wins)"
   echo "  -L, -L=PATH         [LOG_FILE] capture log (default: ${log})"
   echo "  --log, --log=PATH   [LOG_FILE] same as -L"
   echo "  -m, --mxe PATH      [MXE_PATH] MXE usr/bin (Windows target)"
   echo "  -p, --prev V        [PREV_VERSION] default from version.h or git"
-  echo "  -q, --qt PATH       [QT_PREFIX] Qt prefix (static Qt for Linux release)"
+  echo "  -q, --qt PATH       [QT_PREFIX] Qt prefix (Linux release link; -t host Qt)"
   echo "  -S, --systemqt      [USE_SYSTEM_QT] Linux release with system Qt (dynamic link)"
   echo "  -P, --nostrip       [SKIP_STRIP] skip stripping binaries"
   echo "  -N, --no-sign       [SKIP_SIGN] ad-hoc sign only (macOS)"
-  echo "  -t, --tran          [SKIP_TRANSLATIONS] skip translations"
+  echo "  -t, --translate     [RUN_TRANSLATIONS] rebuild .ts -> .qm (default: off)"
   echo "  -T, --tgz           [MAKE_TGZ] also create .tgz of app (macOS)"
   echo "  -v, --version V     [APP_VERSION] (X.Y.Z)"
   echo "  -z, --zero PATH     [ZERO_DIR] Zero src dir (zerod, zero-cli)"
@@ -148,12 +177,76 @@ show_mkrelease_help() {
   echo "No -z with dev."
 }
 
-# Run dotranslations.sh. Sets DOTRANSLATIONS_SKIP if SKIP_TRANSLATIONS. Call from repo root after resolve_qt.
-# Exports QT_PREFIX so dotranslations.sh (child process) can use lrelease.
+# Run dotranslations.sh when -t / RUN_TRANSLATIONS. Default: skip (reuse res/*.qm).
+# -q / QT_PREFIX: host Qt for lrelease (see resolve_translation_qt_prefix).
 run_dotranslations() {
-  [ -n "${SKIP_TRANSLATIONS:-}" ] && export DOTRANSLATIONS_SKIP=1
-  [ -n "${QT_PREFIX:-}" ] && export QT_PREFIX
+  if [ -z "${RUN_TRANSLATIONS:-}" ]; then
+    notice 'Translations off (use -t to rebuild .qm with lrelease)'
+    return 0
+  fi
+  resolve_translation_qt_prefix
+  export QT_PREFIX="${TRANSLATION_QT_PREFIX}"
   "$SCRIPT_DIR/dotranslations.sh"
+}
+
+# Host Qt prefix for lrelease/lconvert. Precedence: -q/QT_PREFIX > qt5-static > system Qt.
+resolve_translation_qt_prefix() {
+  local candidate lrelease_bin trans_dir
+
+  if [ -n "${QT_PREFIX:-}" ]; then
+    candidate="$QT_PREFIX"
+    lrelease_bin="$candidate/bin/lrelease"
+    [ ! -x "$lrelease_bin" ] && lrelease_bin="$(command -v lrelease 2>/dev/null || true)"
+    trans_dir="$(qt_translation_dir "$candidate" "$lrelease_bin")"
+    if [ -n "$lrelease_bin" ] && [ -n "$trans_dir" ] && [ -f "$trans_dir/qtbase_de.qm" ]; then
+      TRANSLATION_QT_PREFIX="$candidate"
+      export QT_LRELEASE="$lrelease_bin"
+      export QT_TRANSLATIONS_DIR="$trans_dir"
+      return 0
+    fi
+  fi
+
+  candidate="$REPO_ROOT/qt5-static"
+  if [ -x "$candidate/bin/lrelease" ] && [ -f "$candidate/translations/qtbase_de.qm" ]; then
+    TRANSLATION_QT_PREFIX="$candidate"
+    export QT_LRELEASE="$candidate/bin/lrelease"
+    export QT_TRANSLATIONS_DIR="$candidate/translations"
+    return 0
+  fi
+
+  lrelease_bin="$(command -v lrelease 2>/dev/null || true)"
+  [ -z "$lrelease_bin" ] && [ -x /usr/lib/qt5/bin/lrelease ] && lrelease_bin=/usr/lib/qt5/bin/lrelease
+  trans_dir="$(qt_translation_dir "" "$lrelease_bin")"
+  if [ -n "$lrelease_bin" ] && [ -n "$trans_dir" ] && [ -f "$trans_dir/qtbase_de.qm" ]; then
+    TRANSLATION_QT_PREFIX="$(cd "$(dirname "$lrelease_bin")/.." && pwd)"
+    export QT_LRELEASE="$lrelease_bin"
+    export QT_TRANSLATIONS_DIR="$trans_dir"
+    return 0
+  fi
+
+  err "Translations (-t) need lrelease and qtbase_*.qm. Install qtbase5-dev-tools, use -q PATH, or build qt5-static/."
+}
+
+# Resolve directory containing qtbase_XX.qm for lconvert merge.
+qt_translation_dir() {
+  local prefix="${1:-}" lrelease_bin="${2:-}" qmake_bin trans
+  if [ -n "$prefix" ] && [ -d "$prefix/translations" ] && [ -f "$prefix/translations/qtbase_de.qm" ]; then
+    echo "$prefix/translations"
+    return 0
+  fi
+  qmake_bin="$(command -v qmake 2>/dev/null || command -v qmake-qt5 2>/dev/null || true)"
+  if [ -n "$qmake_bin" ]; then
+    trans="$("$qmake_bin" -query QT_INSTALL_TRANSLATIONS 2>/dev/null || true)"
+    if [ -n "$trans" ] && [ -f "$trans/qtbase_de.qm" ]; then
+      echo "$trans"
+      return 0
+    fi
+  fi
+  if [ -f /usr/share/qt5/translations/qtbase_de.qm ]; then
+    echo /usr/share/qt5/translations
+    return 0
+  fi
+  return 1
 }
 
 # Resolve QT_PREFIX and QMAKE for build. Call after parsing -q/--qt.
@@ -189,10 +282,6 @@ resolve_qt() {
       ;;
     win)
       resolve_path_win
-      # Host Qt for dotranslations (lrelease). Precedence: -q/QT_PREFIX > default qt5-static.
-      if [ "$mode" = "release" ]; then
-        QT_PREFIX="${QT_PREFIX:-$REPO_ROOT/qt5-static}"
-      fi
       ;;
     *) err "resolve_qt: unknown platform ${plat}" ;;
   esac
@@ -231,18 +320,30 @@ resolve_zero_dir() {
   ZERO_DIR="$base/src"
 }
 
-# Resolve ZERO_DIR_LINUX and ZERO_DIR_WIN (retired mkrelease-linuxwin). Uses ZERO_DIR for both if set.
-resolve_zero_dirs_linuxwin() {
-  local base
-  if [ -n "${ZERO_DIR:-}" ]; then
-    ZERO_DIR_LINUX="${ZERO_DIR_LINUX:-$ZERO_DIR}"
-    ZERO_DIR_WIN="${ZERO_DIR_WIN:-$ZERO_DIR}"
-    return 0
+# Quick preflight for mkdev-win (Linux host, MXE cross-build). Fatal on missing build tools.
+# Call after parse_mkdev_args and resolve_qt win dev (MXE_PATH, QMAKE set).
+preflight_mkdev_win() {
+  local qt_ver sodium_tar
+  case "$(uname -s)" in
+    Linux) ;;
+    *) err "mkdev-win requires a Linux host (MXE cross-build). Got: $(uname -s)" ;;
+  esac
+  command -v make >/dev/null 2>&1 || err "make not found. Install: sudo apt install build-essential"
+  [ -f "$REPO_ROOT/zero-qt-wallet.pro" ] || err "zero-qt-wallet.pro not found at repo root (committed source; not generated)"
+  sodium_tar="$REPO_ROOT/res/libsodium/libsodium-1.0.21.tar.gz"
+  if [ -f "$sodium_tar" ]; then
+    notice "preflight: libsodium tarball cached"
+  else
+    command -v wget >/dev/null 2>&1 || err "wget not found (first Windows libsodium build downloads tarball). Install: sudo apt install wget"
+    notice "preflight: wget OK (libsodium tarball will download on build)"
   fi
-  for base in "../Zero" "../ZeroLinux"; do [ -d "$base" ] && break; done
-  ZERO_DIR_LINUX="${ZERO_DIR_LINUX:-$base/src}"
-  for base in "../Zero" "../ZeroWin"; do [ -d "$base" ] && break; done
-  ZERO_DIR_WIN="${ZERO_DIR_WIN:-$base/src}"
+  [ -n "${MXE_PATH:-}" ] && [ -x "${QMAKE:-}" ] || err "MXE not resolved (internal error)"
+  qt_ver="$("$QMAKE" -query QT_VERSION 2>/dev/null || echo "?")"
+  notice "preflight: Linux host OK"
+  notice "preflight: MXE ${MXE_PATH} (gcc, qmake Qt ${qt_ver})"
+  if [ -n "${RUN_AFTER_BUILD:-}" ] && ! command -v wine >/dev/null 2>&1; then
+    warn "preflight: wine not found; -R/--run smoke test will be skipped"
+  fi
 }
 
 # Resolve MXE path and tools for Windows target (Linux host).

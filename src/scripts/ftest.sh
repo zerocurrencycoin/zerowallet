@@ -76,7 +76,7 @@ parse_mkdev_args "logs/mkdev.log" -L 2>/dev/null || true
 run_test assert_eq "$LOG_FILE" "/env/log.txt"
 
 echo '[ftest] env overrides CLI (parse_mkrelease_args)'
-unset ZERO_DIR APP_VERSION PREV_VERSION QT_PREFIX MXE_PATH SKIP_STRIP SKIP_SIGN SKIP_TRANSLATIONS JOBS LOG_FILE
+unset ZERO_DIR APP_VERSION PREV_VERSION QT_PREFIX MXE_PATH SKIP_STRIP SKIP_SIGN RUN_TRANSLATIONS JOBS LOG_FILE
 export ZERO_DIR="/env/zero"
 parse_mkrelease_args "logs/mkrelease.log" -z /cli/zero 2>/dev/null || true
 run_test assert_eq "$ZERO_DIR" "/env/zero"
@@ -105,9 +105,17 @@ export SKIP_SIGN=1
 parse_mkrelease_args "logs/mkrelease.log" -N 2>/dev/null || true
 run_test assert_eq "${SKIP_SIGN:-}" "1"
 
-export SKIP_TRANSLATIONS=1
+unset RUN_TRANSLATIONS
 parse_mkrelease_args "logs/mkrelease.log" -t 2>/dev/null || true
-run_test assert_eq "${SKIP_TRANSLATIONS:-}" "1"
+run_test assert_eq "${RUN_TRANSLATIONS:-}" "1"
+
+export RUN_TRANSLATIONS=1
+parse_mkrelease_args "logs/mkrelease.log" 2>/dev/null || true
+run_test assert_eq "${RUN_TRANSLATIONS:-}" "1"
+
+unset QT_PREFIX
+parse_mkrelease_args "logs/mkrelease.log" -q /opt/qt-host 2>/dev/null || true
+run_test assert_eq "$QT_PREFIX" "/opt/qt-host"
 
 export JOBS=88
 parse_mkrelease_args "logs/mkrelease.log" -j 2 2>/dev/null || true

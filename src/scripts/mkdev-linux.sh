@@ -23,6 +23,9 @@ done
 resolve_qt linux dev
 [ -z "${QMAKE:-}" ] && err "qmake not found. Install qtbase5-dev-tools."
 
+notice 'Checking libsodium (Unix)...'
+res/libsodium/buildlibsodium.sh 2>&1 | log_capture || err 'libsodium check/build failed'
+
 notice 'Configuring...'
 if [ -n "${MKDEV_CLEAN:-}" ]; then
   make distclean 2>/dev/null || true
@@ -42,4 +45,7 @@ fi
 [ -f zerowallet ] || err 'zerowallet binary not produced'
 notice 'Done. Run ./zerowallet'
 ls -la zerowallet
-[ -n "${RUN_AFTER_BUILD:-}" ] && { notice 'Running ./zerowallet --help'; ./zerowallet --help || true; }
+if [ -n "${RUN_AFTER_BUILD:-}" ]; then
+  notice 'Running ./zerowallet --help'
+  ./zerowallet --help || true
+fi

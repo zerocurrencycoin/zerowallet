@@ -54,6 +54,53 @@ sodium_configure_make() {
   fi
 }
 
+# Classify res/libsodium.a by object format in the first archive member.
+# Echoes: unix (ELF/Mach-O), win (COFF/PECOFF), missing, unknown.
+sodium_archive_kind() {
+  local ar_file="${1:-$REPO_ROOT/res/libsodium.a}" member tmpdir obj kind
+  [ -f "$ar_file" ] || { echo "missing"; return 0; }
+  # Resolve to absolute: ar x runs after cd into tmpdir, so a relative path would not resolve.
+  ar_file="$(cd "$(dirname "$ar_file")" && pwd)/$(basename "$ar_file")"
+  member=$(ar t "$ar_file" 2>/dev/null | head -1 || true)
+  [ -n "$member" ] || { echo "unknown"; return 0; }
+  tmpdir=$(mktemp -d)
+  if ! (cd "$tmpdir" && ar x "$ar_file" "$member" 2>/dev/null); then
+    rm -rf "$tmpdir"
+    echo "unknown"
+    return 0
+  fi
+  obj="$tmpdir/$member"
+  if [ ! -f "$obj" ]; then
+    rm -rf "$tmpdir"
+    echo "unknown"
+    return 0
+  fi
+  kind=$(file -b "$obj")
+  rm -rf "$tmpdir"
+  case "$kind" in
+    *COFF*|*PECOFF*) echo "win" ;;
+    *ELF*|*Mach-O*) echo "unix" ;;
+    *) echo "unknown" ;;
+  esac
+}
+
+# Reuse matching archive; rebuild when missing or wrong target (e.g. after mkdev-win on same tree).
+sodium_ensure_archive() {
+  local target="${1:-unix}"
+  local kind
+  kind=$(sodium_archive_kind "$REPO_ROOT/res/libsodium.a")
+  if [ "$kind" = "$target" ]; then
+    notice "libsodium.a OK (${target})"
+    return 0
+  fi
+  if [ "$kind" = "missing" ]; then
+    notice "libsodium.a missing; building (${target})..."
+  else
+    warn "libsodium.a is ${kind}, need ${target}; rebuilding..."
+  fi
+  sodium_build "$target"
+}
+
 # Full build: extract, configure, make, copy. Call from repo root. Arg: "unix" or "win".
 sodium_build() {
   local target="${1:-unix}"

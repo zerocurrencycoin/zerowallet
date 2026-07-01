@@ -11,6 +11,11 @@ cd "$REPO_ROOT"
 
 parse_mkdev_args "logs/mkdev-win.log" "$@"
 resolve_qt win dev
+preflight_mkdev_win
+if [ -n "${MKDEV_CHECK_ONLY:-}" ]; then
+  notice "mkdev-win preflight OK"
+  exit 0
+fi
 
 notice "CONFIG=${CONFIG} -j${JOBS} (Windows target, MXE cross-build on Linux)"
 [ -n "${LOG_FILE:-}" ] && notice "Log: ${LOG_FILE}"

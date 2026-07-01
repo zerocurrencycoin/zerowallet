@@ -30,10 +30,8 @@ run_dotranslations >/dev/null
 $QMAKE zero-qt-wallet.pro -spec linux-g++ CONFIG+=release >/dev/null
 step_done 'Configuring'
 
-rm -rf bin/zero-qt-wallet* >/dev/null
-rm -rf bin/zerowallet* >/dev/null
 make clean >/dev/null
-make -j"${JOBS:-2}" >/dev/null
+make -j"$JOBS" >/dev/null
 step_done 'Building'
 
 if [ -z "${USE_SYSTEM_QT:-}" ]; then
@@ -58,7 +56,6 @@ cp -f README.md                      "$tgzdir/" >/dev/null
 (cd bin/tgz && tar czf "linux-zerowallet-v${APP_VERSION}.tgz" "linux-zerowallet-v${APP_VERSION}/" >/dev/null 2>&1) || err 'tar failed'
 
 mkdir -p artifacts
-mkdir -p release
 cp -f "bin/tgz/linux-zerowallet-v${APP_VERSION}.tgz" "./artifacts/linux-zerowallet-v${APP_VERSION}.tgz"
 step_done 'Packaging'
 

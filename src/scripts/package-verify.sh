@@ -110,8 +110,14 @@ if [ -n "${APP_VERSION:-}" ]; then
 fi
 
 ran=0
-[ -n "${LINUX_PATH:-}" ] && [ -e "$LINUX_PATH" ] && { verify_tar "$LINUX_PATH"; ran=1; }
-[ -n "${WIN_PATH:-}" ]  && [ -e "$WIN_PATH" ]  && { verify_zip "$WIN_PATH"; ran=1; }
-[ -n "${MAC_PATH:-}" ]  && [ -e "$MAC_PATH" ]  && { verify_dmg "$MAC_PATH"; ran=1; }
+if [ -n "${LINUX_PATH:-}" ] && [ -e "$LINUX_PATH" ]; then
+  verify_tar "$LINUX_PATH"; ran=1
+fi
+if [ -n "${WIN_PATH:-}" ] && [ -e "$WIN_PATH" ]; then
+  verify_zip "$WIN_PATH"; ran=1
+fi
+if [ -n "${MAC_PATH:-}" ] && [ -e "$MAC_PATH" ]; then
+  verify_dmg "$MAC_PATH"; ran=1
+fi
 
 [ "${ran}" -eq 1 ] || err 'No packages to verify. Use -v VERSION or --linux/--mac/--windows PATH'
