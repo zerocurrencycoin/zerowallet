@@ -14,10 +14,10 @@ REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 # Do NOT pre-seed JOBS here: a pre-set JOBS would make the -j flag's override a no-op.
 # Precedence is applied by resolve_jobs at end of parse.
 
-# CPU count, capped at 4. Linux: nproc; macOS: sysctl hw.ncpu; fallback 2.
+# CPU count, capped at 4. Linux: nproc; macOS: gnproc (Homebrew coreutils) or sysctl hw.ncpu; fallback 2.
 detect_jobs() {
   local n
-  n="$(nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 2)"
+  n="$(nproc 2>/dev/null || gnproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 2)"
   [[ "$n" =~ ^[0-9]+$ ]] || n=2
   [ "$n" -gt 4 ] && n=4
   [ "$n" -lt 1 ] && n=2
