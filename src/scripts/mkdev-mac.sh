@@ -23,7 +23,9 @@ if [ -n "${MKDEV_CLEAN:-}" ]; then
   # Dropping .qmake.stash re-probes the SDK: this is the documented fix after an Xcode/SDK
   # update, when a plain (reuse) build fails Qt's SDK-version check
   # (see BUILD.md Troubleshooting, "SDK has been changed").
-  rm -rf ZeroWallet.app zerowallet.app .qmake.stash
+  # Also drop PCH: stale release/optimized pch vs CONFIG+=debug causes
+  # "__OPTIMIZE__ predefined macro was enabled in precompiled file ... but is currently disabled".
+  rm -rf ZeroWallet.app zerowallet.app .qmake.stash bin/*.pch bin/*.pch.d bin/ZeroWallet_*.pch
   notice 'Cleaned (distclean)'
 fi
 

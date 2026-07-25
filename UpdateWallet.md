@@ -538,7 +538,9 @@ Status on branch `upstream-port` unless noted. Build/run before commit.
 | **Custom fields** | consolidation addresses list | `settings.consolidationAddressTable`; `ConsolodationAddressModel`; context menu Copy/Delete | Manual: add/remove addresses |
 | **shield change** | zerod behavior | `websockets.cpp` 688: TODO Respect autoshield change setting | Not implemented |
 
-**Gaps:** No automated tests. Shield change setting not wired. Rescan/reindex require zerod restart; external zerod needs manual `-rescan`/`-reindex`.
+**Gaps:** No automated tests (no QTest / CI UI suite in this repo). Soft status / Connection Error helpers (`doRPCSoftDataContinue`, `showStatusError`, `showConnectionError` in `connection.cpp` / `rpc.cpp`) are **manual** -- checklist in Zero ops doc **`~/Work/ZK/0/E/DevFeeWallets/README.md`** (Zerowallet UI manual checks). Node gates for the same RPC: Zero400 **`./src/test/test_bitcoin --run_test=rpc_zero_exclusive_tests`**. Shield change setting not wired. Rescan/reindex require zerod restart; external zerod needs manual `-rescan`/`-reindex`.
+
+**Ecosystem Qt UI tests:** Bitcoin Core ships `src/qt/test/`. PirateOcean and similar Qt wallets typically have no equivalent harness -- same gap as zerowallet. Automation belongs here (or a wallet CI plan), not in the Zero full-node repo.
 
 **Zero test and doc support:** Zero repo ([zerocurrencycoin/Zero](https://github.com/zerocurrencycoin/Zero)) has `doc/`, `contrib/`, `qa/`. `zerod -?` lists command-line options. Sample configs: `contrib/zero.conf`, `contrib/debian/examples/zero.conf`. Reindex, rescan, deletetx, consolidation are zerod config options; Zero's own test coverage and documentation for these live in the Zero repo (e.g. `qa/` RPC tests, UpdateZero.md if present). zerowallet does not duplicate Zero's option docs; consult Zero for authoritative behavior and tests.
 

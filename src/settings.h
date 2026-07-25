@@ -158,7 +158,7 @@ public:
 
     static const QString labelRegExp;
 
-    static const int     updateSpeed         = 10 * 1000;        // 10 sec
+    static const int     updateSpeed         = 30 * 1000;        // 30 sec (was 10; reduce zerod poll load)
     static const int     quickUpdateSpeed    = 3  * 1000;        // 3 sec
     static const int     priceRefreshSpeed   = 15 * 60 * 1000;   // 15 mins
 

@@ -60,6 +60,7 @@ IDEWorkspaceChecks.plist
 *.sln
 node_modules
 zero-qt-wallet.pro.user*
+.codess/
 
 # singleapplication: vendored; ignore upstream-only files (CMake, examples, CI)
 singleapplication/.github/

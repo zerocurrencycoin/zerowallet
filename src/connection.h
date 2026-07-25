@@ -115,11 +115,26 @@ public:
     void doRPC(const json& payload, const std::function<void(json)>& cb,
                const std::function<void(QNetworkReply*, const json&)>& ne);
     void doRPCWithDefaultErrorHandling(const json& payload, const std::function<void(json)>& cb);
+    /**
+     * Soft tip-poll errors: no dialog.
+     * -34 RPC_DATA_CONTINUE: statusBar each time (validation).
+     * 503 / timeout / -28/-31/-33: statusBar + yellow icon once until next successful getalldata.
+     */
+    void doRPCSoftDataContinue(const json& payload, const std::function<void(json)>& cb);
     void doRPCIgnoreError(const json& payload, const std::function<void(json)>& cb) ;
     /** Optional RPC: ignore transport/RPC errors; swallow exceptions in cb (poll UI). */
     void doRPCIgnoreErrorSafe(const json& payload, const std::function<void(const json&)>& cb);
 
     void showTxError(const QString& error);
+    /**
+     * Delay / failure fetching node status for the UI (getalldata and similar).
+     * Title: "Delay in getting node status". Not Transaction Error, not Connection Error.
+     */
+    void showStatusError(const QString& error);
+    /**
+     * Cannot reach zerod / transport dead (getinfo fail, loader). Not status-delay soft codes.
+     */
+    void showConnectionError(const QString& error);
 
     // Batch method. Note: Because of the template, it has to be in the header file.
     template<class T>

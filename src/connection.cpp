@@ -498,8 +498,8 @@ void ConnectionLoader::refreshZcashdState(Connection* connection, std::function<
                 }
                 this->showInformation(QObject::tr("Your zerod is starting up. Please wait."), status);
                 main->logger->write("Waiting for zerod to come online.");
-                // Refresh after one second
-                QTimer::singleShot(1000, [=]() { this->refreshZcashdState(connection, refused); });
+                // 5s: warmup can take minutes; 1s retries pile onto an overloaded RPC queue
+                QTimer::singleShot(5000, [=]() { this->refreshZcashdState(connection, refused); });
             }
         }
     );
@@ -788,6 +788,138 @@ void Connection::doRPCWithDefaultErrorHandling(const json& payload, const std::f
     });
 }
 
+static bool isSoftRpcDataContinue(QNetworkReply* reply, const json& parsed, QString* reasonOut, int* codeOut, int* httpOut) {
+    // Soft set: statusBar / yellow icon only -- not Transaction Error, not Connection Error.
+    const int http = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
+    if (httpOut)
+        *httpOut = http;
+    if (codeOut)
+        *codeOut = 0;
+
+    if (http == 503) {
+        if (reasonOut)
+            *reasonOut = QObject::tr("Delay in getting node status: RPC work queue full (503)");
+        return true;
+    }
+    if (reply->error() == QNetworkReply::TimeoutError
+        || reply->error() == QNetworkReply::OperationCanceledError) {
+        if (reasonOut)
+            *reasonOut = QObject::tr("Delay in getting node status: RPC timeout");
+        return true;
+    }
+
+    if (parsed.is_discarded() || !parsed.is_object())
+        return false;
+    if (!parsed.contains("error") || parsed["error"].is_null() || !parsed["error"].is_object())
+        return false;
+    const auto& err = parsed["error"];
+    if (!err.contains("code") || !err["code"].is_number_integer())
+        return false;
+    const int code = err["code"].get<int>();
+    if (codeOut)
+        *codeOut = code;
+    // -34 RPC_DATA_CONTINUE; -28 warmup; -31 witnesses; -33 witness cache
+    if (code == -34 || code == -28 || code == -31 || code == -33) {
+        if (reasonOut) {
+            if (code == -34)
+                *reasonOut = QObject::tr("Delay in getting node status: rpc_data_continue (-34)");
+            else if (code == -28)
+                *reasonOut = QObject::tr("Delay in getting node status: node warming up");
+            else if (code == -31)
+                *reasonOut = QObject::tr("Delay in getting node status: witnesses not ready");
+            else
+                *reasonOut = QObject::tr("Delay in getting node status: building witness cache");
+        }
+        return true;
+    }
+    return false;
+}
+
+void Connection::doRPCSoftDataContinue(const json& payload, const std::function<void(json)>& cb) {
+    // Sticky soft UI: show queue/warmup/timeout once until a successful getalldata.
+    // -34 rpc_data_continue: message every time (expected rare; useful while validating).
+    static bool s_queueFullNotified = false;
+    static bool s_notReadyNotified = false;
+    static bool s_timeoutNotified = false;
+    static bool s_softYellowIcon = false;
+
+    auto clearSoftDegraded = [this]() {
+        s_queueFullNotified = false;
+        s_notReadyNotified = false;
+        s_timeoutNotified = false;
+        if (s_softYellowIcon && main && main->statusIcon) {
+            QIcon i(":/icons/res/connected.gif");
+            main->statusIcon->setPixmap(i.pixmap(16, 16));
+            s_softYellowIcon = false;
+        }
+    };
+
+    doRPC(payload,
+        [=](json result) {
+            clearSoftDegraded();
+            cb(result);
+        },
+        [=](auto reply, auto parsed) {
+            QString softReason;
+            int code = 0;
+            int http = 0;
+            if (!isSoftRpcDataContinue(reply, parsed, &softReason, &code, &http)) {
+                // Hard failure on a status poll -- not a send, not a disconnect.
+                if (!parsed.is_discarded() && parsed.contains("error")
+                    && !parsed["error"].is_null()
+                    && parsed["error"].contains("message")
+                    && !parsed["error"]["message"].is_null()) {
+                    this->showStatusError(QString::fromStdString(parsed["error"]["message"]));
+                } else {
+                    this->showStatusError(reply->errorString());
+                }
+                return;
+            }
+
+            bool showMsg = false;
+            bool setYellow = false;
+            if (code == -34) {
+                // Each time while validating coalesce behavior
+                showMsg = true;
+            } else if (http == 503) {
+                if (!s_queueFullNotified) {
+                    showMsg = true;
+                    s_queueFullNotified = true;
+                    setYellow = true;
+                }
+            } else if (reply->error() == QNetworkReply::TimeoutError
+                       || reply->error() == QNetworkReply::OperationCanceledError) {
+                if (!s_timeoutNotified) {
+                    showMsg = true;
+                    s_timeoutNotified = true;
+                    setYellow = true;
+                }
+            } else if (code == -28 || code == -31 || code == -33) {
+                if (!s_notReadyNotified) {
+                    showMsg = true;
+                    s_notReadyNotified = true;
+                    setYellow = true;
+                }
+            }
+
+            if (main) {
+                if (showMsg)
+                    main->statusBar()->showMessage(softReason, 5000);
+                if (main->statusLabel)
+                    main->statusLabel->setToolTip(softReason);
+                if (main->statusIcon) {
+                    main->statusIcon->setToolTip(softReason);
+                    if (setYellow) {
+                        // Same warning pixmap as 0-peers; tooltip = "Delay in getting node status: ..."
+                        QIcon i = QApplication::style()->standardIcon(QStyle::SP_MessageBoxWarning);
+                        main->statusIcon->setPixmap(i.pixmap(16, 16));
+                        s_softYellowIcon = true;
+                    }
+                }
+            }
+        });
+}
+
 void Connection::doRPCIgnoreError(const json& payload, const std::function<void(json)>& cb) {
     doRPC(payload, cb, [=] (auto, auto) {
         // Ignored error handling
@@ -822,6 +954,35 @@ void Connection::showTxError(const QString& error) {
     shown = true;
     QMessageBox::critical(main, QObject::tr("Transaction Error"), QObject::tr("There was an error sending the transaction. The error was:") + "\n\n"
         + error, QMessageBox::StandardButton::Ok);
+    shown = false;
+}
+
+void Connection::showStatusError(const QString& error) {
+    if (error.isNull()) return;
+
+    static bool shown = false;
+    if (shown)
+        return;
+
+    shown = true;
+    QMessageBox::warning(main, QObject::tr("Delay in getting node status"),
+        QObject::tr("There was a delay in getting node status. Last balances and history were kept. Detail:")
+            + "\n\n" + error,
+        QMessageBox::StandardButton::Ok);
+    shown = false;
+}
+
+void Connection::showConnectionError(const QString& error) {
+    if (error.isNull()) return;
+
+    static bool shown = false;
+    if (shown)
+        return;
+
+    shown = true;
+    QMessageBox::critical(main, QObject::tr("Connection Error"),
+        QObject::tr("There was an error connecting to zerod. The error was:") + "\n\n" + error,
+        QMessageBox::StandardButton::Ok);
     shown = false;
 }
 

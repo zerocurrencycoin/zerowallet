@@ -357,14 +357,18 @@ void RPC::sendZTransaction(json params, const std::function<void(json)>& cb,
 }
 
 void RPC::getAllData(const std::function<void(json)>& cb) {
+    // datatype 0: balances + txs. transactiontype 2: last 7 days. count 50.
+    // Was {0,0,0,true}: type 0 = 30y window and count ignored when size==4 (node bug).
+    // PirateOcean does not use getalldata -- in-process Qt models over mapWallet.
     json payload = {
         {"jsonrpc", "1.0"},
         {"id", "someid"},
         {"method", "getalldata"},
-        {"params", {0,0,0,true}}
+        {"params", {0, 2, 50, true}}
     };
 
-    conn->doRPCWithDefaultErrorHandling(payload, cb);
+    // Soft: -34 rpc_data_continue / warmup / witnesses / HTTP 503 -- keep last UI
+    conn->doRPCSoftDataContinue(payload, cb);
 }
 
 /**
@@ -895,8 +899,12 @@ void RPC::getInfoThenRefresh(bool force) {
         static bool shown = false;
         if (!shown && prevCallSucceeded) { // show error only first time
             shown = true;
-            QMessageBox::critical(main, QObject::tr("Connection Error"), QObject::tr("There was an error connecting to zerod. The error was") + ": \n\n"
-                + reply->errorString(), QMessageBox::StandardButton::Ok);
+            if (conn)
+                conn->showConnectionError(reply->errorString());
+            else
+                QMessageBox::critical(main, QObject::tr("Connection Error"),
+                    QObject::tr("There was an error connecting to zerod. The error was") + ": \n\n"
+                    + reply->errorString(), QMessageBox::StandardButton::Ok);
             shown = false;
         }
 

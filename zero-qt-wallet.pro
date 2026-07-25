@@ -25,6 +25,8 @@ TEMPLATE = app
 
 # Suppress Qt deprecation warnings project-wide.
 QMAKE_CXXFLAGS += -Wno-deprecated-declarations
+# Clang 17+: nlohmann json.hpp still uses deprecated "operator "" _json" spacing
+QMAKE_CXXFLAGS += -Wno-deprecated-literal-operator
 
 INCLUDEPATH  += src/3rdparty/
 INCLUDEPATH  += src/
