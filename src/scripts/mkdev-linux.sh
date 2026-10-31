@@ -10,36 +10,38 @@ ME="mkdev-linux"
 cd "$REPO_ROOT"
 
 parse_mkdev_args "logs/mkdev-linux.log" "$@"
+init_logging
 notice "CONFIG=${CONFIG} -j${JOBS}"
-[ -n "${LOG_FILE:-}" ] && notice "Log: ${LOG_FILE}"
 
+# Check (don't auto-install) the dev Qt packages, matching mkdev-mac/win: hint the admin
+# rather than running sudo (which hangs in CI and surprises the user). The dpkg check is cheap.
+missing=""
 for pkg in qtbase5-dev qtbase5-dev-tools libqt5websockets5-dev libqt5svg5-dev; do
-  if ! dpkg -l "$pkg" 2>/dev/null | grep -q ^ii; then
-    notice "Installing $pkg..."
-    sudo apt-get install -y "$pkg"
-  fi
+  dpkg -l "$pkg" 2>/dev/null | grep -q ^ii || missing="${missing} ${pkg}"
 done
+[ -n "$missing" ] && err "Missing Qt dev packages:${missing}. Install: sudo apt install${missing}"
 
 resolve_qt linux dev
-[ -z "${QMAKE:-}" ] && err "qmake not found. Install qtbase5-dev-tools."
+[ -z "${QMAKE:-}" ] && err "qmake not found. Install: sudo apt install qtbase5-dev-tools"
 
-notice 'Configuring...'
+notice 'Checking libsodium (Unix)...'
+res/libsodium/buildlibsodium.sh || err 'libsodium check/build failed'
+
 if [ -n "${MKDEV_CLEAN:-}" ]; then
   make distclean 2>/dev/null || true
-  rm -rf bin
-  rm -f zerowallet
   notice 'Cleaned (distclean)'
 fi
-$QMAKE zero-qt-wallet.pro CONFIG+="$CONFIG" 2>&1 | log_capture
+
+notice 'Configuring...'
+$QMAKE zero-qt-wallet.pro CONFIG+="$CONFIG"
 
 notice 'Building...'
-if make -j"$JOBS" 2>&1 | log_capture; then
-  :
-else
-  build_fail 'build failed'
-fi
+make -j"$JOBS" || build_fail 'build failed'
 
 [ -f zerowallet ] || err 'zerowallet binary not produced'
 notice 'Done. Run ./zerowallet'
 ls -la zerowallet
-[ -n "${RUN_AFTER_BUILD:-}" ] && { notice 'Running ./zerowallet --help'; ./zerowallet --help || true; }
+if [ -n "${RUN_AFTER_BUILD:-}" ]; then
+  notice 'Running ./zerowallet --help'
+  ./zerowallet --help || true
+fi

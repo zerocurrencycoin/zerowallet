@@ -8,4 +8,4 @@ ME="buildlibsodium"
 # shellcheck disable=SC1091
 . "$REPO_ROOT/res/libsodium/fbuild-libsodium.sh"
 cd "$REPO_ROOT"
-sodium_build unix
+sodium_ensure_archive unix

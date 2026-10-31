@@ -8,13 +8,25 @@ Releases page has the latest [installers and binaries](https://github.com/zerocu
 
 zerowallet needs running `zerod`, Zero full node process. If one is not already running, zerowallet will start it.  If not already present, it will configure full node defaults in `zero.conf`.
 
-If this is the first time you're running `zerowallet`, it will download the Zcash cryptographic params (~1.7 GB).
+Before connecting, zerowallet checks the three proving parameter files `zerod` loads in the platform parameter directory (`~/.zcash-params`, `~/Library/Application Support/ZcashParams`, or `%APPDATA%\ZcashParams`): sizes on every start, SHA-256 once per file. On first run it downloads them (about 741 MiB), retrying interrupted downloads; if a download cannot complete, it says why and offers Retry. `zerod`, not the wallet, uses them.
 
 Option `--no-embedded` forces zerowallet to connect to a running `zerod` full node process.
 
 ## Compiling from source
 
-zerowallet is written in C++ 14 and depends on Qt5, [available from](https://www.qt.io/download). Dev build: `./src/scripts/mkdev.sh`. Release: `./src/scripts/mkrelease-linux.sh`, `mkrelease-mac.sh`, or `mkrelease-win.sh` (see [BUILD.md](BUILD.md) for options and platforms). Building zerod from source [is a separate task](https://github.com/zerocurrencycoin/Zero#-building).
+zerowallet is C++14 on Qt 5. Build and release: [BUILD.md](BUILD.md).
+
+## Documentation
+
+Documents maintained for zerowallet; those under `singleapplication/` are upstream's.
+
+| Document | Readers | Purpose |
+|----------|---------|---------|
+| README.md | Users | Install, run, first start, support, this map |
+| [BUILD.md](BUILD.md) | Developers, porters | Setup, dev and release builds, signing, logs, troubleshooting |
+| [TODO.md](TODO.md) | Contributors, maintainers | Open work and postponed items |
+| [AGENTS.md](AGENTS.md) | Agents and humans editing the tree | Scope, git, file, and documentation rules |
+| [src/scripts/Bashrules.md](src/scripts/Bashrules.md) | Script authors | Conventions for the build scripts |
 
 ## Support
 

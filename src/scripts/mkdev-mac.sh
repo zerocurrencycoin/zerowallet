@@ -10,32 +10,37 @@ ME="mkdev-mac"
 cd "$REPO_ROOT"
 
 parse_mkdev_args "logs/mkdev-mac.log" "$@"
+init_logging
 notice "CONFIG=${CONFIG} -j${JOBS}"
-[ -n "${LOG_FILE:-}" ] && notice "Log: ${LOG_FILE}"
 
 resolve_qt mac dev
 [ -z "${QT_PREFIX:-}" ] && err "Qt not found. Run: brew install qt@5"
 [ -x "${QMAKE:-}" ] || err "qmake not found at ${QT_PREFIX:-}/bin/qmake"
 
-notice 'Configuring...'
 if [ -n "${MKDEV_CLEAN:-}" ]; then
   make distclean 2>/dev/null || true
-  rm -rf ZeroWallet.app zerowallet.app bin
+  # distclean leaves the .app bundle and the qmake cache behind; remove them explicitly.
+  # Dropping .qmake.stash re-probes the SDK, which a reuse build needs after an Xcode
+  # update to pass Qt's SDK-version check.
+  # Also drop PCH: stale release/optimized pch vs CONFIG+=debug causes
+  # "__OPTIMIZE__ predefined macro was enabled in precompiled file ... but is currently disabled".
+  rm -rf ZeroWallet.app zerowallet.app .qmake.stash bin/*.pch bin/*.pch.d bin/ZeroWallet_*.pch
   notice 'Cleaned (distclean)'
 fi
-$QMAKE zero-qt-wallet.pro CONFIG+="$CONFIG" CONFIG+=sdk_no_version_check 2>&1 | log_capture
+
+notice 'Configuring...'
+$QMAKE zero-qt-wallet.pro CONFIG+="$CONFIG" CONFIG+=sdk_no_version_check
 
 notice 'Building...'
-if make -j"$JOBS" 2>&1 | log_capture; then
-  :
-else
-  build_fail 'build failed'
-fi
+make -j"$JOBS" || build_fail 'build failed'
 
 if [ -d ZeroWallet.app ]; then
   notice 'Done. Run: open ZeroWallet.app'
   ls -la ZeroWallet.app
-  [ -n "${RUN_AFTER_BUILD:-}" ] && { notice 'Launching ZeroWallet.app'; open ZeroWallet.app; }
+  if [ -n "${RUN_AFTER_BUILD:-}" ]; then
+    notice 'Launching ZeroWallet.app'
+    open ZeroWallet.app
+  fi
 else
   build_fail 'ZeroWallet.app not produced'
 fi

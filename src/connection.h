@@ -4,6 +4,7 @@
 #include "mainwindow.h"
 #include "ui_connection.h"
 #include "precompiled.h"
+#include <QCryptographicHash>
 
 using json = nlohmann::json;
 
@@ -64,6 +65,9 @@ private:
     bool verifyParams();
     void downloadParams(std::function<void(void)> cb);
     void doNextDownload(std::function<void(void)> cb);
+    void downloadParamPart(std::function<void(void)> cb, int part);
+    void paramDownloadFailed(std::function<void(void)> cb, const QString& reason, bool retryable);
+    bool askRetryParams(const QString& message);
     bool startEmbeddedZcashd();
 
     void refreshZcashdState(Connection* connection, std::function<void(void)> refused);
@@ -81,13 +85,24 @@ private:
     MainWindow*             main;
     RPC*                    rpc;
 
-    QNetworkReply* currentDownload = nullptr;
-    QFile*         currentOutput   = nullptr;
-    QQueue<QUrl>*  downloadQueue   = nullptr;
+    // Proving-parameter download: files still to fetch, the file being written, its
+    // running SHA-256, and the attempt count for the current file.
+    QNetworkReply*      currentDownload    = nullptr;
+    QFile*              currentOutput      = nullptr;
+    QCryptographicHash* currentHash        = nullptr;
+    QQueue<QString>*    downloadQueue      = nullptr;
+    int                 downloadAttempt    = 0;
+    bool                currentWriteFailed = false;
 
     QNetworkAccessManager* client  = nullptr;
     QElapsedTimer downloadTime;
 };
+
+/**
+ * Run an RPC success callback; swallow exceptions and ignore null results.
+ * Shared by doRPCIgnoreErrorSafe and orchestrator paths (e.g. poll getinfo).
+ */
+void invokeRpcCallbackSafe(const std::function<void(const json&)>& cb, const json& reply);
 
 /**
  * Represents a connection to a zcashd. It may even start a new zcashd if needed.
@@ -108,9 +123,26 @@ public:
     void doRPC(const json& payload, const std::function<void(json)>& cb,
                const std::function<void(QNetworkReply*, const json&)>& ne);
     void doRPCWithDefaultErrorHandling(const json& payload, const std::function<void(json)>& cb);
+    /**
+     * Soft tip-poll errors: no dialog.
+     * -34 RPC_DATA_CONTINUE: statusBar each time (validation).
+     * 503 / timeout / -28/-31/-33: statusBar + yellow icon once until next successful getalldata.
+     */
+    void doRPCSoftDataContinue(const json& payload, const std::function<void(json)>& cb);
     void doRPCIgnoreError(const json& payload, const std::function<void(json)>& cb) ;
+    /** Optional RPC: ignore transport/RPC errors; swallow exceptions in cb (poll UI). */
+    void doRPCIgnoreErrorSafe(const json& payload, const std::function<void(const json&)>& cb);
 
     void showTxError(const QString& error);
+    /**
+     * Delay / failure fetching node status for the UI (getalldata and similar).
+     * Title: "Delay in getting node status". Not Transaction Error, not Connection Error.
+     */
+    void showStatusError(const QString& error);
+    /**
+     * Cannot reach zerod / transport dead (getinfo fail, loader). Not status-delay soft codes.
+     */
+    void showConnectionError(const QString& error);
 
     // Batch method. Note: Because of the template, it has to be in the header file.
     template<class T>
@@ -154,8 +186,10 @@ public:
 
                     (*responses)[item] = json::object();    // Empty object
                 } else {
-                    if (parsed.is_discarded()) {
-                        (*responses)[item] = json::object();    // Empty object
+                    if (parsed.is_discarded() || !parsed.is_object()) {
+                        (*responses)[item] = json::object();
+                    } else if (parsed.contains("error") && !parsed["error"].is_null()) {
+                        (*responses)[item] = json::object();
                     } else {
                         (*responses)[item] = parsed["result"];
                     }

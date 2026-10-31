@@ -54,6 +54,7 @@
 #include <QFileDialog>
 #include <QDebug>
 #include <QUrl>
+#include <QUrlQuery>
 #include <QQueue>
 #include <QProcess>
 #include <QDesktopServices>

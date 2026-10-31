@@ -131,11 +131,11 @@ Where authoritative sources only suggest or recommend, this project may **mandat
 
 Use `fbuild.sh` as the shared build library. It provides:
 
-- **Logging:** `err`, `warn`, `info`, `notice`, `step_done`, `section`. With `-L`/`--log`, logs **append** (mkdev: log_capture/tee -a; mkrelease: exec > tee -a). Do not truncate at start.
-- **Build:** `log_capture`, `build_fail`, `analyze_build_log`
-- **Args:** `parse_mkdev_args` (mkdev scripts)
+- **Logging:** `err`, `warn`, `notice`, `step_done`, `section`. `init_logging` tees all output to the log with `tee -a`, so `-L`/`--log` **appends**. Do not truncate at start.
+- **Build:** `build_fail`, `analyze_build_log`
+- **Args:** `parse_mkdev_args`, `parse_mkrelease_args`
 - **Resolution:** `resolve_zero_dir`, `resolve_qt`, `resolve_path_win`
-- **Version:** `resolve_version`, `apply_version_sed`, `check_version_mismatch`
+- **Version:** `resolve_version`, `get_app_from_h`, `write_version_h`
 - **Globals:** `SCRIPT_DIR`, `REPO_ROOT`, `JOBS`
 
 **Sourcing:** Use `"$(dirname "${BASH_SOURCE[0]}")/fbuild.sh"` so the script works when invoked by path or from another directory.
@@ -143,7 +143,7 @@ Use `fbuild.sh` as the shared build library. It provides:
 ### Path resolution
 
 - **src/scripts:** `SCRIPT_DIR` = own dir, `REPO_ROOT` = `SCRIPT_DIR/../..`
-- **res/libsodium:** Scripts derive `REPO_ROOT` from their location and source `$REPO_ROOT/res/libsodium/fbuild-libsodium.sh` (which sources fbuild.sh). See BUILD.md § Agreed design.
+- **res/libsodium:** Scripts derive `REPO_ROOT` from their location and source `$REPO_ROOT/res/libsodium/fbuild-libsodium.sh` (which sources fbuild.sh).
 
 ### Build patterns
 
@@ -242,7 +242,7 @@ done
 
 ### ZERO_DEPENDS
 
-Dropped. Download and build each time. See BUILD.md § Agreed design.
+Not supported: each build downloads and builds libsodium.
 
 ### Artifacts
 

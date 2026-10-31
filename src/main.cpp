@@ -185,10 +185,8 @@ public:
         /*
          * Release-only message handler: keep end-user console quiet by suppressing
          * low-value output (all qDebug, and Qt warnings from QNetworkReply/QIODevice).
-         * Rationale: same as Bitcoin Core PR #7692 — debug logs are for developers,
-         * not for shipped builds. In release (CONFIG(release), i.e. when QT_DEBUG is
-         * not defined) we install this handler; in debug builds Qt's default applies.
-         * See UpdateWallet.md §Release message handler and qDebug.
+         * Release builds (QT_DEBUG undefined) install it, so QT_LOGGING_RULES cannot
+         * re-enable qDebug there; debug builds keep Qt's default handler.
          */
 #ifndef QT_DEBUG
         static QtMessageHandler prev = nullptr;
