@@ -153,7 +153,7 @@ Release builds install a message handler (`Application::main()` in `src/main.cpp
 |---------|--------|-----|
 | `__OPTIMIZE__ predefined macro was enabled in PCH file but is currently disabled` | macOS | The precompiled header was built with the other CONFIG (debug or release): `./src/scripts/mkdev.sh -c` |
 | `The macosx platform SDK has been changed from version X to version Y`, then `sdk.mk: *** ^. Stop.` | macOS | Xcode was updated; Qt keeps the SDK version in `.qmake.stash`, which `make distclean` leaves: `./src/scripts/mkdev-mac.sh -c` (release builds always remove it) |
-| `create-dmg` exits nonzero after "Resource busy" during unmount, but the DMG exists | macOS | A create-dmg unmount race; `mkrelease-mac.sh` accepts the DMG when `hdiutil imageinfo` reads it and only warns |
+| `create-dmg` exits nonzero after "Resource busy" during unmount | macOS | A create-dmg unmount race. `create-dmg` 1.2.3 stops after 5 detach attempts and leaves `artifacts/rw.<pid>.<name>.dmg` attached; `mkrelease-mac.sh` then detaches it (forced after two tries), compresses it to the UDZO DMG, and warns. An image still attached from an interrupted run is detached at the start of the next run. The DMG is accepted when `hdiutil imageinfo` reads it |
 | No DMG | macOS | The app is already in `artifacts/ZeroWallet.app`. Rerun with `CREATE_DMG_VERBOSE=1` for the full create-dmg output; check disk space and remove a leftover `artifacts/macOS-zerowallet-v*.dmg` |
 | DMG of 20 MB or more | macOS | `zerod` in `ZERO_DIR` is a debug build; the script strips the packaged copy unless `-P` |
 | Wrong-target libsodium | All | The scripts rebuild `res/libsodium.a` for the target with a warning; no action needed |

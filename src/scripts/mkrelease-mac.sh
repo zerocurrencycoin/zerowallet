@@ -67,6 +67,22 @@ mv -f ZeroWallet.app artifacts/
 step_done 'App in artifacts'
 
 DMG_OUT="artifacts/macOS-zerowallet-v${APP_VERSION}.dmg"
+# create-dmg works in a read-write image artifacts/rw.<pid>.<name>.dmg and gives up after 5
+# "Resource busy" detach attempts, leaving that image attached. Print the device of each
+# attached rw image so a stale one can be detached before the next run and a stuck one
+# compressed after this run.
+rw_image_devices() {
+  hdiutil info | awk -v pre="$REPO_ROOT/artifacts/rw." '
+    /^image-path/ { img = $0; sub(/^image-path[[:space:]]*:[[:space:]]*/, "", img); keep = (index(img, pre) == 1); next }
+    keep && /^\/dev\/disk[0-9]+[[:space:]]/ { print $1; keep = 0 }'
+}
+detach_device() {
+  hdiutil detach "$1" -quiet || { sleep 5; hdiutil detach "$1" -quiet; } || hdiutil detach "$1" -force -quiet
+}
+for dev in $(rw_image_devices); do
+  warn "detaching ${dev}, left attached by an earlier create-dmg run"
+  detach_device "$dev" || err "cannot detach ${dev}; run: hdiutil detach -force ${dev}"
+done
 rm -f artifacts/rw.*.macOS-zerowallet-v*.dmg "$DMG_OUT"
 # --hdiutil-quiet unless CREATE_DMG_VERBOSE; full output goes to the log either way.
 CREATE_DMG_EXTRA=()
@@ -85,6 +101,16 @@ create-dmg --volname "ZeroWallet-v${APP_VERSION}" --volicon "res/logo.icns" \
   --app-drop-link 600 185 --hide-extension "ZeroWallet.app" \
   --background res/dmgbg.png "${CREATE_DMG_EXTRA[@]}" "$DMG_OUT" artifacts/ZeroWallet.app \
   || CREATE_DMG_RC=$?
+# Detach a stuck rw image and compress it as create-dmg would have (UDZO).
+RW_IMG="$(ls -t artifacts/rw.*."$(basename "$DMG_OUT")" 2>/dev/null | head -1 || true)"
+if [ ! -f "$DMG_OUT" ] && [ -n "$RW_IMG" ]; then
+  warn "create-dmg left ${RW_IMG} (exit ${CREATE_DMG_RC}); detaching and compressing it"
+  for dev in $(rw_image_devices); do
+    detach_device "$dev" || err "cannot detach ${dev}; run: hdiutil detach -force ${dev}"
+  done
+  hdiutil convert "$RW_IMG" -format UDZO -quiet -o "$DMG_OUT" || err "hdiutil convert failed for ${RW_IMG}"
+  rm -f "$RW_IMG"
+fi
 # Real validity gate: the DMG must exist and be a readable image (hdiutil imageinfo succeeds).
 DMG_FORMAT=$(hdiutil imageinfo "$DMG_OUT" 2>/dev/null | sed -n 's/^Format:[[:space:]]*//p')
 [ -f "$DMG_OUT" ] && [ -n "$DMG_FORMAT" ] || err "create-dmg failed (exit ${CREATE_DMG_RC}); no valid DMG at ${DMG_OUT}"
