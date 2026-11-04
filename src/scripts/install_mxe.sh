@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Copyright 2026 Zero Developers
 # MXE install (default), deps only, or check.
 # Usage: ./install_mxe.sh [-i|--install|-d|--deps|-c|--check]

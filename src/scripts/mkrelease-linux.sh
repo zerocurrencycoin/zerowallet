@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Copyright 2026 Zero Developers
 # Release build for Linux: static Qt, .tgz + deb.
 set -e -u -o pipefail

@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Copyright 2026 Zero Developers
 # Verify release package contents (tar, zip, dmg). Run from repo root.
 #

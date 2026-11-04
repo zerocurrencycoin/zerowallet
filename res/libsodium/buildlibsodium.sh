@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Copyright 2026 Zero Developers
 set -e -u -o pipefail
 # Build libsodium for Unix (Linux, macOS). Run from repo root.

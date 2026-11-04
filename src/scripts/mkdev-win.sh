@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Copyright 2026 Zero Developers
 # Dev build for Windows *target*, running on Linux (MXE cross-compile). No packaging.
 # Output: debug/zerowallet.exe (default) or release/zerowallet.exe (-r). Requires MXE with static Qt.

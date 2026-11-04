@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Copyright 2026 Zero Developers
 # Build Windows .ico from SVG via Inkscape and ImageMagick convert.
 # Usage: mkico.sh [SVG_PATH] [ICO_OUT]

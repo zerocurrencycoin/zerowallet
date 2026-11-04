@@ -57,7 +57,7 @@ analyze_build_log() {
 # Default is a fresh timestamped file so prior runs are preserved; -L overrides the path.
 # Call once, right after parse_*_args.
 init_logging() {
-  LOG_FILE="${LOG_FILE:-$REPO_ROOT/logs/${ME}-$(date +%Y%m%d-%H%M%S).log}"
+  LOG_FILE="${LOG_FILE:-$REPO_ROOT/logs/$(date +%Y%m%d_%H%M%S)-${ME}.log}"
   mkdir -p "$(dirname "$LOG_FILE")"
   exec > >(tee -a "$LOG_FILE") 2>&1
   notice "Log: ${LOG_FILE}"

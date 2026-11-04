@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Copyright 2026 Zero Developers
 # Report Qt system setup and for zerowallet: dev/release usage and platform defaults.
 # Run from repo root or any dir; detects Linux, macOS, Windows (host or WSL).

@@ -141,7 +141,7 @@ The zip holds `zerowallet.exe`, `zerod.exe`, `zero-cli.exe`. `-t` refreshes tran
 
 ## Logs and debug output
 
-Every dev, release, and `build-qt-static.sh` run writes `logs/<script>-<YYYYMMDD-HHMMSS>.log` with all output, and prints `Log: <path>` first; `-L PATH` sets another path, `-L` alone uses `logs/<script>.log`. `logs/` is gitignored and never pruned; a full `build-qt-static.sh` log is about 30 MB.
+Every dev, release, and `build-qt-static.sh` run writes `logs/<YYYYMMDD_HHMMSS>-<script>.log` with all output, and prints `Log: <path>` first; `-L PATH` sets another path, `-L` alone uses `logs/<script>.log`. `logs/` is gitignored and never pruned; a full `build-qt-static.sh` log is about 30 MB.
 
 Release builds install a message handler (`Application::main()` in `src/main.cpp`, under `#ifndef QT_DEBUG`) that drops `qDebug()` output and selected warnings; dev builds, which are debug, keep them, and `QT_LOGGING_RULES="*.debug=true"` enables them at run time. The wallet writes `zero-qt-wallet.log` in the platform application data directory (`QStandardPaths::AppDataLocation`). `std::cout` output bypasses the handler.
 

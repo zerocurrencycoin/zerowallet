@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Copyright 2026 Zero Developers
 # Release build for macOS: Qt from Homebrew, DMG.
 set -e -u -o pipefail

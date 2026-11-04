@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Copyright 2026 Zero Developers
 # Build static Qt for zerowallet Linux release. One-time, ~30-60 min.
 # Output: qt5-static/ in zerowallet repo root.

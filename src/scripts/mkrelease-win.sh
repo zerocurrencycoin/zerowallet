@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Copyright 2026 Zero Developers
 # Release build for Windows *target*, running on Linux (MXE cross-compile).
 set -e -u -o pipefail

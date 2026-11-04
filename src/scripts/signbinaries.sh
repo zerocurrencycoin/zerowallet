@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Copyright 2026 Zero Developers
 set -e -u -o pipefail
 # shellcheck disable=SC2034
@@ -11,6 +11,7 @@ cd "$REPO_ROOT"
 while [[ $# -gt 0 ]]; do
   case "$1" in
     -v|--version) APP_VERSION="$2"; shift 2 ;;
+    -h|--help) echo 'Usage: src/scripts/signbinaries.sh [-v VERSION]: SHA-256 list and GPG signatures of artifacts/ into release/signatures'; exit 0 ;;
     *) shift ;;
   esac
 done

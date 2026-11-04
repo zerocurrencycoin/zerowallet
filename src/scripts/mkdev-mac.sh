@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Copyright 2026 Zero Developers
 # Dev build for macOS: Homebrew Qt, CONFIG+=debug, no packaging.
 # Output: ZeroWallet.app in repo root. Run: open ZeroWallet.app

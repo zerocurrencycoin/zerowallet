@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Copyright 2026 Zero Developers
 # Dev build for Linux: system Qt, CONFIG+=debug, no packaging.
 # Output: zerowallet in repo root.

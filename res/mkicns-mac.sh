@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Copyright 2026 Zero Developers
 # Build macOS .icns from SVG via Inkscape. Adapted from the iconset/iconutil
 # pattern in https://stackoverflow.com/a/20703594 (Aidan, CC BY-SA 3.0).

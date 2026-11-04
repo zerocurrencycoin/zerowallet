@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Copyright 2026 Zero Developers
 set -e -u -o pipefail
 # Wrapper: run mkrelease-<platform>.sh. Pass all args through.

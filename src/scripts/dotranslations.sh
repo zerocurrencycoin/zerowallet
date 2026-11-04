@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Copyright 2026 Zero Developers
 # Compile .ts → .qm (lrelease), then merge Qt base translations (lconvert).
 # .qm files are platform-independent; used by all mkrelease builds.
