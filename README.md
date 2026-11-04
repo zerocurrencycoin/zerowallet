@@ -24,6 +24,7 @@ Documents maintained for zerowallet; those under `singleapplication/` are upstre
 |----------|---------|---------|
 | README.md | Users | Install, run, first start, support, this map |
 | [BUILD.md](BUILD.md) | Developers, porters | Setup, dev and release builds, signing, logs, troubleshooting |
+| [doc/release-notes/](doc/release-notes/) | Users | Changes, upgrade actions, and known issues per release |
 | [TODO.md](TODO.md) | Contributors, maintainers | Open work and postponed items |
 | [AGENTS.md](AGENTS.md) | Agents and humans editing the tree | Scope, git, file, and documentation rules |
 | [src/scripts/Bashrules.md](src/scripts/Bashrules.md) | Script authors | Conventions for the build scripts |
